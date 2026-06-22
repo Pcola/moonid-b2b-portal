@@ -1,25 +1,29 @@
 @import "tailwindcss";
 
-/* Moonid design tokeny (z prototypu) — používa ich aj shadcn neskôr */
-:root {
-  --brand: #163f38;
-  --brand-dark: #102a26;
-  --brand-hover: #1e5249;
-  --mint: #9ad3c8;
-  --paper: #ffffff;
-  --cream: #f4f6f5;
-  --ink: #16201d;
-  --muted: #6e6a62;
-  --border: #e7ebe9;
+@theme {
+  --color-brand: #163f38;
+  --color-brand-dark: #102a26;
+  --color-brand-hover: #1e5249;
+  --color-mint: #9ad3c8;
+  --color-cream: #f4f6f5;
+  --color-tile: #f7f9f8;
+  --color-paper: #ffffff;
+  --color-ink: #16201d;
+  --color-muted: #6e6a62;
+  --color-line: #e7ebe9;
+
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
-html,
 body {
-  background: var(--cream);
-  color: var(--ink);
-  font-family: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-a {
-  color: var(--brand);
+.font-serif {
+  font-family: var(--font-serif);
 }
