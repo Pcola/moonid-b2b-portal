@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 const NAV = [
-  { label: "Sortiment", href: "#sortiment" },
-  { label: "Hotelové vybavenie", href: "#hotel" },
-  { label: "Pre koho", href: "#prekoho" },
-  { label: "Referencie", href: "#referencie" },
-  { label: "Kontakt", href: "#kontakt" },
+  { label: "Sortiment", href: "/#sortiment" },
+  { label: "Dávkovače", href: "/#davkovace" },
+  { label: "Portál", href: "/#portal" },
+  { label: "O nás", href: "/o-nas" },
+  { label: "Kontakt", href: "/kontakt" },
 ];
 
 const INFO = [
@@ -47,7 +47,7 @@ export function SiteFooter() {
             <Link href="/login" className="inline-flex items-center gap-2 rounded-[9px] border border-white/30 px-[22px] py-[13px] text-[14.5px] font-semibold text-white transition hover:border-white hover:bg-white/10">
               <LoginIcon /> Prihlásiť sa
             </Link>
-            <a href="#kontakt" className="inline-flex items-center gap-2 rounded-[9px] bg-white px-[22px] py-[13px] text-[14.5px] font-semibold text-[#143a33] transition hover:bg-[#e7efec]">Vyžiadať ponuku</a>
+            <Link href="/kontakt" className="inline-flex items-center gap-2 rounded-[9px] bg-white px-[22px] py-[13px] text-[14.5px] font-semibold text-[#143a33] transition hover:bg-[#e7efec]">Vyžiadať ponuku</Link>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export function SiteFooter() {
           <nav className="flex flex-col gap-[13px]" aria-label="Navigácia">
             <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6e908a]">Navigácia</span>
             {NAV.map((n) => (
-              <a key={n.href} href={n.href} className="text-[14.5px] font-medium text-[#c7d8d3] transition hover:text-white">{n.label}</a>
+              <Link key={n.href} href={n.href} className="text-[14.5px] font-medium text-[#c7d8d3] transition hover:text-white">{n.label}</Link>
             ))}
           </nav>
           <nav className="flex flex-col gap-[13px]" aria-label="Informácie">
