@@ -23,6 +23,7 @@
     "apply:broad": "tsx scripts/pohoda/apply-broad.ts",
     "publish:curated": "tsx scripts/pohoda/publish-curated.ts",
     "backfill:slugs": "tsx scripts/pohoda/backfill-slugs.ts",
+    "seed:auth": "tsx scripts/auth/seed-auth.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {
