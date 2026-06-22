@@ -49,6 +49,24 @@ enum ContentStatus {
   READY
 }
 
+// ---- Enrichment zdroje katalógu (PIM) ----
+enum SourceType {
+  HUMED_FEED // XML feed partner.humed.sk
+  MANUAL // ručne adminom (SUPPLIER / MANUFACTURER / HUMED_WEB pribudnú neskôr — additívne)
+}
+
+enum MatchStatus {
+  SUGGESTED // auto-návrh zhody, čaká na admina
+  CONFIRMED // potvrdené adminom → skopírované do Product
+  REJECTED // odmietnuté (pretrvá — matcher nenavrhuje znova)
+}
+
+enum MatchMethod {
+  CODE // g:sku == SKz.IDS (po normalizácii vedúcich núl)
+  NAME // Jaccard skóre názvu
+  MANUAL // admin priradil ručne
+}
+
 enum PriceSource {
   POHODA
   COMPUTED
@@ -130,19 +148,19 @@ model PriceTier {
 // ---------- Firma (zákazník) ---------- [C] join cez ICO
 
 model Company {
-  id            String   @id @default(cuid())
-  ico           String   @unique
+  id            String             @id @default(cuid())
+  ico           String             @unique
   dic           String?
   icDph         String?
   name          String
   city          String?
   address       String?
-  priceTier     PriceTier @relation(fields: [priceTierId], references: [id])
+  priceTier     PriceTier          @relation(fields: [priceTierId], references: [id])
   priceTierId   String
-  splatDays     Int      @default(14)
+  splatDays     Int                @default(14)
   pohodaCenyIds String?
   pohodaRefAd   Int?
-  active        Boolean  @default(true)
+  active        Boolean            @default(true)
   syncedAt      DateTime?
   users         User[]
   locations     DeliveryLocation[]
@@ -150,25 +168,25 @@ model Company {
   orders        Order[]
   invoices      Invoice[]
   dispensers    CompanyDispenser[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([priceTierId])
 }
 
 model DeliveryLocation {
-  id         String   @id @default(cuid())
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id         String             @id @default(cuid())
+  company    Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId  String
   label      String
   street     String?
   city       String?
   zip        String?
-  isDefault  Boolean  @default(false)
+  isDefault  Boolean            @default(false)
   orders     Order[]
   dispensers CompanyDispenser[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
   @@index([companyId])
 }
@@ -176,22 +194,22 @@ model DeliveryLocation {
 // ---------- Používateľ ---------- [P] identita cez Supabase Auth
 
 model User {
-  id          String   @id @default(cuid())
-  authId      String   @unique
-  email       String   @unique
-  name        String?
-  role        Role     @default(CUSTOMER_USER)
-  company     Company? @relation(fields: [companyId], references: [id])
-  companyId   String?
-  mfaEnabled  Boolean  @default(false)
-  active      Boolean  @default(true)
-  lastLoginAt DateTime?
+  id            String             @id @default(cuid())
+  authId        String             @unique
+  email         String             @unique
+  name          String?
+  role          Role               @default(CUSTOMER_USER)
+  company       Company?           @relation(fields: [companyId], references: [id])
+  companyId     String?
+  mfaEnabled    Boolean            @default(false)
+  active        Boolean            @default(true)
+  lastLoginAt   DateTime?
   ordersCreated Order[]            @relation("OrderCreatedBy")
   cartsCreated  Cart[]             @relation("CartCreatedBy")
   statusEvents  OrderStatusEvent[] @relation("StatusChangedBy")
   auditLogs     AuditLog[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([companyId])
   @@index([role])
@@ -200,51 +218,60 @@ model User {
 // ---------- Katalóg ----------
 
 model Category {
-  id             String    @id @default(cuid())
-  name           String    @unique
-  slug           String    @unique
-  sortOrder      Int       @default(0)
-  icon           String?
+  id              String    @id @default(cuid())
+  name            String    @unique
+  slug            String    @unique
+  sortOrder       Int       @default(0)
+  icon            String?
   pohodaGroupCode String?
-  products       Product[]
+  products        Product[]
 }
 
 model Product {
-  id               String        @id @default(cuid())
-  sku              String        @unique // = SKz.IDS
-  name             String        // [C] názov z Pohody
-  nameDisplay      String?       // [P] kuratovaný názov pre web
-  category         Category?     @relation(fields: [categoryId], references: [id])
-  categoryId       String?
-  brand            String?
-  systemCode       String?       // Tork N4/H2/S4/T3...
-  unit             String        @default("ks") // [C] SKz.MJ
-  mj2Koef          Decimal?      @db.Decimal(12, 3)
-  vatRate          Decimal       @db.Decimal(5, 2) @default(23)
-  basePrice        Decimal?      @db.Decimal(12, 4) // [C] ProdejKc
-  costPrice        Decimal?      @db.Decimal(12, 4) // [C] VNakup — NIKDY zákazníkovi
-  stockCache       Decimal?      @db.Decimal(12, 3) // [C] StavZ
-  reserved         Decimal?      @db.Decimal(12, 3)
-  stockSyncedAt    DateTime?
-  isStocked        Boolean       @default(false) // drží sa skladom vs back-order
-  leadDays         Int           @default(5)
-  productKind      ProductKind   @default(CONSUMABLE)
-  isSubsidized     Boolean       @default(false) // dotovaný/prenajatý dávkovač → cena na vyžiadanie
-  shelfStatus      ShelfStatus   @default(CATALOG)
-  featuredReason   String?
-  curationOverride CurationOverride @default(NONE)
-  contentStatus    ContentStatus @default(STUB)
-  prices           ProductPrice[]
-  media            ProductMedia[]
-  cartItems        CartItem[]
-  orderItems       OrderItem[]
-  syncedAt         DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String           @id @default(cuid())
+  sku                String           @unique // = SKz.IDS
+  name               String // [C] názov z Pohody
+  nameDisplay        String? // [P] kuratovaný názov pre web
+  category           Category?        @relation(fields: [categoryId], references: [id])
+  categoryId         String?
+  brand              String?
+  systemCode         String? // Tork N4/H2/S4/T3...
+  unit               String           @default("ks") // [C] SKz.MJ
+  mj2Koef            Decimal?         @db.Decimal(12, 3)
+  vatRate            Decimal          @default(23) @db.Decimal(5, 2)
+  basePrice          Decimal?         @db.Decimal(12, 4) // [C] ProdejKc
+  costPrice          Decimal?         @db.Decimal(12, 4) // [C] VNakup — NIKDY zákazníkovi
+  stockCache         Decimal?         @db.Decimal(12, 3) // [C] StavZ
+  reserved           Decimal?         @db.Decimal(12, 3)
+  stockSyncedAt      DateTime?
+  isStocked          Boolean          @default(false) // drží sa skladom vs back-order
+  leadDays           Int              @default(5)
+  productKind        ProductKind      @default(CONSUMABLE)
+  isSubsidized       Boolean          @default(false) // dotovaný/prenajatý dávkovač → cena na vyžiadanie
+  shelfStatus        ShelfStatus      @default(CATALOG)
+  featuredReason     String?
+  curationOverride   CurationOverride @default(NONE)
+  contentStatus      ContentStatus    @default(STUB)
+  // ---- PIM / info vrstva [P] — píše admin/enrichment, NIE Pohoda inbound sync ----
+  slug               String?          @unique // verejná URL; stabilná po prvom vygenerovaní
+  ean                String? // efektívny EAN (z dôveryhodného zdroja/ručne; NIE z feed g:gtin)
+  descriptionShort   String?
+  descriptionLong    String?          @db.Text
+  isPublished        Boolean          @default(false) // verejný web zobrazuje len isPublished=true
+  lastSeenInPohodaAt DateTime? // [C] pre reconcile/tombstone — čo zmizne z exportu sa archivuje
+  prices             ProductPrice[]
+  media              ProductMedia[]
+  sources            ProductSource[]
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
+  syncedAt           DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   @@index([categoryId])
   @@index([shelfStatus])
   @@index([productKind])
+  @@index([isPublished])
 }
 
 model ProductPrice {
@@ -264,12 +291,45 @@ model ProductMedia {
   id          String  @id @default(cuid())
   product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId   String
-  storagePath String  // Supabase Storage
+  storagePath String // Supabase Storage (alebo dočasne CDN URL z enrichmentu)
   alt         String?
   isPrimary   Boolean @default(false)
   sortOrder   Int     @default(0)
 
   @@index([productId])
+}
+
+// ---------- Enrichment kandidáti (PIM) ---------- [P]
+// 1 Product : N surových zdrojov (humed feed, neskôr ďalší). Obsah sa do Product
+// kopíruje až pri CONFIRM (jednorazovo) — re-import feedu Product neprepisuje.
+// purchasePrice / raw sú INTERNÉ a nikdy sa neserializujú klientovi.
+model ProductSource {
+  id              String       @id @default(cuid())
+  product         Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId       String? // NULL = nespárovaný kandidát; po rozhodnutí (CONFIRM/REJECT) je vyplnené
+  sourceType      SourceType
+  externalId      String? // g:id (HUMED_FEED — vždy prítomné, idempotentný kľúč)
+  externalSku     String? // g:sku
+  title           String?
+  imageUrl        String? // g:image_link (CDN)
+  ean             String? // len z dôveryhodného zdroja; pre HUMED_FEED zostáva NULL (g:gtin je falošný)
+  descriptionLong String?      @db.Text
+  brand           String?
+  purchasePrice   Decimal?     @db.Decimal(12, 4) // g:cenaVhumede — INTERNÉ, nikdy von
+  sourceUrl       String?
+  raw             Json? // sanitizovaný surový item (bez cenových uzlov) na audit/re-parse
+  matchStatus     MatchStatus  @default(SUGGESTED)
+  matchScore      Float? // 0..1 (NAME); CODE = 1.0
+  matchMethod     MatchMethod?
+  matchedBy       String? // User.id kto rozhodol
+  matchedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([sourceType, externalId]) // idempotentný upsert feedu
+  @@index([productId])
+  @@index([matchStatus])
+  @@index([externalSku])
 }
 
 // ---------- Košík ---------- [P]
@@ -302,35 +362,35 @@ model CartItem {
 // ---------- Objednávky ---------- [H]
 
 model Order {
-  id                   String           @id @default(cuid())
-  number               String           @unique // "WEB-2026-00042"
-  company              Company          @relation(fields: [companyId], references: [id])
-  companyId            String
-  createdBy            User             @relation("OrderCreatedBy", fields: [createdById], references: [id])
-  createdById          String
-  deliveryLocation     DeliveryLocation? @relation(fields: [deliveryLocationId], references: [id])
-  deliveryLocationId   String?
-  status               OrderStatus      @default(PRIJATA)
-  hasBackorder         Boolean          @default(false)
-  priceTierCode        String
-  note                 String?
-  subtotal             Decimal          @db.Decimal(12, 4) @default(0)
-  vat                  Decimal          @db.Decimal(12, 4) @default(0)
-  total                Decimal          @db.Decimal(12, 4) @default(0)
+  id                    String             @id @default(cuid())
+  number                String             @unique // "WEB-2026-00042"
+  company               Company            @relation(fields: [companyId], references: [id])
+  companyId             String
+  createdBy             User               @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  createdById           String
+  deliveryLocation      DeliveryLocation?  @relation(fields: [deliveryLocationId], references: [id])
+  deliveryLocationId    String?
+  status                OrderStatus        @default(PRIJATA)
+  hasBackorder          Boolean            @default(false)
+  priceTierCode         String
+  note                  String?
+  subtotal              Decimal            @default(0) @db.Decimal(12, 4)
+  vat                   Decimal            @default(0) @db.Decimal(12, 4)
+  total                 Decimal            @default(0) @db.Decimal(12, 4)
   requestedDeliveryDate DateTime?
   promisedDeliveryDate  DateTime?
-  confirmedAt          DateTime?
+  confirmedAt           DateTime?
   // technická os synca s Pohodou (zákazník nevidí)
-  pohodaSync           PohodaSyncStatus @default(LOKALNA)
-  pohodaObjNumber      String?
-  pohodaFaNumber       String?
-  pohodaPushedAt       DateTime?
-  items                OrderItem[]
-  events               OrderStatusEvent[]
-  invoice              Invoice?
-  syncJobs             PohodaSyncJob[]
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  pohodaSync            PohodaSyncStatus   @default(LOKALNA)
+  pohodaObjNumber       String?
+  pohodaFaNumber        String?
+  pohodaPushedAt        DateTime?
+  items                 OrderItem[]
+  events                OrderStatusEvent[]
+  invoice               Invoice?
+  syncJobs              PohodaSyncJob[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   @@index([companyId])
   @@index([status])
@@ -423,23 +483,23 @@ model DispenserRefill {
 }
 
 model CompanyDispenser {
-  id                 String           @id @default(cuid())
-  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id                 String            @id @default(cuid())
+  company            Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId          String
-  dispenserModel     DispenserModel   @relation(fields: [dispenserModelId], references: [id])
+  dispenserModel     DispenserModel    @relation(fields: [dispenserModelId], references: [id])
   dispenserModelId   String
   deliveryLocation   DeliveryLocation? @relation(fields: [deliveryLocationId], references: [id])
   deliveryLocationId String?
   location           String?
-  qty                Int              @default(1)
-  arrangement        Arrangement      @default(RENTAL)
+  qty                Int               @default(1)
+  arrangement        Arrangement       @default(RENTAL)
   placedAt           DateTime?
   avgRefillDays      Int?
   lastRefillAt       DateTime?
   nextRefillDue      DateTime?
-  active             Boolean          @default(true)
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  active             Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   @@index([companyId])
 }
@@ -447,21 +507,21 @@ model CompanyDispenser {
 // ---------- Sync infraštruktúra ---------- [P]
 
 model SyncCursor {
-  id        String   @id @default("singleton")
+  id        String    @id @default("singleton")
   skz       DateTime?
   ad        DateTime?
   prices    DateTime?
   fa        DateTime?
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime  @updatedAt
 }
 
 model SyncState {
-  id              String   @id @default("singleton")
+  id              String    @id @default("singleton")
   lastInboundAt   DateTime?
   lastStockSyncAt DateTime?
   lastHeartbeatAt DateTime?
   agentVersion    String?
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime  @updatedAt
 }
 
 model PohodaSyncJob {
