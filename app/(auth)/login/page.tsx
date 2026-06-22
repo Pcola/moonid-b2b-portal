@@ -7,22 +7,59 @@ export const metadata: Metadata = { title: "Prihlásenie — Moonid B2B portál"
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-cream px-5 py-12">
-      <div className="w-full max-w-[420px]">
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-[30px] font-bold tracking-[-0.02em] text-brand">moonid</Link>
-          <p className="mt-2 text-[14px] text-muted">B2B objednávkový portál</p>
+    <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+      {/* ľavý zelený panel */}
+      <div
+        className="relative hidden flex-col justify-between overflow-hidden p-[clamp(40px,5vw,64px)] text-mintbg lg:flex"
+        style={{ background: "radial-gradient(130% 120% at 80% -10%, #21564C 0%, #163F38 55%)" }}
+      >
+        <div className="relative z-[2] flex items-center gap-3">
+          <span className="text-[30px] font-medium tracking-[-0.02em] text-white">moonid</span>
+          <span className="border-l border-white/25 pl-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-mint-2">B2B portál</span>
         </div>
-        <div className="rounded-2xl border border-line bg-white p-7 shadow-[0_20px_50px_-30px_rgba(16,42,38,0.3)]">
-          <h1 className="mb-5 text-[20px] font-semibold text-ink">Prihlásenie</h1>
+
+        <div className="relative z-[2] flex max-w-[440px] flex-col gap-6">
+          <span className="inline-flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-mint">
+            <span className="h-[1.5px] w-[26px] bg-mint" />Pre vašu prevádzku
+          </span>
+          <h1 className="text-white" style={{ fontSize: "clamp(34px,4vw,52px)", lineHeight: 1.06, letterSpacing: "-0.02em", textWrap: "balance" }}>
+            Objednávajte hygienu a vybavenie na jednom mieste
+          </h1>
+          <p className="text-[17px] leading-relaxed text-[#b7ccc6]">
+            Vaše ceny, história objednávok, opakované doobjednanie jedným klikom a faktúry — vždy poruke.
+          </p>
+          <div className="mt-1.5 flex gap-7 border-t border-white/15 pt-5">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[28px] text-white">1 600+</span>
+              <span className="text-[12.5px] text-[#8fb3ab]">položiek v sortimente</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[28px] text-white">Vlastný rozvoz</span>
+              <span className="text-[12.5px] text-[#8fb3ab]">Nové Zámky a okolie</span>
+            </div>
+          </div>
+        </div>
+
+        <span className="relative z-[2] text-[12.5px] text-[#6e938b]">© {new Date().getFullYear()} Moonid s.r.o. · moonid@moonid.sk</span>
+      </div>
+
+      {/* pravý formulár */}
+      <div className="flex items-center justify-center bg-white p-[clamp(32px,5vw,64px)]">
+        <div className="flex w-full max-w-[380px] flex-col gap-8">
+          <Link href="/" className="text-[26px] font-bold tracking-[-0.02em] text-brand lg:hidden">moonid</Link>
+          <div className="flex flex-col gap-2.5">
+            <h2 className="text-[32px] tracking-[-0.01em] text-ink">Prihlásenie</h2>
+            <p className="text-[15px] leading-relaxed text-muted">Zadajte firemné prihlasovacie údaje pre prístup do portálu.</p>
+          </div>
           <Suspense>
             <LoginForm />
           </Suspense>
+          <p className="border-t border-line pt-5 text-[13.5px] leading-relaxed text-muted-2">
+            Nemáte ešte prístup?{" "}
+            <Link href="/kontakt" className="font-semibold text-brand transition hover:text-brand-2">Požiadajte o zriadenie účtu</Link>{" "}
+            alebo nám napíšte na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand transition hover:text-brand-2">moonid@moonid.sk</a>.
+          </p>
         </div>
-        <p className="mt-6 text-center text-[13.5px] text-muted-2">
-          Ešte nemáte prístup?{" "}
-          <Link href="/kontakt" className="font-medium text-brand transition hover:text-brand-2">Požiadať o prístup</Link>
-        </p>
       </div>
     </main>
   );
