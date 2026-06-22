@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Newsreader, Hanken_Grotesk } from "next/font/google";
+import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
-
-const serif = Newsreader({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500"],
-  variable: "--font-newsreader",
-  display: "swap",
-});
 
 const sans = Hanken_Grotesk({
   subsets: ["latin", "latin-ext"],
@@ -17,18 +10,15 @@ const sans = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Moonid — hygiena a čistota pre prevádzky",
+  title: "Moonid s.r.o. — hygiena, čistenie a vybavenie pre vašu prevádzku",
   description:
-    "B2B dodávateľ hygieny, čistenia a vybavenia pre hotely, wellness, gastro, úrady a školy. Vlastný rozvoz, prenájom dávkovačov, dodávky na faktúru.",
+    "B2B dodávateľ hygieny, čistiacich prostriedkov, papierového programu, dávkovačov, gastro a kancelárskych potrieb — aj hotelová kozmetika a vybavenie. Jeden dodávateľ, vlastný rozvoz, faktúra so splatnosťou.",
+  metadataBase: new URL("https://www.moonid.sk"),
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sk" className={`${serif.variable} ${sans.variable}`}>
+    <html lang="sk" className={sans.variable}>
       <body>{children}</body>
     </html>
   );
