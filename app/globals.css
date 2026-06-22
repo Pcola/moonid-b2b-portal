@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Moonid design tokeny (z prototypu) — používa ich aj shadcn neskôr */
+:root {
+  --brand: #163f38;
+  --brand-dark: #102a26;
+  --brand-hover: #1e5249;
+  --mint: #9ad3c8;
+  --paper: #ffffff;
+  --cream: #f4f6f5;
+  --ink: #16201d;
+  --muted: #6e6a62;
+  --border: #e7ebe9;
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+a {
+  color: var(--brand);
+}

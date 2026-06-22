@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Moonid — Administrácia portálu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Hanken Grotesk',system-ui,-apple-system,sans-serif;color:#1A1A17;background:#F4F6F5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  h1,h2,h3,h4{margin:0;font-weight:400;}
+  p{margin:0;}
+  .serif{font-family:'Newsreader',Georgia,serif;}
+  input,select,textarea,button{font-family:inherit;}
+  a{color:inherit;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#C7D2CD;border-radius:8px;border:2px solid #F4F6F5;}
+  @keyframes screenIn{from{transform:translateY(8px);}to{transform:none;}}
+  .screen{animation:screenIn .4s cubic-bezier(.2,.7,.2,1) both;}
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#102A26"/><text x="50" y="70" font-family="Georgia,serif" font-size="54" fill="#9AD3C8" text-anchor="middle">m</text></svg>
+</template>
+
+<!-- ============================ LOGIN ============================ -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;">
+  <div style="position:relative;overflow:hidden;background:radial-gradient(130% 120% at 80% -10%,#1B463E 0%,#0F2622 55%);color:#EAF1EE;padding:clamp(40px,5vw,64px);display:flex;flex-direction:column;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:2;">
+      <span class="serif" style="font-weight:500;font-size:30px;color:#fff;letter-spacing:-0.02em;">moonid</span>
+      <span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#9AD3C8;font-weight:600;border-left:1px solid rgba(255,255,255,0.25);padding-left:12px;">Administrácia</span>
+    </div>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;gap:24px;max-width:440px;">
+      <span style="display:inline-flex;align-items:center;gap:10px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#9AD3C8;font-weight:600;"><span style="width:26px;height:1.5px;background:#9AD3C8;"></span>Riadenie portálu</span>
+      <h1 class="serif" style="font-size:clamp(34px,4vw,52px);line-height:1.06;letter-spacing:-0.02em;color:#fff;text-wrap:balance;">Celý obchod pod kontrolou na jednom mieste</h1>
+      <p style="font-size:17px;line-height:1.6;color:#B7CCC6;">Objednávky, sklad, ceny pre zákazníkov, faktúry a tržby — prehľadne a v reálnom čase.</p>
+    </div>
+    <div aria-hidden="true" style="position:absolute;right:-4%;bottom:-12%;font-family:'Hanken Grotesk',sans-serif;font-size:300px;font-weight:700;line-height:.8;letter-spacing:-0.05em;color:rgba(255,255,255,0.05);user-select:none;z-index:1;">m</div>
+    <span style="position:relative;z-index:2;font-size:12.5px;color:#6E938B;">© 2026 Moonid s.r.o. · interný systém</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;padding:clamp(32px,5vw,64px);background:#fff;">
+    <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:30px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <h2 class="serif" style="font-size:32px;color:#16201D;letter-spacing:-0.01em;">Prihlásenie správcu</h2>
+        <p style="font-size:15px;color:#6E6A62;line-height:1.5;">Prístup len pre oprávnených pracovníkov Moonid.</p>
+      </div>
+      <form onSubmit="{{ onLogin }}" style="display:flex;flex-direction:column;gap:22px;">
+        <label style="display:flex;flex-direction:column;gap:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:#6E6A62;">E-mail
+          <input type="email" value="jozef@moonid.sk" style="font-size:15.5px;font-weight:400;color:#16201D;padding:13px 14px;border:1px solid #D2D8D4;border-radius:10px;background:#FBFCFB;transition:border-color .18s ease;" style-focus="border-color:#163F38;outline:none;" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:#6E6A62;">Heslo
+          <input type="password" value="123456789" style="font-size:15.5px;font-weight:400;color:#16201D;padding:13px 14px;border:1px solid #D2D8D4;border-radius:10px;background:#FBFCFB;transition:border-color .18s ease;" style-focus="border-color:#163F38;outline:none;" />
+        </label>
+        <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#102A26;color:#fff;font-weight:600;font-size:15.5px;padding:15px;border:none;border-radius:10px;cursor:pointer;transition:background .2s ease,transform .15s ease;" style-hover="background:#1B463E;transform:translateY(-1px);">Vstúpiť do administrácie<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============================ APP ============================ -->
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;display:grid;grid-template-columns:248px 1fr;">
+
+  <!-- SIDEBAR -->
+  <aside style="position:sticky;top:0;height:100vh;background:#0F2622;color:#9FBAB3;display:flex;flex-direction:column;padding:22px 16px;gap:5px;">
+    <div style="display:flex;align-items:center;gap:11px;padding:6px 10px 18px;">
+      <span class="serif" style="font-weight:500;font-size:26px;color:#fff;letter-spacing:-0.02em;">moonid</span>
+      <span style="font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:#9AD3C8;font-weight:600;border:1px solid rgba(154,211,200,0.3);border-radius:5px;padding:2px 6px;">Admin</span>
+    </div>
+
+    <button onClick="{{ goDashboard }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nDash.bg }};color:{{ nDash.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Prehľad</button>
+    <button onClick="{{ goOrders }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nOrd.bg }};color:{{ nOrd.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 3H8z"/><path d="M5 7h14l-1 13H6z"/><path d="M9 11v5M15 11v5"/></svg>Objednávky<span style="margin-left:auto;background:#C8881A;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;">{{ newCount }}</span></button>
+    <button onClick="{{ goProducts }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nProd.bg }};color:{{ nProd.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Produkty</button>
+    <button onClick="{{ goCustomers }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nCust.bg }};color:{{ nCust.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5a3 3 0 0 1 0 6M22 20a6 6 0 0 0-5-5.9"/></svg>Zákazníci</button>
+    <button onClick="{{ goPricing }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nPrice.bg }};color:{{ nPrice.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>Cenníky</button>
+    <button onClick="{{ goInvoices }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nInv.bg }};color:{{ nInv.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Faktúry</button>
+
+    <div style="margin-top:auto;display:flex;align-items:center;gap:11px;padding:12px 10px;border-top:1px solid rgba(255,255,255,0.08);">
+      <span style="flex:none;width:38px;height:38px;border-radius:10px;background:#9AD3C8;color:#0F2622;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">JS</span>
+      <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+        <span style="font-size:13.5px;color:#fff;font-weight:600;white-space:nowrap;">Jozef Slobodník</span>
+        <span style="font-size:11.5px;color:#7FA199;">Konateľ · Admin</span>
+      </div>
+      <button onClick="{{ onLogout }}" title="Odhlásiť sa" style="flex:none;margin-left:auto;width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:#7FA199;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s ease,color .18s ease;" style-hover="background:rgba(255,255,255,0.06);color:#fff;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div style="display:flex;flex-direction:column;min-width:0;">
+    <header style="position:sticky;top:0;z-index:30;background:rgba(244,246,245,0.85);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid #E2E7E4;padding:14px clamp(20px,3vw,40px);display:flex;align-items:center;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+        <span style="font-size:12px;color:#86827A;">{{ crumb }}</span>
+        <h2 style="font-size:20px;font-weight:600;color:#16201D;letter-spacing:-0.01em;white-space:nowrap;">{{ pageTitle }}</h2>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #E2E7E4;border-radius:10px;padding:9px 13px;width:clamp(160px,20vw,260px);">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#86827A" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input placeholder="Hľadať…" style="border:none;background:transparent;outline:none;font-size:14px;color:#16201D;width:100%;" />
+        </div>
+        <button style="position:relative;width:42px;height:42px;border-radius:11px;border:1px solid #E2E7E4;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#3C3A33;" style-hover="border-color:#C9D8D2;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:#C8881A;border:2px solid #fff;"></span>
+        </button>
+      </div>
+    </header>
+
+    <div style="padding:clamp(24px,3vw,40px);flex:1;">
+
+      <!-- ===== PREHĽAD ===== -->
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:clamp(20px,2.6vw,30px);max-width:1240px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <span style="font-size:12.5px;letter-spacing:0.14em;text-transform:uppercase;color:#1E5249;font-weight:600;">Sobota · 21. jún 2026</span>
+            <h1 class="serif" style="font-size:clamp(26px,3.2vw,38px);color:#16201D;letter-spacing:-0.015em;">Prehľad prevádzky</h1>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <select style="border:1px solid #E2E7E4;border-radius:10px;padding:11px 14px;background:#fff;font-size:14px;color:#16201D;outline:none;cursor:pointer;"><option>Tento mesiac</option><option>Dnes</option><option>Tento týždeň</option><option>Tento rok</option></select>
+            <button onClick="{{ goOrders }}" style="display:inline-flex;align-items:center;gap:9px;background:#163F38;color:#fff;border:none;font-weight:600;font-size:14.5px;padding:11px 18px;border-radius:10px;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;">Spracovať objednávky<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </div>
+
+        <!-- KPI -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:clamp(14px,1.6vw,20px);">
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#EAF1EE;color:#163F38;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7a7 7 0 1 0 0 10"/><path d="M4 10h9M4 14h9"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#1E5249;background:#EAF1EE;padding:4px 8px;border-radius:7px;">+12 %</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:29px;color:#16201D;line-height:1;">18 940 €</span><span style="font-size:13.5px;color:#6E6A62;">Tržby — jún 2026</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#FBF1DC;color:#9A6B0E;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 3H8z"/><path d="M5 7h14l-1 13H6z"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#9A6B0E;background:#FBF1DC;padding:4px 8px;border-radius:7px;">akcia</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:29px;color:#16201D;line-height:1;">3</span><span style="font-size:13.5px;color:#6E6A62;">Nové objednávky na spracovanie</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#EAF1EE;color:#163F38;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5a3 3 0 0 1 0 6"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#1E5249;background:#EAF1EE;padding:4px 8px;border-radius:7px;">+2</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:29px;color:#16201D;line-height:1;">28</span><span style="font-size:13.5px;color:#6E6A62;">Aktívni zákazníci</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#F7E4E0;color:#A23B2A;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#A23B2A;background:#F7E4E0;padding:4px 8px;border-radius:7px;">sklad</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:29px;color:#16201D;line-height:1;">4</span><span style="font-size:13.5px;color:#6E6A62;">Položky s nízkym skladom</span></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:clamp(16px,2vw,24px);align-items:start;">
+          <!-- graf tržieb -->
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;flex-direction:column;gap:3px;"><h2 class="serif" style="font-size:21px;color:#16201D;">Tržby za posledných 7 dní</h2><span style="font-size:13.5px;color:#6E6A62;">Spolu 8 612 € · priemer 1 230 €/deň</span></div>
+              <span style="font-size:12px;font-weight:600;color:#1E5249;background:#EAF1EE;padding:5px 10px;border-radius:8px;">+12 %</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:clamp(10px,2vw,22px);height:180px;padding-top:10px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#86827A;">980</span><div style="width:100%;max-width:46px;height:54%;background:linear-gradient(180deg,#2A6A5E,#163F38);border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#86827A;">Po</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#86827A;">1 240</span><div style="width:100%;max-width:46px;height:68%;background:linear-gradient(180deg,#2A6A5E,#163F38);border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#86827A;">Ut</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#86827A;">760</span><div style="width:100%;max-width:46px;height:42%;background:linear-gradient(180deg,#2A6A5E,#163F38);border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#86827A;">St</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#86827A;">1 510</span><div style="width:100%;max-width:46px;height:83%;background:linear-gradient(180deg,#2A6A5E,#163F38);border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#86827A;">Št</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#163F38;font-weight:600;">1 820</span><div style="width:100%;max-width:46px;height:100%;background:linear-gradient(180deg,#3C8C7C,#1E5249);border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#16201D;font-weight:600;">Pi</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#86827A;">640</span><div style="width:100%;max-width:46px;height:35%;background:linear-gradient(180deg,#2A6A5E,#163F38);border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#86827A;">So</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><span style="font-size:11.5px;color:#86827A;">—</span><div style="width:100%;max-width:46px;height:8%;background:#E2E7E4;border-radius:7px 7px 3px 3px;"></div><span style="font-size:12px;color:#86827A;">Ne</span></div>
+            </div>
+          </div>
+
+          <!-- top produkty -->
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+            <div style="padding:18px 22px;border-bottom:1px solid #EDF0EF;"><h2 class="serif" style="font-size:20px;color:#16201D;">Najpredávanejšie</h2></div>
+            <sc-for list="{{ topProducts }}" as="p" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid #F1F3F2;">
+                <span style="flex:none;width:44px;height:44px;border-radius:9px;background:#F7F9F8;border:1px solid #EDF0EF;display:flex;align-items:center;justify-content:center;padding:5px;"><img src="{{ p.img }}" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;mix-blend-mode:multiply;" /></span>
+                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;"><span style="font-size:13.5px;color:#16201D;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.n }}</span><span style="font-size:12px;color:#86827A;">{{ p.sold }} ks tento mesiac</span></div>
+                <span class="serif" style="font-size:15px;color:#163F38;white-space:nowrap;">{{ p.rev }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- objednávky na spracovanie -->
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #EDF0EF;">
+            <h2 class="serif" style="font-size:21px;color:#16201D;">Objednávky čakajúce na akciu</h2>
+            <button onClick="{{ goOrders }}" style="background:none;border:none;color:#163F38;font-weight:600;font-size:14px;cursor:pointer;">Všetky objednávky</button>
+          </div>
+          <sc-for list="{{ pendingOrders }}" as="o" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:auto 1.4fr 1fr auto auto auto;align-items:center;gap:18px;padding:16px 22px;border-bottom:1px solid #F1F3F2;">
+              <span class="serif" style="font-size:16px;color:#16201D;">#{{ o.id }}</span>
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span style="font-size:14px;color:#16201D;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ o.customer }}</span><span style="font-size:12.5px;color:#86827A;">{{ o.count }} položiek · {{ o.date }}</span></div>
+              <span style="font-size:13.5px;color:#6E6A62;">{{ o.tier }}</span>
+              <span style="font-size:11.5px;font-weight:600;color:{{ o.statusFg }};background:{{ o.statusBg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ o.statusLabel }}</span>
+              <span class="serif" style="font-size:16px;color:#16201D;white-space:nowrap;">{{ o.total }}</span>
+              <button onClick="{{ o.onOpen }}" style="display:inline-flex;align-items:center;gap:7px;background:#163F38;color:#fff;border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .18s ease;" style-hover="background:#1E5249;">Spracovať<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== OBJEDNÁVKY ===== -->
+      <sc-if value="{{ isOrders }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:20px;max-width:1240px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <sc-for list="{{ orderFilters }}" as="f" hint-placeholder-count="5">
+            <button onClick="{{ f.onPick }}" style="font-size:13.5px;font-weight:500;color:{{ f.fg }};background:{{ f.bg }};border:1px solid {{ f.border }};padding:8px 15px;border-radius:20px;cursor:pointer;">{{ f.label }}<span style="margin-left:7px;color:{{ f.countFg }};">{{ f.count }}</span></button>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:auto 1.5fr 1fr 1fr auto auto;gap:18px;padding:14px 22px;border-bottom:1px solid #EDF0EF;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">
+            <span>Číslo</span><span>Zákazník</span><span>Dátum</span><span>Cenová úroveň</span><span>Stav</span><span style="text-align:right;">Suma</span>
+          </div>
+          <sc-for list="{{ allOrders }}" as="o" hint-placeholder-count="6">
+            <button onClick="{{ o.onOpen }}" style="display:grid;grid-template-columns:auto 1.5fr 1fr 1fr auto auto;align-items:center;gap:18px;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:17px 22px;border-bottom:1px solid #F1F3F2;transition:background .15s ease;" style-hover="background:#F7F9F8;">
+              <span class="serif" style="font-size:16px;color:#16201D;">#{{ o.id }}</span>
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><span style="font-size:14px;color:#16201D;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ o.customer }}</span><span style="font-size:12.5px;color:#86827A;">{{ o.count }} položiek</span></div>
+              <span style="font-size:14px;color:#6E6A62;">{{ o.date }}</span>
+              <span style="font-size:13.5px;color:#6E6A62;">{{ o.tier }}</span>
+              <span style="font-size:11.5px;font-weight:600;color:{{ o.statusFg }};background:{{ o.statusBg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ o.statusLabel }}</span>
+              <span class="serif" style="font-size:16px;color:#16201D;text-align:right;white-space:nowrap;">{{ o.total }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== DETAIL OBJEDNÁVKY ===== -->
+      <sc-if value="{{ isOrderDetail }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:24px;max-width:1120px;">
+        <button onClick="{{ goOrders }}" style="display:inline-flex;align-items:center;gap:8px;background:none;border:none;color:#6E6A62;font-size:14px;font-weight:500;cursor:pointer;align-self:flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Späť na objednávky</button>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;"><h1 class="serif" style="font-size:clamp(26px,3vw,36px);color:#16201D;letter-spacing:-0.015em;">Objednávka #{{ od.id }}</h1><span style="font-size:12px;font-weight:600;color:{{ od.statusFg }};background:{{ od.statusBg }};padding:6px 13px;border-radius:20px;">{{ od.statusLabel }}</span></div>
+            <span style="font-size:14.5px;color:#6E6A62;">{{ od.customer }} · {{ od.date }} · {{ od.count }} položiek</span>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button onClick="{{ od.onAdvance }}" style="display:{{ od.advanceDisplay }};align-items:center;gap:8px;background:#163F38;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>{{ od.advanceLabel }}</button>
+            <span style="display:{{ od.doneDisplay }};align-items:center;gap:8px;background:#EAF1EE;color:#1E5249;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Vybavená</span>
+            <button style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #E2E7E4;color:#3C3A33;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;" style-hover="border-color:#C9D8D2;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z"/><path d="M9 12h6"/></svg>Vystaviť faktúru</button>
+          </div>
+        </div>
+
+        <!-- stav stepper -->
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:26px clamp(20px,3vw,36px);">
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+            <sc-for list="{{ od.steps }}" as="st" hint-placeholder-count="5">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:0;">
+                  <span style="flex:none;width:32px;height:32px;border-radius:50%;background:{{ st.dotBg }};color:{{ st.dotFg }};border:2px solid {{ st.dotBorder }};display:flex;align-items:center;justify-content:center;z-index:2;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:{{ st.checkDisplay }};"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span style="width:8px;height:8px;border-radius:50%;background:currentColor;display:{{ st.dotDisplay }};"></span>
+                  </span>
+                  <span style="flex:1;height:2px;background:{{ st.lineBg }};"></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:13.5px;font-weight:600;color:{{ st.titleColor }};">{{ st.title }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:clamp(16px,2vw,24px);align-items:start;">
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+            <div style="padding:18px 22px;border-bottom:1px solid #EDF0EF;"><h2 class="serif" style="font-size:20px;color:#16201D;">Položky</h2></div>
+            <sc-for list="{{ od.lines }}" as="l" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:16px;padding:16px 22px;border-bottom:1px solid #F1F3F2;">
+                <span style="flex:none;width:50px;height:50px;border-radius:10px;background:#F7F9F8;border:1px solid #EDF0EF;display:flex;align-items:center;justify-content:center;padding:6px;"><img src="{{ l.img }}" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;mix-blend-mode:multiply;" /></span>
+                <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;"><span style="font-size:14.5px;color:#16201D;font-weight:500;line-height:1.3;">{{ l.n }}</span><span style="font-size:12.5px;color:#86827A;">{{ l.pack }} · {{ l.price }} / {{ l.unitLabel }}</span></div>
+                <span style="font-size:14px;color:#6E6A62;white-space:nowrap;">{{ l.qty }} ×</span>
+                <span class="serif" style="font-size:16px;color:#16201D;white-space:nowrap;min-width:80px;text-align:right;">{{ l.line }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:13px;">
+              <h3 style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#86827A;font-weight:600;">Súhrn</h3>
+              <div style="display:flex;justify-content:space-between;font-size:14.5px;color:#3C3A33;"><span>Medzisúčet</span><span>{{ od.subtotal }}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14.5px;color:#3C3A33;"><span>Doprava</span><span>{{ od.shipping }}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14.5px;color:#3C3A33;"><span>DPH 23 %</span><span>{{ od.vat }}</span></div>
+              <div style="height:1px;background:#EDF0EF;margin:4px 0;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:15px;font-weight:600;color:#16201D;">Spolu s DPH</span><span class="serif" style="font-size:24px;color:#163F38;">{{ od.total }}</span></div>
+            </div>
+            <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+              <h3 style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#86827A;font-weight:600;">Zákazník</h3>
+              <div style="display:flex;flex-direction:column;gap:3px;"><span style="font-size:14.5px;color:#16201D;font-weight:600;">{{ od.customer }}</span><span style="font-size:14px;color:#6E6A62;line-height:1.5;">{{ od.address }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;border-top:1px solid #F1F3F2;padding-top:12px;"><span style="font-size:12.5px;color:#86827A;">Cenová úroveň · platba</span><span style="font-size:14px;color:#3C3A33;">{{ od.tier }} · faktúra 14 dní</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== PRODUKTY ===== -->
+      <sc-if value="{{ isProducts }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:20px;max-width:1240px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+          <span style="font-size:14px;color:#6E6A62;">{{ productCount }} produktov v katalógu · <span style="color:#A23B2A;font-weight:600;">4 s nízkym skladom</span></span>
+          <button style="display:inline-flex;align-items:center;gap:8px;background:#163F38;color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Pridať produkt</button>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:2.4fr 1fr 0.9fr 0.9fr auto;gap:18px;padding:14px 22px;border-bottom:1px solid #EDF0EF;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">
+            <span>Produkt</span><span>Kategória</span><span>Sklad</span><span>Predajná cena</span><span style="text-align:right;">Stav</span>
+          </div>
+          <sc-for list="{{ products }}" as="p" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:2.4fr 1fr 0.9fr 0.9fr auto;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid #F1F3F2;">
+              <div style="display:flex;align-items:center;gap:13px;min-width:0;">
+                <span style="flex:none;width:42px;height:42px;border-radius:9px;background:#F7F9F8;border:1px solid #EDF0EF;display:flex;align-items:center;justify-content:center;padding:5px;"><img src="{{ p.img }}" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;mix-blend-mode:multiply;" /></span>
+                <div style="display:flex;flex-direction:column;gap:1px;min-width:0;"><span style="font-size:14px;color:#16201D;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.n }}</span><span style="font-size:12px;color:#86827A;">ID {{ p.id }} · {{ p.pack }}</span></div>
+              </div>
+              <span style="font-size:13.5px;color:#6E6A62;">{{ p.cat }}</span>
+              <span style="font-size:14px;font-weight:600;color:{{ p.stockColor }};">{{ p.stock }}<span style="font-weight:400;color:#86827A;font-size:12.5px;"> {{ p.unit }}</span></span>
+              <span class="serif" style="font-size:16px;color:#16201D;">{{ p.price }}</span>
+              <span style="display:flex;justify-content:flex-end;"><span style="font-size:11.5px;font-weight:600;color:{{ p.stateFg }};background:{{ p.stateBg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ p.stateLabel }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== ZÁKAZNÍCI ===== -->
+      <sc-if value="{{ isCustomers }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:20px;max-width:1240px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+          <span style="font-size:14px;color:#6E6A62;">28 aktívnych zákazníkov · 4 cenové úrovne</span>
+          <button style="display:inline-flex;align-items:center;gap:8px;background:#163F38;color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Pridať zákazníka</button>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 1fr;gap:18px;padding:14px 22px;border-bottom:1px solid #EDF0EF;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">
+            <span>Firma</span><span>Mesto</span><span>Cenová úroveň</span><span>Objednávky</span><span style="text-align:right;">Tržby 2026</span>
+          </div>
+          <sc-for list="{{ customers }}" as="c" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 1fr;align-items:center;gap:18px;padding:16px 22px;border-bottom:1px solid #F1F3F2;">
+              <div style="display:flex;align-items:center;gap:13px;min-width:0;"><span style="flex:none;width:40px;height:40px;border-radius:10px;background:{{ c.avBg }};color:{{ c.avFg }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13.5px;">{{ c.initials }}</span><div style="display:flex;flex-direction:column;gap:1px;min-width:0;"><span style="font-size:14px;color:#16201D;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.name }}</span><span style="font-size:12px;color:#86827A;">{{ c.contact }}</span></div></div>
+              <span style="font-size:14px;color:#6E6A62;">{{ c.city }}</span>
+              <span style="font-size:12.5px;font-weight:600;color:#1E5249;background:#EAF1EE;padding:5px 10px;border-radius:8px;width:fit-content;">{{ c.tier }}</span>
+              <span style="font-size:14px;color:#3C3A33;">{{ c.orders }}</span>
+              <span class="serif" style="font-size:16px;color:#16201D;text-align:right;">{{ c.revenue }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== CENNÍKY ===== -->
+      <sc-if value="{{ isPricing }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:22px;max-width:1240px;">
+        <p style="font-size:15px;color:#6E6A62;max-width:640px;line-height:1.55;">Cenové úrovne určujú zľavu z maloobchodnej ceny (MOC) pre jednotlivé skupiny zákazníkov. Každému zákazníkovi priradíte jednu úroveň.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:clamp(16px,2vw,22px);">
+          <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4">
+            <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+                <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#86827A;font-weight:600;">{{ t.code }}</span><h3 class="serif" style="font-size:22px;color:#16201D;">{{ t.name }}</h3></div>
+                <span class="serif" style="font-size:30px;color:#163F38;line-height:1;">{{ t.discount }}</span>
+              </div>
+              <p style="font-size:14px;color:#6E6A62;line-height:1.5;">{{ t.desc }}</p>
+              <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #F1F3F2;padding-top:14px;"><span style="font-size:13.5px;color:#6E6A62;">{{ t.customers }} zákazníkov</span><button style="background:none;border:none;color:#163F38;font-weight:600;font-size:13.5px;cursor:pointer;">Upraviť</button></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== FAKTÚRY ===== -->
+      <sc-if value="{{ isInvoices }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:20px;max-width:1240px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13px;color:#6E6A62;">Vystavené (jún)</span><span class="serif" style="font-size:28px;color:#16201D;">18 940 €</span></div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13px;color:#6E6A62;">Čaká na úhradu</span><span class="serif" style="font-size:28px;color:#9A6B0E;">3 142 €</span></div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13px;color:#6E6A62;">Po splatnosti</span><span class="serif" style="font-size:28px;color:#A23B2A;">412 €</span></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;"><button style="display:inline-flex;align-items:center;gap:8px;background:#163F38;color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Vystaviť faktúru</button></div>
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:auto 1.4fr 1fr 1fr auto auto;gap:18px;padding:14px 22px;border-bottom:1px solid #EDF0EF;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">
+            <span>Faktúra</span><span>Zákazník</span><span>Dátum</span><span>Splatnosť</span><span>Stav</span><span style="text-align:right;">Suma</span>
+          </div>
+          <sc-for list="{{ invoices }}" as="f" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:auto 1.4fr 1fr 1fr auto auto;align-items:center;gap:18px;padding:16px 22px;border-bottom:1px solid #F1F3F2;">
+              <span class="serif" style="font-size:15px;color:#16201D;">{{ f.no }}</span>
+              <span style="font-size:14px;color:#16201D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ f.customer }}</span>
+              <span style="font-size:14px;color:#6E6A62;">{{ f.date }}</span>
+              <span style="font-size:14px;color:#6E6A62;">{{ f.due }}</span>
+              <span style="font-size:11.5px;font-weight:600;color:{{ f.fg }};background:{{ f.bg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ f.status }}</span>
+              <span class="serif" style="font-size:16px;color:#16201D;text-align:right;white-space:nowrap;">{{ f.amount }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;background:#102A26;color:#fff;padding:14px 22px;border-radius:12px;box-shadow:0 18px 40px -16px rgba(0,0,0,0.5);display:flex;align-items:center;gap:11px;font-size:14.5px;font-weight:500;">
+    <span style="display:inline-flex;width:22px;height:22px;border-radius:50%;background:#9AD3C8;color:#102A26;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>{{ toast }}
+  </div>
+  </sc-if>
+
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen:'login', activeOrder:'2849', statusOverride:{}, orderFilter:'Všetky', toast:'' };
+
+  PRODUCTS = [
+    { id:'3466', n:'SIDOLUX PROFESSIONAL na kuchyne – aktívna pena', cat:'Čistiace prostriedky', img:'https://www.partner.humed.sk/image/cache/catalog/01011909-800x800.jpg', pack:'fľaša 500 ml', unit:'ks', price:3.20, stock:142 },
+    { id:'3405', n:'SIDOLUX ECO na kuchyne 500 ml', cat:'Čistiace prostriedky', img:'https://www.partner.humed.sk/image/cache/catalog/01015004-800x800.jpg', pack:'fľaša 500 ml', unit:'ks', price:2.85, stock:88 },
+    { id:'3060', n:'Papierové vreckovky CELLART 2-vrst. 100 ks', cat:'Hygienický papier', img:'https://www.partner.humed.sk/image/cache/catalog/9941-2-800x800.jpg', pack:'balík 100 ks', unit:'bal', price:0.62, stock:9 },
+    { id:'1846', n:'Kozmetické utierky VELVET CLASSIC 100 ks', cat:'Hygienický papier', img:'https://www.partner.humed.sk/image/cache/catalog/3006-800x800.jpg', pack:'balík 100 ks', unit:'bal', price:1.05, stock:64 },
+    { id:'3359', n:'Tork SmartOne Mini toaletný papier T9 (12 ks)', cat:'Tork', img:'https://www.partner.humed.sk/image/cache/catalog/472193-800x800.jpg', pack:'kartón 12 ks', unit:'krt', price:38.50, stock:31 },
+    { id:'3373', n:'Tork antimikrobiálne penové mydlo S4 – 1000 ml', cat:'Tork', img:'https://www.partner.humed.sk/image/cache/catalog/520800-800x800.jpg', pack:'náplň 1000 ml', unit:'ks', price:9.20, stock:7 },
+    { id:'922', n:'Dávkovač mydlovej peny BIELY 500 ml', cat:'Dávkovače', img:'https://www.partner.humed.sk/image/cache/catalog/S5-800x800.jpg', pack:'kus', unit:'ks', price:8.90, stock:54 },
+    { id:'2219', n:'Zásobník utierok CELLART Auto-Cut čierny', cat:'Dávkovače', img:'https://www.partner.humed.sk/image/cache/catalog/199109-800x800.jpg', pack:'kus', unit:'ks', price:24.50, stock:18 },
+    { id:'2033', n:'Krém na ruky VITALON Marigold 100 ml', cat:'Kozmetika', img:'https://www.partner.humed.sk/image/cache/catalog/829-800x800.jpg', pack:'tuba 100 ml', unit:'ks', price:1.95, stock:120 },
+    { id:'3167', n:'Tulipán Negro sprchový gél 650 ml', cat:'Kozmetika', img:'https://www.partner.humed.sk/image/cache/catalog/740579-800x800.jpg', pack:'fľaša 650 ml', unit:'ks', price:2.40, stock:76 },
+    { id:'445', n:'Green Pharmacy tekuté mydlo 460 ml', cat:'Mydlá', img:'https://www.partner.humed.sk/image/cache/catalog/445-800x800.jpg', pack:'fľaša 460 ml', unit:'ks', price:2.30, stock:6 },
+    { id:'3134', n:'HDPE vrecia na odpad 60 L čierne 20 ks', cat:'Vrecia', img:'https://www.partner.humed.sk/image/cache/catalog/1913-800x800.jpg', pack:'rolka 20 ks', unit:'rol', price:3.75, stock:210 },
+    { id:'1836', n:'Stierka okenná silikónová 30 cm', cat:'Upratovanie', img:'https://www.partner.humed.sk/image/cache/catalog/6632-800x800.jpg', pack:'kus', unit:'ks', price:4.20, stock:42 },
+    { id:'1851', n:'Servisný upratovací vozík so žmýkacím lisom', cat:'Upratovanie', img:'https://www.partner.humed.sk/image/cache/catalog/1107-1-800x800.jpg', pack:'kus', unit:'ks', price:189.00, stock:4 }
+  ];
+
+  ORDERS = [
+    { id:'2849', date:'21. jún 2026', baseStatus:'nova', customer:'Grand Hotel SOLE', city:'Nitra', address:'Pri Kúpalisku 1, 949 01 Nitra', tier:'B2 — Hotel · −18 %', items:[{id:'3466',qty:6},{id:'3060',qty:10},{id:'3359',qty:2}] },
+    { id:'2850', date:'21. jún 2026', baseStatus:'nova', customer:'Penzión Lipa', city:'Šurany', address:'Námestie 12, 942 01 Šurany', tier:'A — Štandard · −8 %', items:[{id:'2033',qty:8},{id:'445',qty:6}] },
+    { id:'2851', date:'21. jún 2026', baseStatus:'nova', customer:'Reštaurácia U Zlatého', city:'Nové Zámky', address:'Hlavná 5, 940 01 Nové Zámky', tier:'B3 — Gastro VIP · −22 %', items:[{id:'3134',qty:12},{id:'2027x',qty:0},{id:'1836',qty:4}] },
+    { id:'2848', date:'20. jún 2026', baseStatus:'pripravuje', customer:'Wellness Podhájska', city:'Podhájska', address:'Kúpeľná 1, 941 48 Podhájska', tier:'B1 — Partner · −12 %', items:[{id:'3373',qty:5},{id:'922',qty:3},{id:'2219',qty:2}] },
+    { id:'2847', date:'18. jún 2026', baseStatus:'na-ceste', customer:'Grand Hotel SOLE', city:'Nitra', address:'Pri Kúpalisku 1, 949 01 Nitra', tier:'B2 — Hotel · −18 %', items:[{id:'3466',qty:6},{id:'2033',qty:8},{id:'3359',qty:2}] },
+    { id:'2841', date:'11. jún 2026', baseStatus:'dorucena', customer:'Mestský úrad Nové Zámky', city:'Nové Zámky', address:'Hlavné nám. 10, 940 01 Nové Zámky', tier:'A — Štandard · −8 %', items:[{id:'922',qty:2},{id:'1846',qty:12},{id:'3134',qty:6}] }
+  ];
+
+  STATUS = {
+    'nova':      { label:'Nová',         fg:'#9A6B0E', bg:'#FBF1DC' },
+    'prijata':   { label:'Prijatá',      fg:'#1E5249', bg:'#EAF1EE' },
+    'pripravuje':{ label:'Pripravuje sa',fg:'#9A6B0E', bg:'#FBF1DC' },
+    'na-ceste':  { label:'Na ceste',     fg:'#1A5B8A', bg:'#E2EEF7' },
+    'dorucena':  { label:'Doručená',     fg:'#1E5249', bg:'#EAF1EE' }
+  };
+  ORDER_FLOW = ['nova','prijata','pripravuje','na-ceste','dorucena'];
+  ADVANCE_LABEL = { 'nova':'Prijať objednávku', 'prijata':'Začať prípravu', 'pripravuje':'Odoslať na rozvoz', 'na-ceste':'Označiť doručené' };
+
+  m(n){ return n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/, ' ') + ' €'; }
+  find(id){ return this.PRODUCTS.find(p => p.id === id); }
+  statusOf(o){ return this.state.statusOverride[o.id] || o.baseStatus; }
+  go(s){ this.setState({ screen:s }); try{ window.scrollTo(0,0); }catch(e){} }
+  showToast(msg){ clearTimeout(this._t); this.setState({ toast:msg }); this._t=setTimeout(()=>this.setState({toast:''}),2600); }
+
+  orderTotalNum(o){ return o.items.reduce((a,it)=>{ const p=this.find(it.id); return a+(p?p.price*it.qty:0); },0); }
+  orderCount(o){ return o.items.reduce((a,it)=>{ const p=this.find(it.id); return a+(p?it.qty:0); },0); }
+
+  advance(orderId){
+    const o=this.ORDERS.find(x=>x.id===orderId); if(!o) return;
+    const cur=this.statusOf(o); const idx=this.ORDER_FLOW.indexOf(cur);
+    if(idx>=this.ORDER_FLOW.length-1) return;
+    const next=this.ORDER_FLOW[idx+1];
+    this.setState(s=>({ statusOverride:{ ...s.statusOverride, [orderId]:next } }));
+    this.showToast('Objednávka #'+orderId+' → '+this.STATUS[next].label);
+  }
+
+  renderVals(){
+    const screen=this.state.screen;
+    const inApp=screen!=='login';
+    const navOf=(k)=>({ bg: screen===k?'rgba(255,255,255,0.08)':'transparent', fg: screen===k?'#FFFFFF':'#9FBAB3' });
+
+    const titles={ dashboard:{t:'Prehľad',c:'Dashboard'}, orders:{t:'Objednávky',c:'Spracovanie'}, orderDetail:{t:'Detail objednávky',c:'Objednávky'}, products:{t:'Produkty a sklad',c:'Katalóg'}, customers:{t:'Zákazníci',c:'CRM'}, pricing:{t:'Cenníky a úrovne',c:'Nastavenia'}, invoices:{t:'Faktúry',c:'Účtovníctvo'} };
+    const tk=titles[screen]||titles.dashboard;
+
+    const newCount=this.ORDERS.filter(o=>this.statusOf(o)==='nova').length;
+
+    const mapOrder=(o)=>{ const st=this.STATUS[this.statusOf(o)]; return {
+      id:o.id, date:o.date, customer:o.customer, tier:o.tier.split(' · ')[0], count:this.orderCount(o),
+      statusLabel:st.label, statusFg:st.fg, statusBg:st.bg, total:this.m(this.orderTotalNum(o)*1.23),
+      onOpen:()=>this.setState({screen:'orderDetail', activeOrder:o.id})
+    };};
+
+    // filter objednávok
+    const fmap={ 'Všetky':null, 'Nové':'nova', 'Pripravuje sa':'pripravuje', 'Na ceste':'na-ceste', 'Doručené':'dorucena' };
+    const af=this.state.orderFilter;
+    const filteredOrders=this.ORDERS.filter(o=> fmap[af]===null || this.statusOf(o)===fmap[af]);
+    const orderFilters=Object.keys(fmap).map(label=>{
+      const active=af===label;
+      const count= fmap[label]===null? this.ORDERS.length : this.ORDERS.filter(o=>this.statusOf(o)===fmap[label]).length;
+      return { label, count, fg:active?'#fff':'#3C3A33', bg:active?'#163F38':'#fff', border:active?'#163F38':'#E2E7E4', countFg:active?'#9AD3C8':'#9DB0AA', onPick:()=>this.setState({orderFilter:label}) };
+    });
+
+    // detail
+    const od0=this.ORDERS.find(o=>o.id===this.state.activeOrder)||this.ORDERS[0];
+    const cur=this.statusOf(od0); const odSt=this.STATUS[cur];
+    const curIdx=this.ORDER_FLOW.indexOf(cur);
+    const stepTitles=['Nová','Prijatá','Pripravuje sa','Na ceste','Doručená'];
+    const odSteps=stepTitles.map((title,i)=>{ const done=i<curIdx, active=i===curIdx; return {
+      title, checkDisplay:done?'block':'none', dotDisplay:done?'none':'block',
+      dotBg: done?'#163F38':'#fff', dotFg: done?'#fff':(active?'#163F38':'#C7D2CD'), dotBorder: done?'#163F38':(active?'#163F38':'#E2E7E4'),
+      lineBg: i<4 ? (i<curIdx?'#163F38':'#E2E7E4') : 'transparent', titleColor: (done||active)?'#16201D':'#9DB0AA'
+    };});
+    const odSubN=this.orderTotalNum(od0); const odShipN=odSubN>=50?0:4.90;
+    const isDone=curIdx>=this.ORDER_FLOW.length-1;
+    const od={
+      id:od0.id, date:od0.date, customer:od0.customer, address:od0.address, tier:od0.tier, count:this.orderCount(od0),
+      statusLabel:odSt.label, statusFg:odSt.fg, statusBg:odSt.bg, steps:odSteps,
+      lines:od0.items.filter(it=>this.find(it.id)).map(it=>{ const p=this.find(it.id); return { n:p.n, img:p.img, pack:p.pack, price:this.m(p.price), unitLabel:p.unit, qty:it.qty, line:this.m(p.price*it.qty) }; }),
+      subtotal:this.m(odSubN), shipping:odShipN===0?'zdarma':this.m(odShipN), vat:this.m((odSubN+odShipN)*0.23), total:this.m((odSubN+odShipN)*1.23),
+      advanceLabel:this.ADVANCE_LABEL[cur]||'Posunúť stav', advanceDisplay:isDone?'none':'inline-flex', doneDisplay:isDone?'inline-flex':'none',
+      onAdvance:()=>this.advance(od0.id)
+    };
+
+    // produkty
+    const products=this.PRODUCTS.map(p=>{ const low=p.stock<=10; return {
+      ...p, price:this.m(p.price), stock:p.stock,
+      stockColor: low?'#A23B2A':'#16201D',
+      stateLabel: low?'Nízky sklad':'Aktívny', stateFg: low?'#A23B2A':'#1E5249', stateBg: low?'#F7E4E0':'#EAF1EE'
+    };});
+
+    // zákazníci
+    const customers=[
+      { name:'Grand Hotel SOLE', contact:'objednavky@grandhotelsole.sk', city:'Nitra', tier:'B2 · −18 %', orders:42, revenue:'8 940 €', initials:'GS', avBg:'#163F38', avFg:'#fff' },
+      { name:'Reštaurácia U Zlatého', contact:'sef@uzlateho.sk', city:'Nové Zámky', tier:'B3 · −22 %', orders:64, revenue:'6 210 €', initials:'UZ', avBg:'#EAF1EE', avFg:'#163F38' },
+      { name:'Wellness Podhájska', contact:'prevadzka@podhajska.sk', city:'Podhájska', tier:'B1 · −12 %', orders:28, revenue:'5 480 €', initials:'WP', avBg:'#EAF1EE', avFg:'#163F38' },
+      { name:'Mestský úrad Nové Zámky', contact:'sprava@novezamky.sk', city:'Nové Zámky', tier:'A · −8 %', orders:19, revenue:'3 120 €', initials:'MÚ', avBg:'#EAF1EE', avFg:'#163F38' },
+      { name:'Penzión Lipa', contact:'recepcia@penzionlipa.sk', city:'Šurany', tier:'A · −8 %', orders:14, revenue:'2 040 €', initials:'PL', avBg:'#EAF1EE', avFg:'#163F38' },
+      { name:'LOKO trans Slovakia', contact:'sklad@lokotrans.sk', city:'Komárno', tier:'B2 · −18 %', orders:23, revenue:'4 760 €', initials:'LT', avBg:'#EAF1EE', avFg:'#163F38' }
+    ];
+
+    const tiers=[
+      { code:'Úroveň A', name:'Štandard', discount:'−8 %', desc:'Základná zľava pre menšie prevádzky a inštitúcie.', customers:12 },
+      { code:'Úroveň B1', name:'Partner', discount:'−12 %', desc:'Pravidelní zákazníci so stredným objemom odberu.', customers:8 },
+      { code:'Úroveň B2', name:'Hotel', discount:'−18 %', desc:'Hotely a wellness s veľkým a stabilným odberom.', customers:5 },
+      { code:'Úroveň B3', name:'Gastro VIP', discount:'−22 %', desc:'Najväčší gastro odberatelia s rámcovou zmluvou.', customers:3 }
+    ];
+
+    const invoices=[
+      { no:'2026120', customer:'Grand Hotel SOLE', date:'18. jún 2026', due:'2. júl 2026', status:'Čaká', fg:'#9A6B0E', bg:'#FBF1DC', amount:'178,52 €' },
+      { no:'2026118', customer:'Wellness Podhájska', date:'15. jún 2026', due:'29. jún 2026', status:'Čaká', fg:'#9A6B0E', bg:'#FBF1DC', amount:'264,90 €' },
+      { no:'2026114', customer:'Reštaurácia U Zlatého', date:'11. jún 2026', due:'25. jún 2026', status:'Uhradená', fg:'#1E5249', bg:'#EAF1EE', amount:'412,30 €' },
+      { no:'2026109', customer:'Mestský úrad Nové Zámky', date:'8. jún 2026', due:'5. jún 2026', status:'Po splatnosti', fg:'#A23B2A', bg:'#F7E4E0', amount:'94,30 €' },
+      { no:'2026101', customer:'LOKO trans Slovakia', date:'2. jún 2026', due:'16. jún 2026', status:'Uhradená', fg:'#1E5249', bg:'#EAF1EE', amount:'212,80 €' }
+    ];
+
+    const topProducts=[
+      { id:'3466', n:'SIDOLUX na kuchyne', img:this.find('3466').img, sold:312, rev:'998 €' },
+      { id:'3359', n:'Tork SmartOne T9', img:this.find('3359').img, sold:96, rev:'3 696 €' },
+      { id:'3060', n:'Vreckovky CELLART', img:this.find('3060').img, sold:540, rev:'335 €' },
+      { id:'2033', n:'Krém na ruky VITALON', img:this.find('2033').img, sold:188, rev:'367 €' }
+    ];
+
+    return {
+      isLogin:!inApp, isApp:inApp,
+      isDashboard:screen==='dashboard', isOrders:screen==='orders', isOrderDetail:screen==='orderDetail', isProducts:screen==='products', isCustomers:screen==='customers', isPricing:screen==='pricing', isInvoices:screen==='invoices',
+      onLogin:(e)=>{ e.preventDefault(); this.go('dashboard'); },
+      onLogout:()=>this.setState({screen:'login'}),
+      goDashboard:()=>this.go('dashboard'), goOrders:()=>this.go('orders'), goProducts:()=>this.go('products'), goCustomers:()=>this.go('customers'), goPricing:()=>this.go('pricing'), goInvoices:()=>this.go('invoices'),
+      nDash:navOf('dashboard'), nOrd:navOf('orders'), nProd:navOf('products'), nCust:navOf('customers'), nPrice:navOf('pricing'), nInv:navOf('invoices'),
+      pageTitle:tk.t, crumb:tk.c, newCount,
+      topProducts,
+      pendingOrders:this.ORDERS.filter(o=>['nova','pripravuje'].includes(this.statusOf(o))).slice(0,4).map(mapOrder),
+      orderFilters, allOrders:filteredOrders.map(mapOrder),
+      od,
+      products, productCount:this.PRODUCTS.length,
+      customers, tiers, invoices,
+      toast:this.state.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

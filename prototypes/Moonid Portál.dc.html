@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Moonid — B2B portál</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Hanken Grotesk',system-ui,-apple-system,sans-serif;color:#1A1A17;background:#F4F6F5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  h1,h2,h3,h4{margin:0;font-weight:400;}
+  p{margin:0;}
+  .serif{font-family:'Newsreader',Georgia,serif;}
+  input,select,textarea,button{font-family:inherit;}
+  a{color:inherit;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#C7D2CD;border-radius:8px;border:2px solid #F4F6F5;}
+  ::-webkit-scrollbar-thumb:hover{background:#9DB0AA;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes slideIn{from{transform:translateX(100%);}to{transform:none;}}
+  @keyframes screenIn{from{transform:translateY(8px);}to{transform:none;}}
+  .screen{animation:screenIn .4s cubic-bezier(.2,.7,.2,1) both;}
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#163F38"/><text x="50" y="70" font-family="Georgia,serif" font-size="58" fill="#FFFFFF" text-anchor="middle">m</text></svg>
+</template>
+
+<!-- ============================ LOGIN ============================ -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;">
+  <!-- ľavý zelený panel -->
+  <div style="position:relative;overflow:hidden;background:radial-gradient(130% 120% at 80% -10%,#21564C 0%,#163F38 55%);color:#EAF1EE;padding:clamp(40px,5vw,64px);display:flex;flex-direction:column;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:2;">
+      <span class="serif" style="font-weight:500;font-size:30px;color:#fff;letter-spacing:-0.02em;">moonid</span>
+      <span style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8FC3B9;font-weight:600;border-left:1px solid rgba(255,255,255,0.25);padding-left:12px;">B2B portál</span>
+    </div>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;gap:24px;max-width:440px;">
+      <span style="display:inline-flex;align-items:center;gap:10px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#9AD3C8;font-weight:600;"><span style="width:26px;height:1.5px;background:#9AD3C8;"></span>Pre vašu prevádzku</span>
+      <h1 class="serif" style="font-size:clamp(34px,4vw,52px);line-height:1.06;letter-spacing:-0.02em;color:#fff;text-wrap:balance;">Objednávajte hygienu a vybavenie na jednom mieste</h1>
+      <p style="font-size:17px;line-height:1.6;color:#B7CCC6;">Vaše ceny, história objednávok, opakované doobjednanie jedným klikom a faktúry — vždy poruke.</p>
+      <div style="display:flex;gap:28px;border-top:1px solid rgba(255,255,255,0.16);padding-top:22px;margin-top:6px;">
+        <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:28px;color:#fff;">1 600+</span><span style="font-size:12.5px;color:#8FB3AB;">položiek v sortimente</span></div>
+        <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:28px;color:#fff;">do 2. dňa</span><span style="font-size:12.5px;color:#8FB3AB;">vlastný rozvoz</span></div>
+      </div>
+    </div>
+    <div aria-hidden="true" style="position:absolute;right:-4%;bottom:-12%;font-family:'Hanken Grotesk',sans-serif;font-size:300px;font-weight:700;line-height:.8;letter-spacing:-0.05em;color:rgba(255,255,255,0.05);user-select:none;z-index:1;">m</div>
+    <span style="position:relative;z-index:2;font-size:12.5px;color:#6E938B;">© 2026 Moonid s.r.o. · moonid@moonid.sk</span>
+  </div>
+  <!-- pravý formulár -->
+  <div style="display:flex;align-items:center;justify-content:center;padding:clamp(32px,5vw,64px);background:#fff;">
+    <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:30px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <h2 class="serif" style="font-size:32px;color:#16201D;letter-spacing:-0.01em;">Prihlásenie</h2>
+        <p style="font-size:15px;color:#6E6A62;line-height:1.5;">Zadajte firemné prihlasovacie údaje pre prístup do portálu.</p>
+      </div>
+      <form onSubmit="{{ onLogin }}" style="display:flex;flex-direction:column;gap:22px;">
+        <label style="display:flex;flex-direction:column;gap:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:#6E6A62;">Firemný e-mail
+          <input type="email" value="objednavky@grandhotelsole.sk" style="font-size:15.5px;font-weight:400;color:#16201D;padding:13px 14px;border:1px solid #D2D8D4;border-radius:10px;background:#FBFCFB;transition:border-color .18s ease;" style-focus="border-color:#163F38;outline:none;" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;color:#6E6A62;">Heslo
+          <input type="password" value="123456789" style="font-size:15.5px;font-weight:400;color:#16201D;padding:13px 14px;border:1px solid #D2D8D4;border-radius:10px;background:#FBFCFB;transition:border-color .18s ease;" style-focus="border-color:#163F38;outline:none;" />
+        </label>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <label style="display:flex;align-items:center;gap:9px;font-size:14px;color:#54514A;cursor:pointer;"><input type="checkbox" checked style="width:16px;height:16px;accent-color:#163F38;" />Zapamätať si ma</label>
+          <a href="#" style="font-size:14px;color:#163F38;font-weight:600;text-decoration:none;">Zabudli ste heslo?</a>
+        </div>
+        <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#163F38;color:#fff;font-weight:600;font-size:15.5px;padding:15px;border:none;border-radius:10px;cursor:pointer;transition:background .2s ease,transform .15s ease;" style-hover="background:#1E5249;transform:translateY(-1px);">Prihlásiť sa<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+      <p style="font-size:13.5px;color:#86827A;line-height:1.55;border-top:1px solid #EDF0EF;padding-top:20px;">Nemáte ešte prístup? <a href="#" style="color:#163F38;font-weight:600;text-decoration:none;">Požiadajte o zriadenie účtu</a> alebo nám napíšte na moonid@moonid.sk.</p>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============================ APP ============================ -->
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;display:grid;grid-template-columns:248px 1fr;">
+
+  <!-- SIDEBAR -->
+  <aside style="position:sticky;top:0;height:100vh;background:#102A26;color:#9FBAB3;display:flex;flex-direction:column;padding:22px 16px;gap:6px;">
+    <div style="display:flex;align-items:center;gap:11px;padding:6px 10px 18px;">
+      <span class="serif" style="font-weight:500;font-size:26px;color:#fff;letter-spacing:-0.02em;">moonid</span>
+      <span style="font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8FC3B9;font-weight:600;border:1px solid rgba(143,195,185,0.3);border-radius:5px;padding:2px 6px;">B2B</span>
+    </div>
+
+    <span style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#5C857B;font-weight:600;padding:8px 12px 6px;">Prehľad</span>
+    <button onClick="{{ goDashboard }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nDash.bg }};color:{{ nDash.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Nástenka</button>
+    <button onClick="{{ goCatalog }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nCat.bg }};color:{{ nCat.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Katalóg</button>
+    <button onClick="{{ goOrders }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nOrd.bg }};color:{{ nOrd.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 3H8z"/><path d="M5 7h14l-1 13H6z"/><path d="M9 11v5M15 11v5"/></svg>Objednávky</button>
+    <button onClick="{{ goInvoices }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;font-size:14.5px;font-weight:500;background:{{ nInv.bg }};color:{{ nInv.fg }};transition:background .18s ease,color .18s ease;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Faktúry</button>
+
+    <span style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#5C857B;font-weight:600;padding:18px 12px 6px;">Konto</span>
+    <a href="#" style="display:flex;align-items:center;gap:13px;border-radius:10px;padding:11px 12px;font-size:14.5px;font-weight:500;color:#9FBAB3;text-decoration:none;transition:background .18s ease,color .18s ease;" style-hover="background:rgba(255,255,255,0.05);color:#fff;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 0 1-4 0v-.2a1.7 1.7 0 0 0-2.9-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 13H4a2 2 0 0 1 0-4h.2a1.7 1.7 0 0 0 1.1-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.1V2a2 2 0 0 1 4 0v.2a1.7 1.7 0 0 0 2.9 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9z"/></svg>Nastavenia</a>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;">
+      <div style="background:rgba(143,195,185,0.1);border:1px solid rgba(143,195,185,0.18);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;">
+        <span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8FC3B9;font-weight:600;">Cenová úroveň</span>
+        <span style="font-size:14px;color:#E7EFEC;font-weight:600;">B2 — Hotel · −18 %</span>
+        <span style="font-size:12px;color:#7FA199;line-height:1.4;">Vaše ceny sú už po zľave.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px;border-top:1px solid rgba(255,255,255,0.08);">
+        <span style="flex:none;width:38px;height:38px;border-radius:10px;background:#9AD3C8;color:#102A26;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">GS</span>
+        <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+          <span style="font-size:13.5px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Grand Hotel SOLE</span>
+          <span style="font-size:11.5px;color:#7FA199;">Nákupné oddelenie</span>
+        </div>
+        <button onClick="{{ onLogout }}" title="Odhlásiť sa" style="flex:none;margin-left:auto;width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:#7FA199;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s ease,color .18s ease;" style-hover="background:rgba(255,255,255,0.06);color:#fff;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div style="display:flex;flex-direction:column;min-width:0;">
+    <!-- TOPBAR -->
+    <header style="position:sticky;top:0;z-index:30;background:rgba(244,246,245,0.85);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid #E2E7E4;padding:14px clamp(20px,3vw,40px);display:flex;align-items:center;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+        <span style="font-size:12px;color:#86827A;">{{ crumb }}</span>
+        <h2 style="font-size:20px;font-weight:600;color:#16201D;letter-spacing:-0.01em;white-space:nowrap;">{{ pageTitle }}</h2>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #E2E7E4;border-radius:10px;padding:9px 13px;width:clamp(180px,24vw,300px);">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#86827A" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input value="{{ query }}" onInput="{{ onSearch }}" placeholder="Hľadať produkt…" style="border:none;background:transparent;outline:none;font-size:14px;color:#16201D;width:100%;" />
+        </div>
+        <button title="Notifikácie" style="position:relative;width:42px;height:42px;border-radius:11px;border:1px solid #E2E7E4;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#3C3A33;transition:border-color .18s ease;" style-hover="border-color:#C9D8D2;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:#163F38;border:2px solid #fff;"></span>
+        </button>
+        <button onClick="{{ openCart }}" style="display:inline-flex;align-items:center;gap:10px;background:#163F38;color:#fff;border:none;border-radius:11px;padding:0 16px;height:42px;cursor:pointer;font-size:14px;font-weight:600;transition:background .18s ease;" style-hover="background:#1E5249;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H3"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+          Košík<sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}"><span style="background:#9AD3C8;color:#102A26;font-size:12px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;">{{ cartCount }}</span></sc-if>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div style="padding:clamp(24px,3vw,40px);flex:1;">
+
+      <!-- ===== DASHBOARD ===== -->
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:clamp(24px,3vw,36px);max-width:1180px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <span style="font-size:12.5px;letter-spacing:0.14em;text-transform:uppercase;color:#1E5249;font-weight:600;">{{ today }}</span>
+            <h1 class="serif" style="font-size:clamp(28px,3.4vw,40px);color:#16201D;letter-spacing:-0.015em;">Dobrý deň, Grand Hotel SOLE</h1>
+          </div>
+          <button onClick="{{ goCatalog }}" style="display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid #E2E7E4;color:#163F38;font-weight:600;font-size:14.5px;padding:12px 18px;border-radius:10px;cursor:pointer;transition:border-color .18s ease,transform .15s ease;" style-hover="border-color:#C9D8D2;transform:translateY(-1px);">Nová objednávka<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+
+        <!-- štatistiky -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:clamp(14px,1.6vw,20px);">
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#EAF1EE;color:#163F38;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3z"/><path d="M14 9h3.5l3 3v3H14z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#1A5B8A;background:#E2EEF7;padding:4px 8px;border-radius:7px;">#2847</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:30px;color:#16201D;line-height:1;">1</span><span style="font-size:13.5px;color:#6E6A62;">Objednávka na ceste</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#EAF1EE;color:#163F38;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7a7 7 0 1 0 0 10"/><path d="M4 10h9M4 14h9"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#9A6B0E;background:#FBF1DC;padding:4px 8px;border-radius:7px;">1 faktúra</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:30px;color:#16201D;line-height:1;">248,60 €</span><span style="font-size:13.5px;color:#6E6A62;">Čaká na úhradu</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#EAF1EE;color:#163F38;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#1E5249;background:#EAF1EE;padding:4px 8px;border-radius:7px;">+8 %</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:30px;color:#16201D;line-height:1;">42</span><span style="font-size:13.5px;color:#6E6A62;">Objednávok v 2026</span></div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:#EAF1EE;color:#163F38;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3z"/><path d="M14 9h3.5l3 3v3H14z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#1E5249;background:#EAF1EE;padding:4px 8px;border-radius:7px;">22. jún</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><span class="serif" style="font-size:30px;color:#16201D;line-height:1;">zajtra</span><span style="font-size:13.5px;color:#6E6A62;">Najbližší rozvoz</span></div>
+          </div>
+        </div>
+
+        <!-- rýchle doobjednanie -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <h2 class="serif" style="font-size:24px;color:#16201D;letter-spacing:-0.01em;">Rýchle doobjednanie</h2>
+              <p style="font-size:14.5px;color:#6E6A62;">Vaše najčastejšie objednávané položky.</p>
+            </div>
+            <button onClick="{{ goCatalog }}" style="background:none;border:none;color:#163F38;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">Celý katalóg<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
+            <sc-for list="{{ reorder }}" as="p" hint-placeholder-count="5">
+              <div style="background:#fff;border:1px solid #E7EBE9;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;transition:border-color .18s ease,box-shadow .18s ease;" style-hover="border-color:#C9D8D2;box-shadow:0 14px 30px -20px rgba(22,40,29,0.35);">
+                <div style="height:96px;border-radius:9px;background:#F7F9F8;display:flex;align-items:center;justify-content:center;padding:8px;"><img src="{{ p.img }}" alt="{{ p.n }}" loading="lazy" style="max-height:100%;max-width:100%;object-fit:contain;mix-blend-mode:multiply;" /></div>
+                <div style="display:flex;flex-direction:column;gap:4px;min-height:54px;">
+                  <span style="font-size:13.5px;font-weight:500;color:#16201D;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.n }}</span>
+                  <span style="font-size:12px;color:#86827A;">{{ p.pack }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span class="serif" style="font-size:18px;color:#163F38;">{{ p.price }}</span>
+                  <button onClick="{{ p.onAdd }}" style="flex:none;width:38px;height:38px;border-radius:10px;border:1px solid #163F38;background:#163F38;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s ease;" style-hover="background:#1E5249;" title="Pridať do košíka">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- posledné objednávky + dodávka -->
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:clamp(16px,2vw,24px);align-items:start;">
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid #EDF0EF;">
+              <h2 class="serif" style="font-size:21px;color:#16201D;">Posledné objednávky</h2>
+              <button onClick="{{ goOrders }}" style="background:none;border:none;color:#163F38;font-weight:600;font-size:14px;cursor:pointer;">Všetky</button>
+            </div>
+            <sc-for list="{{ recentOrders }}" as="o" hint-placeholder-count="4">
+              <button onClick="{{ o.onOpen }}" style="display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:18px;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:16px 22px;border-bottom:1px solid #F1F3F2;transition:background .15s ease;" style-hover="background:#F7F9F8;">
+                <span class="serif" style="font-size:16px;color:#16201D;">#{{ o.id }}</span>
+                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+                  <span style="font-size:14px;color:#3C3A33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ o.summary }}</span>
+                  <span style="font-size:12.5px;color:#86827A;">{{ o.date }} · {{ o.count }} položiek</span>
+                </div>
+                <span style="font-size:11.5px;font-weight:600;color:{{ o.statusFg }};background:{{ o.statusBg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ o.statusLabel }}</span>
+                <span class="serif" style="font-size:16px;color:#16201D;white-space:nowrap;">{{ o.total }}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <div style="background:radial-gradient(120% 120% at 90% -10%,#21564C 0%,#163F38 60%);color:#EAF1EE;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;background:rgba(143,195,185,0.15);color:#9AD3C8;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3z"/><path d="M14 9h3.5l3 3v3H14z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg></span>
+              <span style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#8FC3B9;font-weight:600;">Najbližší rozvoz</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <span class="serif" style="font-size:28px;color:#fff;line-height:1.1;">Zajtra, 22. jún</span>
+              <span style="font-size:14px;color:#A9C2BB;">Objednávka #2847 · doručenie 8:00–12:00</span>
+            </div>
+            <div style="height:1px;background:rgba(255,255,255,0.12);"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#D7E4E0;"><span style="width:8px;height:8px;border-radius:50%;background:#9AD3C8;"></span>Vodič: Jozef · 0919 216 908</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#D7E4E0;"><span style="width:8px;height:8px;border-radius:50%;background:#9AD3C8;"></span>Bez platby vopred — faktúra 14 dní</div>
+            </div>
+            <button onClick="{{ openOrder2847 }}" style="margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#163F38;border:none;border-radius:10px;padding:12px;font-weight:600;font-size:14.5px;cursor:pointer;transition:transform .15s ease;" style-hover="transform:translateY(-1px);">Sledovať objednávku<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== KATALÓG ===== -->
+      <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:grid;grid-template-columns:208px 1fr;gap:clamp(20px,2.5vw,32px);max-width:1280px;align-items:start;">
+        <!-- filter rail -->
+        <div style="position:sticky;top:96px;display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#86827A;font-weight:600;padding:4px 12px 8px;">Kategórie</span>
+          <sc-for list="{{ cats }}" as="c" hint-placeholder-count="9">
+            <button onClick="{{ c.onPick }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:none;border-radius:9px;padding:9px 12px;cursor:pointer;font-size:14px;font-weight:500;background:{{ c.bg }};color:{{ c.fg }};transition:background .15s ease,color .15s ease;">{{ c.label }}<span style="font-size:12px;color:{{ c.countColor }};">{{ c.count }}</span></button>
+          </sc-for>
+        </div>
+
+        <!-- grid -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span style="font-size:14px;color:#6E6A62;">{{ resultLabel }}</span>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#6E6A62;">Zoradiť<select style="border:1px solid #E2E7E4;border-radius:8px;padding:7px 10px;background:#fff;font-size:13.5px;color:#16201D;outline:none;cursor:pointer;"><option>Najobľúbenejšie</option><option>Cena ↑</option><option>Cena ↓</option><option>Názov A–Z</option></select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:clamp(14px,1.6vw,20px);">
+            <sc-for list="{{ products }}" as="p" hint-placeholder-count="9">
+              <div style="background:#fff;border:1px solid #E7EBE9;border-radius:15px;padding:16px;display:flex;flex-direction:column;gap:13px;transition:border-color .18s ease,box-shadow .18s ease;" style-hover="border-color:#C9D8D2;box-shadow:0 16px 34px -22px rgba(22,40,29,0.4);">
+                <div style="position:relative;height:140px;border-radius:11px;background:#F7F9F8;display:flex;align-items:center;justify-content:center;padding:12px;">
+                  <img src="{{ p.img }}" alt="{{ p.n }}" loading="lazy" style="max-height:100%;max-width:100%;object-fit:contain;mix-blend-mode:multiply;" />
+                  <span style="position:absolute;top:0;left:0;background:#163F38;color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;">{{ p.saveBadge }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <span style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#1E5249;font-weight:600;">{{ p.cat }}</span>
+                  <h3 style="font-size:14.5px;font-weight:500;color:#16201D;line-height:1.32;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ p.n }}</h3>
+                  <span style="font-size:12.5px;color:#86827A;">{{ p.pack }} · ID {{ p.id }}</span>
+                </div>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;border-top:1px solid #F1F3F2;padding-top:12px;">
+                  <div style="display:flex;flex-direction:column;gap:1px;">
+                    <span style="font-size:11px;color:#86827A;text-decoration:line-through;">{{ p.list }}</span>
+                    <span class="serif" style="font-size:21px;color:#163F38;line-height:1;">{{ p.price }}</span>
+                    <span style="font-size:11px;color:#6E6A62;">{{ p.unitNote }}</span>
+                  </div>
+                  <button onClick="{{ p.onAdd }}" style="display:{{ p.addDisplay }};align-items:center;gap:7px;background:#EAF1EE;color:#163F38;border:none;border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s ease;" style-hover="background:#DCE9E4;">Pridať<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+                  <div style="display:{{ p.stepDisplay }};align-items:center;gap:0;border:1px solid #163F38;border-radius:10px;overflow:hidden;">
+                    <button onClick="{{ p.onDec }}" style="width:34px;height:38px;border:none;background:#fff;color:#163F38;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">−</button>
+                    <span style="min-width:30px;text-align:center;font-size:15px;font-weight:600;color:#16201D;">{{ p.qty }}</span>
+                    <button onClick="{{ p.onInc }}" style="width:34px;height:38px;border:none;background:#163F38;color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">+</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== OBJEDNÁVKY ===== -->
+      <sc-if value="{{ isOrders }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:20px;max-width:1080px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <sc-for list="{{ orderFilters }}" as="f" hint-placeholder-count="4">
+            <span style="font-size:13.5px;font-weight:500;color:{{ f.fg }};background:{{ f.bg }};border:1px solid {{ f.border }};padding:8px 15px;border-radius:20px;cursor:pointer;">{{ f.label }}</span>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:auto 1.6fr 1fr auto auto;gap:18px;padding:14px 22px;border-bottom:1px solid #EDF0EF;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">
+            <span>Číslo</span><span>Položky</span><span>Dátum</span><span>Stav</span><span style="text-align:right;">Spolu</span>
+          </div>
+          <sc-for list="{{ allOrders }}" as="o" hint-placeholder-count="5">
+            <button onClick="{{ o.onOpen }}" style="display:grid;grid-template-columns:auto 1.6fr 1fr auto auto;align-items:center;gap:18px;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:18px 22px;border-bottom:1px solid #F1F3F2;transition:background .15s ease;" style-hover="background:#F7F9F8;">
+              <span class="serif" style="font-size:16px;color:#16201D;">#{{ o.id }}</span>
+              <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                <div style="flex:none;display:flex;">
+                  <sc-for list="{{ o.thumbs }}" as="t" hint-placeholder-count="3"><span style="width:34px;height:34px;border-radius:8px;background:#F7F9F8;border:1px solid #EDF0EF;margin-left:-8px;display:flex;align-items:center;justify-content:center;padding:3px;overflow:hidden;"><img src="{{ t }}" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;mix-blend-mode:multiply;" /></span></sc-for>
+                </div>
+                <span style="font-size:14px;color:#3C3A33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ o.summary }}</span>
+              </div>
+              <span style="font-size:14px;color:#6E6A62;">{{ o.date }}</span>
+              <span style="font-size:11.5px;font-weight:600;color:{{ o.statusFg }};background:{{ o.statusBg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ o.statusLabel }}</span>
+              <span class="serif" style="font-size:16px;color:#16201D;text-align:right;white-space:nowrap;">{{ o.total }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== DETAIL OBJEDNÁVKY ===== -->
+      <sc-if value="{{ isOrderDetail }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:24px;max-width:1080px;">
+        <button onClick="{{ goOrders }}" style="display:inline-flex;align-items:center;gap:8px;background:none;border:none;color:#6E6A62;font-size:14px;font-weight:500;cursor:pointer;align-self:flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Späť na objednávky</button>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <h1 class="serif" style="font-size:clamp(26px,3vw,36px);color:#16201D;letter-spacing:-0.015em;">Objednávka #{{ od.id }}</h1>
+              <span style="font-size:12px;font-weight:600;color:{{ od.statusFg }};background:{{ od.statusBg }};padding:6px 13px;border-radius:20px;">{{ od.statusLabel }}</span>
+            </div>
+            <span style="font-size:14.5px;color:#6E6A62;">Objednané {{ od.date }} · {{ od.count }} položiek</span>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button onClick="{{ od.onReorder }}" style="display:inline-flex;align-items:center;gap:8px;background:#163F38;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Objednať znova</button>
+            <button style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #E2E7E4;color:#3C3A33;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .18s ease;" style-hover="border-color:#C9D8D2;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Faktúra</button>
+          </div>
+        </div>
+
+        <!-- timeline -->
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:26px clamp(20px,3vw,36px);">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative;">
+            <sc-for list="{{ od.steps }}" as="st" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:12px;position:relative;">
+                <div style="display:flex;align-items:center;gap:0;">
+                  <span style="flex:none;width:34px;height:34px;border-radius:50%;background:{{ st.dotBg }};color:{{ st.dotFg }};border:2px solid {{ st.dotBorder }};display:flex;align-items:center;justify-content:center;z-index:2;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:{{ st.checkDisplay }};"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span style="width:9px;height:9px;border-radius:50%;background:currentColor;display:{{ st.dotDisplay }};"></span>
+                  </span>
+                  <span style="flex:1;height:2px;background:{{ st.lineBg }};"></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <span style="font-size:14px;font-weight:600;color:{{ st.titleColor }};">{{ st.title }}</span>
+                  <span style="font-size:12.5px;color:#86827A;">{{ st.time }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:clamp(16px,2vw,24px);align-items:start;">
+          <!-- položky -->
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+            <div style="padding:18px 22px;border-bottom:1px solid #EDF0EF;"><h2 class="serif" style="font-size:20px;color:#16201D;">Položky objednávky</h2></div>
+            <sc-for list="{{ od.lines }}" as="l" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:16px;padding:16px 22px;border-bottom:1px solid #F1F3F2;">
+                <span style="flex:none;width:54px;height:54px;border-radius:10px;background:#F7F9F8;border:1px solid #EDF0EF;display:flex;align-items:center;justify-content:center;padding:6px;"><img src="{{ l.img }}" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;mix-blend-mode:multiply;" /></span>
+                <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;">
+                  <span style="font-size:14.5px;color:#16201D;font-weight:500;line-height:1.3;">{{ l.n }}</span>
+                  <span style="font-size:12.5px;color:#86827A;">{{ l.pack }} · {{ l.price }} / {{ l.unitLabel }}</span>
+                </div>
+                <span style="font-size:14px;color:#6E6A62;white-space:nowrap;">{{ l.qty }} ×</span>
+                <span class="serif" style="font-size:16px;color:#16201D;white-space:nowrap;min-width:80px;text-align:right;">{{ l.line }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <!-- súhrn + adresa -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:13px;">
+              <h3 style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#86827A;font-weight:600;">Súhrn</h3>
+              <div style="display:flex;justify-content:space-between;font-size:14.5px;color:#3C3A33;"><span>Medzisúčet (bez DPH)</span><span>{{ od.subtotal }}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14.5px;color:#3C3A33;"><span>Doprava</span><span>{{ od.shipping }}</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14.5px;color:#3C3A33;"><span>DPH 23 %</span><span>{{ od.vat }}</span></div>
+              <div style="height:1px;background:#EDF0EF;margin:4px 0;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:15px;font-weight:600;color:#16201D;">Spolu s DPH</span><span class="serif" style="font-size:24px;color:#163F38;">{{ od.total }}</span></div>
+            </div>
+            <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+              <h3 style="font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#86827A;font-weight:600;">Doručenie</h3>
+              <div style="display:flex;flex-direction:column;gap:3px;"><span style="font-size:14.5px;color:#16201D;font-weight:600;">Grand Hotel SOLE</span><span style="font-size:14px;color:#6E6A62;line-height:1.5;">Pri Kúpalisku 1, 949 01 Nitra</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;border-top:1px solid #F1F3F2;padding-top:12px;"><span style="font-size:12.5px;color:#86827A;">Spôsob platby</span><span style="font-size:14px;color:#3C3A33;">Faktúra · splatnosť 14 dní</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== FAKTÚRY ===== -->
+      <sc-if value="{{ isInvoices }}" hint-placeholder-val="{{ false }}">
+      <div class="screen" style="display:flex;flex-direction:column;gap:20px;max-width:1080px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13px;color:#6E6A62;">Po splatnosti</span><span class="serif" style="font-size:28px;color:#16201D;">0,00 €</span></div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13px;color:#6E6A62;">Čaká na úhradu</span><span class="serif" style="font-size:28px;color:#16201D;">248,60 €</span></div>
+          <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13px;color:#6E6A62;">Uhradené (2026)</span><span class="serif" style="font-size:28px;color:#16201D;">4 312,90 €</span></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBE9;border-radius:16px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:auto 1fr auto auto auto;gap:18px;padding:14px 22px;border-bottom:1px solid #EDF0EF;font-size:11.5px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">
+            <span>Faktúra</span><span>Objednávka</span><span>Dátum</span><span>Stav</span><span style="text-align:right;">Suma</span>
+          </div>
+          <sc-for list="{{ invoices }}" as="f" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:18px;padding:17px 22px;border-bottom:1px solid #F1F3F2;">
+              <span class="serif" style="font-size:15px;color:#16201D;">{{ f.no }}</span>
+              <span style="font-size:14px;color:#6E6A62;">#{{ f.order }}</span>
+              <span style="font-size:14px;color:#6E6A62;">{{ f.date }}</span>
+              <span style="font-size:11.5px;font-weight:600;color:{{ f.fg }};background:{{ f.bg }};padding:5px 11px;border-radius:20px;white-space:nowrap;">{{ f.status }}</span>
+              <span style="display:flex;align-items:center;gap:14px;justify-content:flex-end;"><span class="serif" style="font-size:16px;color:#16201D;">{{ f.amount }}</span><button title="Stiahnuť PDF" style="width:34px;height:34px;border-radius:9px;border:1px solid #E2E7E4;background:#fff;color:#163F38;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .18s ease;" style-hover="border-color:#C9D8D2;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></button></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- CART DRAWER -->
+  <sc-if value="{{ cartOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:60;display:flex;justify-content:flex-end;">
+    <div onClick="{{ closeCart }}" style="position:absolute;inset:0;background:rgba(16,34,29,0.4);"></div>
+    <div style="position:relative;width:min(440px,92vw);height:100%;background:#fff;box-shadow:-30px 0 60px -30px rgba(0,0,0,0.4);display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 24px;border-bottom:1px solid #EDF0EF;">
+        <h2 class="serif" style="font-size:22px;color:#16201D;">Košík <span style="font-size:15px;color:#86827A;">· {{ cartCount }} ks</span></h2>
+        <button onClick="{{ closeCart }}" style="width:38px;height:38px;border-radius:10px;border:1px solid #E2E7E4;background:#fff;cursor:pointer;color:#3C3A33;display:flex;align-items:center;justify-content:center;" style-hover="border-color:#C9D8D2;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+
+      <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;overflow-y:auto;padding:8px 24px;">
+        <sc-for list="{{ cartItems }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #F1F3F2;">
+            <span style="flex:none;width:60px;height:60px;border-radius:10px;background:#F7F9F8;border:1px solid #EDF0EF;display:flex;align-items:center;justify-content:center;padding:6px;"><img src="{{ p.img }}" loading="lazy" style="max-width:100%;max-height:100%;object-fit:contain;mix-blend-mode:multiply;" /></span>
+            <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;">
+              <span style="font-size:14px;color:#16201D;font-weight:500;line-height:1.3;">{{ p.n }}</span>
+              <span style="font-size:12.5px;color:#86827A;">{{ p.price }} / {{ p.unitLabel }}</span>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;">
+                <div style="display:flex;align-items:center;border:1px solid #E2E7E4;border-radius:9px;overflow:hidden;">
+                  <button onClick="{{ p.onDec }}" style="width:30px;height:32px;border:none;background:#fff;color:#163F38;cursor:pointer;font-size:17px;">−</button>
+                  <span style="min-width:26px;text-align:center;font-size:14px;font-weight:600;color:#16201D;">{{ p.qty }}</span>
+                  <button onClick="{{ p.onInc }}" style="width:30px;height:32px;border:none;background:#fff;color:#163F38;cursor:pointer;font-size:17px;">+</button>
+                </div>
+                <span class="serif" style="font-size:16px;color:#16201D;">{{ p.line }}</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="border-top:1px solid #EDF0EF;padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#6E6A62;"><span>Medzisúčet (bez DPH)</span><span>{{ cartSubtotal }}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#6E6A62;"><span>Doprava</span><span>{{ cartShipping }}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #EDF0EF;padding-top:12px;"><span style="font-size:15px;font-weight:600;color:#16201D;">Spolu s DPH</span><span class="serif" style="font-size:24px;color:#163F38;">{{ cartTotal }}</span></div>
+        <button onClick="{{ placeOrder }}" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#163F38;color:#fff;border:none;border-radius:11px;padding:15px;font-size:15.5px;font-weight:600;cursor:pointer;transition:background .18s ease;" style-hover="background:#1E5249;">Objednať na faktúru<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <span style="font-size:12.5px;color:#86827A;text-align:center;">Bez platby vopred · splatnosť 14 dní · rozvoz zdarma nad 50 €</span>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;text-align:center;">
+        <span style="width:64px;height:64px;border-radius:50%;background:#F4F6F5;display:flex;align-items:center;justify-content:center;color:#9DB0AA;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H3"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg></span>
+        <div style="display:flex;flex-direction:column;gap:6px;"><h3 class="serif" style="font-size:20px;color:#16201D;">Košík je prázdny</h3><p style="font-size:14px;color:#6E6A62;">Pridajte produkty z katalógu alebo z rýchleho doobjednania.</p></div>
+        <button onClick="{{ goCatalogFromCart }}" style="background:#163F38;color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:14.5px;font-weight:600;cursor:pointer;" style-hover="background:#1E5249;">Prejsť do katalógu</button>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- TOAST -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;background:#102A26;color:#fff;padding:14px 22px;border-radius:12px;box-shadow:0 18px 40px -16px rgba(0,0,0,0.5);display:flex;align-items:center;gap:11px;font-size:14.5px;font-weight:500;">
+    <span style="display:inline-flex;width:22px;height:22px;border-radius:50%;background:#9AD3C8;color:#102A26;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>{{ toast }}
+  </div>
+  </sc-if>
+
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'login', cart: {}, cartOpen: false, activeCat: 'Všetko', query: '', activeOrder: '2847', toast: '' };
+
+  PRODUCTS = [
+    { id:'3466', n:'SIDOLUX PROFESSIONAL na kuchyne – aktívna pena', cat:'Čistiace prostriedky', img:'https://www.partner.humed.sk/image/cache/catalog/01011909-800x800.jpg', pack:'fľaša 500 ml', unit:'ks', price:3.20, list:3.90 },
+    { id:'3405', n:'SIDOLUX ECO na kuchyne 500 ml', cat:'Čistiace prostriedky', img:'https://www.partner.humed.sk/image/cache/catalog/01015004-800x800.jpg', pack:'fľaša 500 ml', unit:'ks', price:2.85, list:3.40 },
+    { id:'3464', n:'SIDOLUX PROFESSIONAL na pripáleniny a krbové sklá', cat:'Čistiace prostriedky', img:'https://www.partner.humed.sk/image/cache/catalog/01011915-800x800.jpg', pack:'fľaša 500 ml', unit:'ks', price:3.10, list:3.80 },
+    { id:'3060', n:'Papierové kozmetické vreckovky CELLART 2-vrst. 100 ks', cat:'Hygienický papier', img:'https://www.partner.humed.sk/image/cache/catalog/9941-2-800x800.jpg', pack:'balík 100 ks', unit:'bal', price:0.62, list:0.85 },
+    { id:'1846', n:'Kozmetické utierky VELVET CLASSIC 2-vrst. 100 ks', cat:'Hygienický papier', img:'https://www.partner.humed.sk/image/cache/catalog/3006-800x800.jpg', pack:'balík 100 ks', unit:'bal', price:1.05, list:1.40 },
+    { id:'3359', n:'Tork SmartOne Mini toaletný papier T9 2-vr. (12 ks)', cat:'Tork', img:'https://www.partner.humed.sk/image/cache/catalog/472193-800x800.jpg', pack:'kartón 12 ks', unit:'kartón', price:38.50, list:44.90 },
+    { id:'3392', n:'Tork papierové utierky do zásobníka W6 (6 ks)', cat:'Tork', img:'https://www.partner.humed.sk/image/cache/catalog/130007-800x800.jpg', pack:'kartón 6 ks', unit:'kartón', price:29.90, list:35.00 },
+    { id:'3373', n:'Tork antimikrobiálne penové mydlo S4 – 1000 ml', cat:'Tork', img:'https://www.partner.humed.sk/image/cache/catalog/520800-800x800.jpg', pack:'náplň 1000 ml', unit:'ks', price:9.20, list:11.50 },
+    { id:'922', n:'Dávkovač mydlovej peny BIELY 500 ml', cat:'Dávkovače', img:'https://www.partner.humed.sk/image/cache/catalog/S5-800x800.jpg', pack:'kus', unit:'ks', price:8.90, list:11.00 },
+    { id:'2219', n:'Zásobník utierok CELLART Auto-Cut čierny', cat:'Dávkovače', img:'https://www.partner.humed.sk/image/cache/catalog/199109-800x800.jpg', pack:'kus', unit:'ks', price:24.50, list:29.90 },
+    { id:'2033', n:'Krém na ruky VITALON Marigold 100 ml', cat:'Kozmetika', img:'https://www.partner.humed.sk/image/cache/catalog/829-800x800.jpg', pack:'tuba 100 ml', unit:'ks', price:1.95, list:2.50 },
+    { id:'3167', n:'Tulipán Negro sprchový gél Algodón & Talco 650 ml', cat:'Kozmetika', img:'https://www.partner.humed.sk/image/cache/catalog/740579-800x800.jpg', pack:'fľaša 650 ml', unit:'ks', price:2.40, list:3.10 },
+    { id:'445', n:'Green Pharmacy tekuté mydlo Olivy a goji 460 ml', cat:'Mydlá', img:'https://www.partner.humed.sk/image/cache/catalog/445-800x800.jpg', pack:'fľaša 460 ml', unit:'ks', price:2.30, list:2.95 },
+    { id:'2298', n:'Fresh Juice krémové mydlo ALMOND 460 ml', cat:'Mydlá', img:'https://www.partner.humed.sk/image/cache/catalog/583-800x800.jpg', pack:'fľaša 460 ml', unit:'ks', price:2.20, list:2.80 },
+    { id:'3134', n:'HDPE vrecia na odpad 60 L čierne 20 ks', cat:'Vrecia', img:'https://www.partner.humed.sk/image/cache/catalog/1913-800x800.jpg', pack:'rolka 20 ks', unit:'rolka', price:3.75, list:4.60 },
+    { id:'2027', n:'HDPE mikroténové vrecia biele 10 L 50 ks', cat:'Vrecia', img:'https://www.partner.humed.sk/image/cache/catalog/257-800x800.jpg', pack:'balík 50 ks', unit:'bal', price:1.40, list:1.90 },
+    { id:'1836', n:'Stierka okenná silikónová 30 cm', cat:'Upratovanie', img:'https://www.partner.humed.sk/image/cache/catalog/6632-800x800.jpg', pack:'kus', unit:'ks', price:4.20, list:5.30 },
+    { id:'1851', n:'Servisný upratovací vozík 2×6 L + 2×25 L, žmýkací lis', cat:'Upratovanie', img:'https://www.partner.humed.sk/image/cache/catalog/1107-1-800x800.jpg', pack:'kus', unit:'ks', price:189.00, list:229.00 }
+  ];
+
+  ORDERS = [
+    { id:'2847', date:'18. jún 2026', status:'na-ceste', items:[{id:'3466',qty:6},{id:'3060',qty:10},{id:'3359',qty:2},{id:'2033',qty:8}] },
+    { id:'2841', date:'11. jún 2026', status:'dorucena', items:[{id:'922',qty:2},{id:'2033',qty:12},{id:'3373',qty:4}] },
+    { id:'2835', date:'2. jún 2026', status:'dorucena', items:[{id:'3134',qty:8},{id:'2027',qty:6},{id:'1836',qty:3}] },
+    { id:'2828', date:'26. máj 2026', status:'dorucena', items:[{id:'3359',qty:3},{id:'3392',qty:2},{id:'2219',qty:1}] },
+    { id:'2814', date:'19. máj 2026', status:'dorucena', items:[{id:'445',qty:10},{id:'2298',qty:10},{id:'3167',qty:6}] }
+  ];
+
+  STATUS = {
+    'prijata':   { label:'Prijatá',      fg:'#1E5249', bg:'#EAF1EE' },
+    'pripravuje':{ label:'Pripravuje sa',fg:'#9A6B0E', bg:'#FBF1DC' },
+    'na-ceste':  { label:'Na ceste',     fg:'#1A5B8A', bg:'#E2EEF7' },
+    'dorucena':  { label:'Doručená',     fg:'#1E5249', bg:'#EAF1EE' }
+  };
+
+  CATS = ['Všetko','Čistiace prostriedky','Hygienický papier','Tork','Dávkovače','Kozmetika','Mydlá','Vrecia','Upratovanie'];
+
+  m(n){ return n.toFixed(2).replace('.', ',') + ' €'; }
+  find(id){ return this.PRODUCTS.find(p => p.id === id); }
+
+  go(screen){ this.setState({ screen, cartOpen:false }); try{ window.scrollTo(0,0); }catch(e){} }
+  addToCart(id){
+    this.setState(s => ({ cart: { ...s.cart, [id]: (s.cart[id]||0) + 1 } }));
+    const p = this.find(id);
+    this.showToast((p ? p.n.split(' ').slice(0,3).join(' ') : 'Položka') + ' pridaná do košíka');
+  }
+  inc(id){ this.setState(s => ({ cart: { ...s.cart, [id]: (s.cart[id]||0) + 1 } })); }
+  dec(id){ this.setState(s => { const q=(s.cart[id]||0)-1; const c={...s.cart}; if(q<=0) delete c[id]; else c[id]=q; return { cart:c }; }); }
+  showToast(msg){ clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(()=>this.setState({toast:''}), 2400); }
+  reorder(orderId){
+    const o = this.ORDERS.find(x=>x.id===orderId); if(!o) return;
+    this.setState(s => { const c={...s.cart}; o.items.forEach(it=>{ c[it.id]=(c[it.id]||0)+it.qty; }); return { cart:c, cartOpen:true }; });
+  }
+  placeOrder(){ this.setState({ cart:{}, cartOpen:false }); this.showToast('Objednávka odoslaná — ozveme sa s potvrdením'); this.setState({ screen:'orders' }); }
+
+  cartCount(){ return Object.values(this.state.cart).reduce((a,b)=>a+b,0); }
+  cartSubtotalNum(){ return Object.keys(this.state.cart).reduce((a,id)=>{ const p=this.find(id); return a + (p? p.price*this.state.cart[id]:0); },0); }
+
+  orderTotalNum(o){ return o.items.reduce((a,it)=>{ const p=this.find(it.id); return a + (p? p.price*it.qty:0); },0); }
+  orderSummary(o){ const first=this.find(o.items[0].id); const more=o.items.length-1; return (first? first.n.split(' ').slice(0,3).join(' '):'') + (more>0? '  +'+more+' ďalšie':''); }
+  orderCount(o){ return o.items.reduce((a,it)=>a+it.qty,0); }
+
+  renderVals(){
+    const screen = this.state.screen;
+    const inApp = screen !== 'login';
+    const navOf = (k)=> ({ bg: screen===k ? 'rgba(255,255,255,0.08)' : 'transparent', fg: screen===k ? '#FFFFFF' : '#9FBAB3' });
+    const cartN = this.cartCount();
+    const subN = this.cartSubtotalNum();
+    const shipN = subN >= 50 || subN === 0 ? 0 : 4.90;
+    const totalN = (subN + shipN) * 1.23;
+
+    const titles = {
+      dashboard:{ t:'Nástenka', c:'Prehľad' },
+      catalog:{ t:'Katalóg produktov', c:'Objednávanie' },
+      orders:{ t:'Objednávky', c:'História' },
+      orderDetail:{ t:'Detail objednávky', c:'Objednávky' },
+      invoices:{ t:'Faktúry', c:'Účtovníctvo' }
+    };
+    const tk = titles[screen] || titles.dashboard;
+
+    const cartIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H3"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>';
+    const truckIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3z"/><path d="M14 9h3.5l3 3v3H14z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg>';
+    const repeatIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
+    const euroIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7a7 7 0 1 0 0 10"/><path d="M4 10h9M4 14h9"/></svg>';
+
+    // mapovanie produktu pre zobrazenie
+    const mapP = (p)=>{ const q=this.state.cart[p.id]||0; return {
+      ...p, price:this.m(p.price), list:this.m(p.list),
+      unitLabel:p.unit, unitNote:'za '+p.unit+' · bez DPH',
+      qty:q, inCart:q>0, notInCart:q<=0,
+      addDisplay: q>0?'none':'inline-flex', stepDisplay: q>0?'flex':'none',
+      saveBadge: p.list>p.price ? ('−'+Math.round((1-p.price/p.list)*100)+' %') : '',
+      onAdd:()=>this.addToCart(p.id), onInc:()=>this.inc(p.id), onDec:()=>this.dec(p.id)
+    };};
+
+    // katalóg filtrovaný
+    const q = this.state.query.trim().toLowerCase();
+    const filtered = this.PRODUCTS.filter(p =>
+      (this.state.activeCat==='Všetko' || p.cat===this.state.activeCat) &&
+      (!q || p.n.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q))
+    );
+
+    const cats = this.CATS.map(c => {
+      const active = this.state.activeCat===c;
+      const count = c==='Všetko' ? this.PRODUCTS.length : this.PRODUCTS.filter(p=>p.cat===c).length;
+      return { label:c, count, bg: active?'#163F38':'transparent', fg: active?'#fff':'#3C3A33', countColor: active?'#9AD3C8':'#9DB0AA', onPick:()=>this.setState({activeCat:c}) };
+    });
+
+    const mapOrder = (o)=>{ const st=this.STATUS[o.status]; return {
+      id:o.id, date:o.date, summary:this.orderSummary(o), count:this.orderCount(o),
+      statusLabel:st.label, statusFg:st.fg, statusBg:st.bg,
+      total:this.m(this.orderTotalNum(o)*1.23),
+      thumbs:o.items.slice(0,3).map(it=>{ const p=this.find(it.id); return p?p.img:''; }),
+      onOpen:()=>this.setState({screen:'orderDetail', activeOrder:o.id, cartOpen:false})
+    };};
+
+    // detail objednávky
+    const od0 = this.ORDERS.find(o=>o.id===this.state.activeOrder) || this.ORDERS[0];
+    const odSt = this.STATUS[od0.status];
+    const odSubN = this.orderTotalNum(od0);
+    const odShipN = odSubN>=50?0:4.90;
+    const stepDefs = [
+      { key:'prijata', title:'Prijatá', time:od0.date+' · 9:24' },
+      { key:'pripravuje', title:'Pripravuje sa', time:od0.status==='prijata'?'čaká':'18. jún · 14:10' },
+      { key:'na-ceste', title:'Na ceste', time:od0.status==='dorucena'?'21. jún · 7:50':(od0.status==='na-ceste'?'dnes · 7:50':'—') },
+      { key:'dorucena', title:'Doručená', time:od0.status==='dorucena'?'21. jún · 10:32':'očak. 22. jún' }
+    ];
+    const order = ['prijata','pripravuje','na-ceste','dorucena'];
+    const curIdx = order.indexOf(od0.status);
+    const checkIcon = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    const dotIcon = '<span style="width:9px;height:9px;border-radius:50%;background:currentColor;display:block;"></span>';
+    const odSteps = stepDefs.map((s,i)=>{
+      const done = i < curIdx, active = i === curIdx;
+      return {
+        title:s.title, time:s.time, checkDisplay: done?'block':'none', dotDisplay: done?'none':'block',
+        dotBg: done?'#163F38':(active?'#fff':'#fff'),
+        dotFg: done?'#fff':(active?'#163F38':'#C7D2CD'),
+        dotBorder: done?'#163F38':(active?'#163F38':'#E2E7E4'),
+        lineBg: i<3 ? (i<curIdx?'#163F38':'#E2E7E4') : 'transparent',
+        titleColor: (done||active)?'#16201D':'#9DB0AA'
+      };
+    });
+    const od = {
+      id:od0.id, date:od0.date, count:this.orderCount(od0),
+      statusLabel:odSt.label, statusFg:odSt.fg, statusBg:odSt.bg,
+      steps:odSteps,
+      lines:od0.items.map(it=>{ const p=this.find(it.id); return { n:p.n, img:p.img, pack:p.pack, price:this.m(p.price), unitLabel:p.unit, qty:it.qty, line:this.m(p.price*it.qty) }; }),
+      subtotal:this.m(odSubN), shipping: odShipN===0?'zdarma':this.m(odShipN), vat:this.m((odSubN+odShipN)*0.23), total:this.m((odSubN+odShipN)*1.23),
+      onReorder:()=>this.reorder(od0.id)
+    };
+
+    const orderFilters = ['Všetky','Na ceste','Doručené','Tento mesiac'].map((l,i)=>({ label:l, fg:i===0?'#fff':'#3C3A33', bg:i===0?'#163F38':'#fff', border:i===0?'#163F38':'#E2E7E4' }));
+
+    const invoices = [
+      { no:'2026114', order:'2841', date:'11. jún 2026', status:'Čaká', fg:'#9A6B0E', bg:'#FBF1DC', amount:'248,60 €' },
+      { no:'2026108', order:'2835', date:'2. jún 2026', status:'Uhradená', fg:'#1E5249', bg:'#EAF1EE', amount:'94,30 €' },
+      { no:'2026101', order:'2828', date:'26. máj 2026', status:'Uhradená', fg:'#1E5249', bg:'#EAF1EE', amount:'212,80 €' },
+      { no:'2026094', order:'2814', date:'19. máj 2026', status:'Uhradená', fg:'#1E5249', bg:'#EAF1EE', amount:'88,10 €' },
+      { no:'2026087', order:'2806', date:'12. máj 2026', status:'Uhradená', fg:'#1E5249', bg:'#EAF1EE', amount:'301,40 €' }
+    ];
+
+    const stats = [
+      { value:'1', label:'Objednávka na ceste', delta:'#2847', deltaColor:'#1A5B8A', deltaBg:'#E2EEF7', icon:truckIcon },
+      { value:'248,60 €', label:'Čaká na úhradu', delta:'1 faktúra', deltaColor:'#9A6B0E', deltaBg:'#FBF1DC', icon:euroIcon },
+      { value:'42', label:'Objednávok v 2026', delta:'+8 %', deltaColor:'#1E5249', deltaBg:'#EAF1EE', icon:repeatIcon },
+      { value:'zajtra', label:'Najbližší rozvoz', delta:'22. jún', deltaColor:'#1E5249', deltaBg:'#EAF1EE', icon:cartIcon }
+    ];
+
+    return {
+      isLogin: !inApp, isApp: inApp,
+      isDashboard: screen==='dashboard', isCatalog: screen==='catalog', isOrders: screen==='orders', isOrderDetail: screen==='orderDetail', isInvoices: screen==='invoices',
+      onLogin:(e)=>{ e.preventDefault(); this.go('dashboard'); },
+      onLogout:()=>this.setState({ screen:'login', cart:{}, cartOpen:false }),
+      goDashboard:()=>this.go('dashboard'), goCatalog:()=>this.go('catalog'), goOrders:()=>this.go('orders'), goInvoices:()=>this.go('invoices'),
+      goCatalogFromCart:()=>this.go('catalog'),
+      nDash:navOf('dashboard'), nCat:navOf('catalog'), nOrd:navOf('orders'), nInv:navOf('invoices'),
+      pageTitle:tk.t, crumb:tk.c,
+      query:this.state.query, onSearch:(e)=>this.setState({query:e.target.value, screen:'catalog'}),
+      cartOpen:this.state.cartOpen, openCart:()=>this.setState({cartOpen:true}), closeCart:()=>this.setState({cartOpen:false}),
+      hasCart: cartN>0, cartEmpty: cartN===0, cartCount:cartN,
+      today:'Sobota · 21. jún 2026',
+      stats,
+      reorder: ['3466','3060','3359','922','2033'].map(id=>mapP(this.find(id))),
+      recentOrders: this.ORDERS.slice(0,4).map(mapOrder),
+      allOrders: this.ORDERS.map(mapOrder),
+      openOrder2847:()=>this.setState({screen:'orderDetail', activeOrder:'2847', cartOpen:false}),
+      cats,
+      products: filtered.map(mapP),
+      resultLabel: filtered.length + ' produktov · cenová úroveň B2 (−18 %)',
+      orderFilters, allOrdersTitle:'Objednávky',
+      od,
+      invoices,
+      cartItems: Object.keys(this.state.cart).map(id=>{ const p=this.find(id); const qq=this.state.cart[id]; return { n:p.n, img:p.img, unitLabel:p.unit, price:this.m(p.price), qty:qq, line:this.m(p.price*qq), onInc:()=>this.inc(id), onDec:()=>this.dec(id) }; }),
+      cartSubtotal:this.m(subN), cartShipping: shipN===0?'zdarma':this.m(shipN), cartTotal:this.m(totalN),
+      placeOrder:()=>this.placeOrder(),
+      toast:this.state.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
