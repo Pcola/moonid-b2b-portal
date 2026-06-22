@@ -5,10 +5,9 @@ import { ContactForm } from "@/components/site/contact-form";
 
 /* ───────── dáta ───────── */
 const STATS = [
-  { n: "9 rokov", l: "na trhu (od 2017)" },
-  { n: "1 600+", l: "položiek v ponuke" },
-  { n: "Vlastný", l: "rozvoz v regióne" },
-  { n: "Nové Zámky", l: "a Nitriansky kraj" },
+  { n: "Od 2017", l: "9 rokov na trhu" },
+  { n: "1 600+", l: "produktov v ponuke" },
+  { n: "Vlastný rozvoz", l: "Nové Zámky a Nitriansky kraj" },
 ];
 const BRANDS = [
   { src: "/images/logo-tork.png", alt: "Tork" },
@@ -18,17 +17,6 @@ const BRANDS = [
   { src: "/images/logo-vileda.png", alt: "Vileda Professional" },
   { src: "/images/logo-leifheit.png", alt: "Leifheit" },
   { src: "/images/logo-sanytol.png", alt: "Sanytol" },
-];
-const CATEGORIES = [
-  { t: "Čistiace a dezinfekčné prostriedky", d: "Univerzálne čističe, dezinfekcia povrchov a rúk, kúpeľňa a WC, profesionálna chémia." },
-  { t: "Papierový program", d: "Toaletný papier, papierové utierky, uteráky, servítky, vreckovky." },
-  { t: "Dávkovače a zásobníky", d: "Systémy na mydlo a penu, papier, dezinfekciu, sušiče rúk aj osviežovače vzduchu." },
-  { t: "Mydlá a hygiena rúk", d: "Tekuté a penové mydlá, dezinfekčné gély, krémy na ruky, čistiace pasty." },
-  { t: "Upratovacie pomôcky a OOPP", d: "Mopy, vedrá a vozíky, handry a mikroutierky, WC kefy, rukavice a ochranné pomôcky." },
-  { t: "Odpadové hospodárstvo", d: "Vrecia na odpad všetkých objemov, koše, mikroténové sáčky a tašky." },
-  { t: "Gastro a jednorazový program", d: "Menu boxy, jednorazový riad a príbory, obaly, fólie, alobaly a papiere na pečenie." },
-  { t: "Pranie a starostlivosť o textil", d: "Pracie prášky a gély, aviváže, odstraňovače škvŕn, prostriedky na žehlenie." },
-  { t: "Kancelária a občerstvenie", d: "Písacie a archivačné potreby, papier, káva, čaje, voda a pochutiny do prevádzok." },
 ];
 const RENTAL = [
   { t: "Vyberieme a osadíme", d: "Navrhneme dávkovače na mydlo, papierové utierky, toaletný papier a dezinfekciu podľa vašej prevádzky a osadíme ich." },
@@ -178,15 +166,6 @@ export function SortimentSection() {
           <div className="relative min-h-[280px] overflow-hidden rounded-2xl border border-line">
             <Image src="/images/rozvoz.jpg" alt="Vlastný rozvoz Moonid — dodávka naložená tovarom" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
           </div>
-        </div>
-        <p className="mb-4 text-[14px] font-semibold uppercase tracking-[0.14em] text-muted-2">Kategórie sortimentu</p>
-        <div className="flex flex-wrap gap-2.5">
-          {CATEGORIES.map((c) => (
-            <Link key={c.t} href="/produkty" className="rounded-full border border-line bg-white px-4 py-2 text-[14px] font-medium text-muted transition hover:border-brand/40 hover:text-ink">{c.t}</Link>
-          ))}
-        </div>
-        <div className="mt-8">
-          <Link href="/produkty" className="inline-flex items-center gap-2.5 rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">Pozrieť celý katalóg <Arrow /></Link>
         </div>
       </div>
     </section>
@@ -452,15 +431,13 @@ export function KontaktSection() {
 /* ───────── CTA pás ───────── */
 export function CtaBand() {
   return (
-    <section style={{ padding: "clamp(56px,7vw,96px) 0" }}>
-      <div className={wrap}>
-        <div className="flex flex-col items-center gap-6 rounded-[24px] border border-line bg-cream px-6 py-[clamp(40px,6vw,72px)] text-center">
-          <h2 className="max-w-[680px] text-ink" style={h2style}>Pripravíme ponuku na mieru vašej prevádzke</h2>
-          <p className="max-w-[560px] text-muted-3" style={{ fontSize: "clamp(16px,1.6vw,18px)", lineHeight: 1.6 }}>Napíšte nám, čo potrebujete — ozveme sa spravidla do 24 hodín. Bez záväzkov.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/kontakt" className="rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">Vyžiadať cenovú ponuku</Link>
-            <Link href="/o-nas" className="rounded-[10px] border border-line bg-white px-[24px] py-[14px] text-base font-semibold text-ink transition hover:border-brand/40">Viac o nás</Link>
-          </div>
+    <section className="border-t border-line bg-cream" style={{ padding: "clamp(64px,9vw,120px) 0" }}>
+      <div className={`${wrap} flex flex-col items-center gap-6 text-center`}>
+        <h2 className="max-w-[680px] text-ink" style={h2style}>Pripravíme ponuku na mieru vašej prevádzke</h2>
+        <p className="max-w-[560px] text-muted-3" style={{ fontSize: "clamp(16px,1.6vw,18px)", lineHeight: 1.6 }}>Napíšte nám, čo potrebujete — ozveme sa spravidla do 24 hodín. Bez záväzkov.</p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link href="/kontakt" className="rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">Vyžiadať cenovú ponuku</Link>
+          <Link href="/o-nas" className="rounded-[10px] border border-line bg-white px-[24px] py-[14px] text-base font-semibold text-ink transition hover:border-brand/40">Viac o nás</Link>
         </div>
       </div>
     </section>
