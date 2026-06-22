@@ -19,6 +19,8 @@
     "match:sources": "tsx scripts/pohoda/match-sources.ts",
     "export:candidates": "tsx scripts/pohoda/export-candidates.ts",
     "apply:verdicts": "tsx scripts/pohoda/apply-verdicts.ts",
+    "export:broad": "tsx scripts/pohoda/export-broad-candidates.ts",
+    "apply:broad": "tsx scripts/pohoda/apply-broad.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {
