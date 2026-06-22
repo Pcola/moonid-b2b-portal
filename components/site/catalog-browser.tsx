@@ -46,8 +46,12 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
         {shown.map((p) => (
           <div key={p.id} className="card-hover flex flex-col overflow-hidden rounded-[14px] border border-line bg-white">
             <div className="flex aspect-square items-center justify-center bg-cream p-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.i} alt={p.n} loading="lazy" className="max-h-full max-w-full object-contain" />
+              {p.i ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.i} alt={p.n} loading="lazy" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
+              )}
             </div>
             <div className="flex flex-1 flex-col gap-1.5 p-4">
               <span className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-2 line-clamp-1">{p.c}</span>
