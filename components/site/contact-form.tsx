@@ -12,6 +12,8 @@ const SEGMENTS = [
   "Iné",
 ];
 
+const TYPY = ["Cenová ponuka", "Prenájom dávkovačov", "Prístup do portálu", "Iné"];
+
 const inputCls =
   "border-0 border-b border-[#d2d8d4] bg-transparent px-0.5 py-2 text-[15.5px] text-ink outline-none transition-colors focus:border-brand";
 const labelCls =
@@ -20,14 +22,26 @@ const labelCls =
 export function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
-    // TODO: napojiť reálne odoslanie (Resend / API route /api/dopyt)
-    await new Promise((r) => setTimeout(r, 600));
-    setSubmitting(false);
-    setSubmitted(true);
+    setError(false);
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+    try {
+      const res = await fetch("/api/dopyt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("send failed");
+      setSubmitted(true);
+    } catch {
+      setError(true);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
@@ -60,6 +74,16 @@ export function ContactForm() {
             <input name="firma" type="text" required placeholder="Názov firmy alebo prevádzky" className={inputCls} />
           </label>
         </div>
+        <div className="grid gap-[26px] sm:grid-cols-2">
+          <label className={labelCls}>Mesto / PSČ prevádzky
+            <input name="lokalita" type="text" placeholder="napr. Nové Zámky" className={inputCls} />
+          </label>
+          <label className={labelCls}>Typ dopytu
+            <select name="typ" className={inputCls} defaultValue="Cenová ponuka">
+              {TYPY.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+        </div>
         <label className={labelCls}>Segment
           <select name="segment" className={inputCls} defaultValue="">
             <option value="">Vyberte segment</option>
@@ -77,6 +101,11 @@ export function ContactForm() {
             <input name="telefon" type="tel" placeholder="09xx xxx xxx" className={inputCls} />
           </label>
         </div>
+        <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-muted-3">
+          <input name="gdpr" type="checkbox" required className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+          <span>Súhlasím so spracovaním osobných údajov za účelom vybavenia dopytu (<a href="#" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>). *</span>
+        </label>
+        {error && <p className="text-[14px] text-[#a23b2a]">Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908.</p>}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-4">
           <button type="submit" disabled={submitting} className="inline-flex items-center gap-2.5 rounded-[9px] bg-brand px-7 py-[15px] text-[15.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-70">
             {submitting ? "Odosielam…" : "Odoslať dopyt"}

@@ -7,10 +7,10 @@ import { ContactForm } from "@/components/site/contact-form";
 import { CookieBanner } from "@/components/site/cookie-banner";
 
 const STATS = [
-  { n: "2017", l: "Na trhu od" },
+  { n: "9 rokov", l: "na trhu (od 2017)" },
+  { n: "1 600+", l: "položiek v ponuke" },
   { n: "Vlastný", l: "rozvoz v regióne" },
-  { n: "do 2. dňa", l: "doručenie tovaru" },
-  { n: "1", l: "dodávateľ pre celú prevádzku" },
+  { n: "Nové Zámky", l: "a Nitriansky kraj" },
 ];
 
 const BRANDS = [
@@ -35,6 +35,36 @@ const CATEGORIES = [
   { t: "Kancelária a občerstvenie", d: "Písacie a archivačné potreby, papier, káva, čaje, voda a pochutiny do prevádzok." },
 ];
 
+const RENTAL = [
+  { t: "Vyberieme a osadíme", d: "Navrhneme dávkovače na mydlo, papierové utierky, toaletný papier a dezinfekciu podľa vašej prevádzky a osadíme ich." },
+  { t: "Dopĺňame pri rozvoze", d: "Pri pravidelnom závoze sledujeme spotrebu a dopĺňame správne náplne — nikdy vám nedôjde mydlo na toaletách." },
+  { t: "Jeden štandard, nula starostí", d: "Rovnaký systém naprieč celou prevádzkou. Žiadne hľadanie kompatibilných náplní, žiadna investícia do zariadení." },
+];
+
+const STEPS = [
+  { n: "1", t: "Pošlete dopyt", d: "Napíšte nám, čo potrebujete, alebo pošlite zoznam položiek. Nezáväzne." },
+  { n: "2", t: "Pripravíme ponuku na mieru", d: "Ozveme sa s cenovou ponukou a v prípade záujmu navrhneme aj osadenie dávkovačov." },
+  { n: "3", t: "Prvý rozvoz a prístup do portálu", d: "Privezieme prvú objednávku vlastným rozvozom a zriadime vám prístup do portálu. Faktúra so splatnosťou 14 dní." },
+];
+
+const TERMS = [
+  { k: "Oblasť rozvozu", v: "Okres Nové Zámky a Nitriansky kraj — vlastným rozvozom." },
+  { k: "Doprava", v: "Vlastným rozvozom v rámci pravidelného závozu." },
+  { k: "Splatnosť", v: "Faktúra so splatnosťou 14 dní, bez platby vopred." },
+  { k: "Dodacia doba", v: "Skladové položky spravidla do 2. pracovného dňa, ostatné na objednávku s potvrdeným termínom." },
+  { k: "Frekvencia závozu", v: "Pravidelný rozvoz v dohodnutých dňoch podľa vašej spotreby." },
+  { k: "Pre koho", v: "Pre firmy a prevádzky (na IČO), na faktúru." },
+];
+
+const FAQ = [
+  { q: "Kam rozvážate?", a: "Vlastným rozvozom zásobujeme okres Nové Zámky a Nitriansky kraj. Ak si nie ste istí, či sme vo vašej oblasti, ozvite sa nám." },
+  { q: "Požičiavate dávkovače?", a: "Áno. Dávkovače vám osadíme a vy platíte len náplne, ktoré dopĺňame pri pravidelnom rozvoze — bez investície do zariadení." },
+  { q: "Ako rýchlo dodáte?", a: "Skladové položky spravidla do 2. pracovného dňa. Položky na objednávku privezieme v potvrdenom termíne pri najbližšom závoze." },
+  { q: "Musím mať firmu / IČO?", a: "Áno, dodávame pre prevádzky a firmy na faktúru so splatnosťou." },
+  { q: "Ako získam prístup do portálu?", a: "Prístup vám zriadime po prvej objednávke. Potom si náplne a tovar doobjednáte jedným klikom za svoje dohodnuté ceny." },
+  { q: "Dá sa objednať aj menšie množstvo?", a: "Áno. Objednávky riešime individuálne podľa frekvencie vášho závozu — napíšte nám, čo potrebujete." },
+];
+
 const SEGMENTS = [
   { t: "Hotely, penzióny a ubytovanie", d: "Amenity, vybavenie izieb a kompletná prevádzková hygiena.", p: <><path d="M3 8v9" /><path d="M3 17h18" /><path d="M3 12h13a4 4 0 0 1 4 4v1" /><path d="M6.5 12V9.5a1 1 0 0 1 1-1H11a1 1 0 0 1 1 1V12" /></> },
   { t: "Wellness, kúpaliská a fitness", d: "Bazénová chémia, osviežovače, posilňovne a športoviská.", p: <path d="M12 3s6 6.4 6 10.5a6 6 0 0 1-12 0C6 9.4 12 3 12 3z" /> },
@@ -51,13 +81,14 @@ const PORTAL_FEATS = [
   "Opakované objednávky jedným klikom",
   "História objednávok a faktúry",
   "Stav rozvozu a doručenia",
+  "Moje dávkovače — náplne na jeden klik",
 ];
 
 const WHY = [
-  { t: "Všetko na jednom mieste", d: "Hygiena, čistenie, gastro aj hotelové vybavenie od jedného dodávateľa.", p: <><path d="M12 3l8 4-8 4-8-4 8-4z" /><path d="M4 11l8 4 8-4" /><path d="M4 15l8 4 8-4" /></> },
-  { t: "Vlastný rozvoz", d: "Pravidelný a flexibilný závoz v regióne.", p: <><path d="M3 6h11v9H3z" /><path d="M14 9h3.5l3 3v3H14z" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17.5" cy="17.5" r="1.6" /></> },
-  { t: "Faktúra so splatnosťou", d: "Štandardné B2B podmienky bez platby vopred.", p: <><path d="M6 3h8l4 4v14l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.5z" /><path d="M14 3v4h4" /><path d="M9 11h6M9 14.5h4" /></> },
-  { t: "Osobný prístup", d: "Jeden človek, ktorý vašu prevádzku pozná; dodáme aj menšie objednávky.", p: <><circle cx="12" cy="8" r="3.2" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></> },
+  { t: "Osobný prístup", d: "Jeden človek, ktorý vašu prevádzku pozná — vybavíte všetko jedným telefonátom.", p: <><circle cx="12" cy="8" r="3.2" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></> },
+  { t: "Jeden partner pre celý objekt", d: "Hygiena, čistenie, gastro aj hotelové vybavenie z jedného miesta — namiesto piatich dodávateľov.", p: <><path d="M12 3l8 4-8 4-8-4 8-4z" /><path d="M4 11l8 4 8-4" /><path d="M4 15l8 4 8-4" /></> },
+  { t: "Stabilný partner od 2017", d: "Roky skúseností a desiatky spokojných prevádzok v regióne.", p: <><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 21l-4.9 2.6.9-5.5-4-3.9 5.5-.8z" /></> },
+  { t: "Spoľahlivé a načas", d: "Pravidelný vlastný rozvoz — tovar máte načas, bez výpadkov a čakania na kuriéra.", p: <><path d="M3 6h11v9H3z" /><path d="M14 9h3.5l3 3v3H14z" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17.5" cy="17.5" r="1.6" /></> },
 ];
 
 const CLIENTS = [
@@ -67,13 +98,21 @@ const CLIENTS = [
   { src: "/images/klient-loko.png", alt: "LOKO trans Slovakia", h: 70 },
 ];
 
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+};
+
 const Ico = ({ children }: { children: React.ReactNode }) => (
   <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+);
+const Check = ({ stroke = "#9ad3c8" }: { stroke?: string }) => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
 );
 
 const sectionPad = { padding: "clamp(64px,9vw,120px) 0" };
 const wrap = "mx-auto max-w-[1240px] px-5 sm:px-8";
-const h2cls = "text-ink";
 const h2style = { fontSize: "clamp(30px,4.2vw,52px)", lineHeight: 1.06, letterSpacing: "-0.015em" };
 const eyebrow = "text-[12.5px] font-semibold uppercase tracking-[0.16em] text-brand-2";
 
@@ -88,21 +127,21 @@ export default function Home() {
           <div className="absolute inset-0" style={{ background: "linear-gradient(100deg,rgba(16,34,29,0.94) 0%,rgba(18,40,32,0.82) 30%,rgba(20,55,48,0.45) 56%,rgba(20,55,48,0.12) 100%)" }} />
           <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(16,34,29,0.42) 0%,rgba(16,34,29,0) 26%,rgba(16,34,29,0.30) 100%)" }} />
           <div className={`relative z-[2] w-full ${wrap}`} style={{ paddingTop: "clamp(96px,12vw,150px)", paddingBottom: "clamp(56px,7vw,96px)" }}>
-            <div className="hero-stagger flex max-w-[780px] flex-col items-start gap-[26px]">
+            <div className="hero-stagger flex max-w-[800px] flex-col items-start gap-[26px]">
               <span className="inline-flex items-center gap-2.5 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-mint">
                 <span className="h-[1.5px] w-[26px] bg-mint" /> Dodávateľ pre vašu prevádzku · od 2017
               </span>
               <h1 className="text-white" style={{ fontSize: "clamp(40px,6vw,78px)", lineHeight: 1.02, letterSpacing: "-0.02em", textWrap: "balance" }}>
                 Hygiena, čistenie a vybavenie pre vašu prevádzku
               </h1>
-              <p className="max-w-[600px] text-[#d7e4e0]" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>
-                Čistiace a hygienické prostriedky, papierový program, dávkovače, gastro a kancelárske potreby — aj hotelová kozmetika a vybavenie. Jeden dodávateľ, pravidelný rozvoz, faktúra so splatnosťou.
+              <p className="max-w-[620px] text-[#d7e4e0]" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>
+                Jeden dodávateľ pre hotely, wellness, gastro, úrady aj školy v okrese Nové Zámky a Nitrianskom kraji. Vlastný rozvoz, dávkovače na prenájom a objednávky na faktúru.
               </p>
               <div className="mt-0.5 flex flex-wrap items-center gap-3.5">
-                <a href="#kontakt" className="rounded-[10px] bg-white px-[26px] py-[15px] text-base font-semibold text-brand transition hover:-translate-y-px">Vyžiadať cenovú ponuku</a>
-                <Link href="/login" className="inline-flex items-center gap-2.5 rounded-[10px] border border-white/40 px-[22px] py-[15px] text-base font-semibold text-white transition hover:border-white hover:bg-white/10">
-                  Vstúpiť do portálu
-                </Link>
+                <a href="#kontakt" className="rounded-[10px] bg-white px-[26px] py-[15px] text-base font-semibold text-brand transition hover:-translate-y-px">Získať ponuku pre vašu prevádzku</a>
+                <a href="#ako-zacat" className="inline-flex items-center gap-2.5 rounded-[10px] border border-white/40 px-[22px] py-[15px] text-base font-semibold text-white transition hover:border-white hover:bg-white/10">
+                  Ako sa stať zákazníkom
+                </a>
               </div>
               <div className="mt-2.5 flex flex-wrap gap-x-[clamp(20px,3vw,48px)] gap-y-5 border-t border-white/20 pt-6">
                 {STATS.map((s) => (
@@ -124,7 +163,7 @@ export default function Home() {
               <div className="brand-track">
                 {[...BRANDS, ...BRANDS].map((b, i) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={i} src={b.src} alt={i < BRANDS.length ? b.alt : ""} aria-hidden={i >= BRANDS.length} className={`brand-logo${i >= BRANDS.length ? " brand-dup" : ""}`} />
+                  <img key={i} src={b.src} alt={i < BRANDS.length ? b.alt : ""} aria-hidden={i >= BRANDS.length} loading="lazy" className={`brand-logo${i >= BRANDS.length ? " brand-dup" : ""}`} />
                 ))}
               </div>
             </div>
@@ -136,7 +175,7 @@ export default function Home() {
           <div className={wrap}>
             <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[680px]">
               <span className={eyebrow}>Sortiment</span>
-              <h2 className={`mt-3.5 ${h2cls}`} style={{ ...h2style, textWrap: "balance" }}>Kompletný sortiment pre hygienu, čistenie a chod vašej prevádzky</h2>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Kompletný sortiment pre hygienu, čistenie a chod vašej prevádzky</h2>
             </div>
             <div className="mb-[clamp(16px,2vw,24px)] grid gap-[clamp(16px,2vw,24px)] lg:grid-cols-2">
               <div className="flex min-h-[280px] flex-col justify-between gap-7 rounded-2xl bg-brand p-[clamp(28px,3.5vw,44px)] text-mintbg">
@@ -144,8 +183,8 @@ export default function Home() {
                   <span className="text-white" style={{ fontSize: "clamp(34px,4vw,48px)", lineHeight: 1 }}>Cez 1 600 položiek<br />v sortimente</span>
                   <p className="max-w-[420px] text-[15.5px] leading-relaxed text-[#a9c2bb]">Najpredávanejšie produkty držíme skladom, zvyšok sortimentu objednáme pri vašej objednávke — od čistiacej chémie a papierového programu až po dávkovače, gastro a kancelárske potreby.</p>
                 </div>
-                <a href="#kontakt" className="inline-flex items-center gap-2.5 self-start rounded-[10px] bg-white px-[22px] py-[13px] text-[15px] font-semibold text-brand transition hover:-translate-y-px">Stiahnuť kompletný cenník (PDF)
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v12M6 11l6 6 6-6M4 20h16" /></svg>
+                <a href="#kontakt" className="inline-flex items-center gap-2.5 self-start rounded-[10px] bg-white px-[22px] py-[13px] text-[15px] font-semibold text-brand transition hover:-translate-y-px">Vyžiadať cenník na mieru
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </a>
               </div>
               <div className="relative min-h-[280px] overflow-hidden rounded-2xl border border-line">
@@ -166,12 +205,82 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ===== DÁVKOVAČE NA PRENÁJOM ===== */}
+        <section id="davkovace" style={sectionPad}>
+          <div className={wrap}>
+            <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[760px]">
+              <span className={eyebrow}>Dávkovače a náplne</span>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Dávkovače vám osadíme. Platíte len náplne.</h2>
+              <p className="mt-4 text-muted-3" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>Žiadna investícia do vybavenia, žiadne riešenie kompatibility — postaráme sa o dávkovače na mydlo, papier aj dezinfekciu naprieč celou prevádzkou.</p>
+            </div>
+            <div className="reveal-cascade grid gap-[clamp(16px,2vw,24px)] md:grid-cols-3">
+              {RENTAL.map((r, i) => (
+                <div key={r.t} className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-[clamp(26px,3vw,34px)]">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-mintbg text-[15px] font-semibold text-brand">{i + 1}</span>
+                  <h3 className="text-[19px] font-semibold text-ink">{r.t}</h3>
+                  <p className="text-[15.5px] leading-relaxed text-muted">{r.d}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8">
+              <a href="#kontakt" className="inline-flex items-center gap-2.5 rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">
+                Chcem dávkovače pre svoju prevádzku
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== AKO ZAČAŤ ===== */}
+        <section id="ako-zacat" className="border-y border-line bg-cream" style={sectionPad}>
+          <div className={wrap}>
+            <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[680px]">
+              <span className={eyebrow}>Ako začať</span>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Ako sa stať zákazníkom</h2>
+              <p className="mt-4 text-muted-3" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>Od prvého dopytu k pravidelným dodávkam v troch krokoch — bez záväzkov a bez zbytočnej byrokracie.</p>
+            </div>
+            <div className="reveal-cascade grid gap-[clamp(16px,2vw,24px)] md:grid-cols-3">
+              {STEPS.map((s) => (
+                <div key={s.n} className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-[clamp(26px,3vw,34px)]">
+                  <span className="text-brand-2" style={{ fontSize: "clamp(40px,4vw,56px)", lineHeight: 1 }}>{s.n}</span>
+                  <h3 className="text-[19px] font-semibold text-ink">{s.t}</h3>
+                  <p className="text-[15.5px] leading-relaxed text-muted">{s.d}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8">
+              <a href="#kontakt" className="inline-flex items-center gap-2.5 rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">
+                Vyžiadať nezáväznú ponuku
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== PODMIENKY ===== */}
+        <section id="podmienky" style={sectionPad}>
+          <div className={wrap}>
+            <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[680px]">
+              <span className={eyebrow}>Podmienky spolupráce</span>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Jasné B2B podmienky bez prekvapení</h2>
+            </div>
+            <dl className="grid gap-x-[clamp(24px,4vw,64px)] gap-y-0 sm:grid-cols-2">
+              {TERMS.map((t) => (
+                <div key={t.k} className="flex flex-col gap-1 border-t border-line py-5">
+                  <dt className="text-[12px] font-semibold uppercase tracking-[0.14em] text-brand-2">{t.k}</dt>
+                  <dd className="text-[15.5px] leading-relaxed text-muted">{t.v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
         {/* ===== HOTEL ===== */}
-        <section id="hotel" style={sectionPad}>
+        <section id="hotel" className="border-t border-line bg-cream" style={sectionPad}>
           <div className={wrap}>
             <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[720px]">
               <span className={eyebrow}>Aj pre hotely a wellness</span>
-              <h2 className={`mt-3.5 ${h2cls}`} style={{ ...h2style, textWrap: "balance" }}>Hotelové vybavenie a kozmetika</h2>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Hotelové vybavenie a kozmetika</h2>
               <p className="mt-4 text-muted-3" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>Okrem bežnej prevádzkovej hygieny zabezpečíme aj špecializované hotelové vybavenie a kozmetiku — všetko, čo robí pobyt hosťa príjemným.</p>
             </div>
             <div className="reveal grid gap-[clamp(20px,2.5vw,28px)] lg:grid-cols-2">
@@ -190,17 +299,16 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-[14.5px] text-[#6b675f]">Doplníme aj chémiu do bazénov a víriviek a osviežovače vzduchu pre wellness priestory.</p>
           </div>
         </section>
 
         {/* ===== PRE KOHO ===== */}
-        <section id="prekoho" className="border-t border-line bg-cream" style={sectionPad}>
+        <section id="prekoho" style={sectionPad}>
           <div className={wrap}>
             <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[680px]">
               <span className={eyebrow}>Pre koho dodávame</span>
-              <h2 className={`mt-3.5 ${h2cls}`} style={{ ...h2style, textWrap: "balance" }}>Partner pre prevádzky naprieč odvetviami</h2>
-              <p className="mt-4 text-muted-3" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>Zásobujeme širokú škálu prevádzok — od ubytovania a gastra cez priemysel, obchod a služby až po školy a samosprávu.</p>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Regionálny partner pre prevádzky naprieč odvetviami</h2>
+              <p className="mt-4 text-muted-3" style={{ fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.55 }}>Zásobujeme širokú škálu prevádzok v regióne — od ubytovania a gastra cez priemysel, obchod a služby až po školy a samosprávu.</p>
             </div>
             <div className="reveal-cascade grid gap-[clamp(16px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
               {SEGMENTS.map((s) => (
@@ -213,7 +321,13 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-[14.5px] text-muted-2">A mnohé ďalšie prevádzky — od malých kaderníctiev po priemyselné haly. Neviete zaradiť svoju prevádzku? Ozvite sa, pripravíme ponuku na mieru.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a href="#kontakt" className="inline-flex items-center gap-2.5 rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">
+                Pripravíme ponuku pre vašu prevádzku
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+              <span className="text-[14.5px] text-muted-2">Neviete zaradiť svoju prevádzku? Ozvite sa — pripravíme ponuku na mieru.</span>
+            </div>
           </div>
         </section>
 
@@ -224,15 +338,12 @@ export default function Home() {
               <div aria-hidden="true" className="pointer-events-none absolute select-none font-bold" style={{ right: "-2%", bottom: "-34%", fontSize: "clamp(240px,32vw,420px)", lineHeight: 0.8, letterSpacing: "-0.05em", color: "rgba(255,255,255,0.05)" }}>m</div>
               <div className="relative z-[2] grid items-center gap-[clamp(36px,5vw,72px)] p-[clamp(34px,5vw,72px)] lg:grid-cols-[1.15fr_0.85fr]">
                 <div className="flex flex-col gap-[22px]">
-                  <span className="inline-flex items-center gap-2.5 text-[12.5px] font-semibold uppercase tracking-[0.16em] text-mint"><span className="h-[1.5px] w-[26px] bg-mint" /> Pre stálych zákazníkov</span>
+                  <span className="inline-flex items-center gap-2.5 text-[12.5px] font-semibold uppercase tracking-[0.16em] text-mint"><span className="h-[1.5px] w-[26px] bg-mint" /> Objednávkový portál</span>
                   <h2 className="text-white" style={{ fontSize: "clamp(30px,4.2vw,50px)", lineHeight: 1.06, letterSpacing: "-0.015em", textWrap: "balance" }}>Objednávajte online cez B2B portál</h2>
-                  <p className="max-w-[520px] text-[#b7ccc6]" style={{ fontSize: "clamp(16px,1.6vw,18.5px)", lineHeight: 1.6 }}>Existujúci zákazníci si v portáli pozrú svoje dohodnuté ceny, históriu objednávok aj faktúry — a celý sortiment doobjednajú jedným klikom, kedykoľvek.</p>
-                  <div className="mt-1 grid max-w-[540px] grid-cols-1 gap-x-7 gap-y-4 sm:grid-cols-2">
+                  <p className="max-w-[520px] text-[#b7ccc6]" style={{ fontSize: "clamp(16px,1.6vw,18.5px)", lineHeight: 1.6 }}>Po prvej objednávke vám zriadime prístup do portálu — pozriete si svoje dohodnuté ceny, históriu aj faktúry a celý sortiment doobjednáte jedným klikom. Portál pozná vašu prevádzku, takže žiadne hľadanie kódov náplní.</p>
+                  <div className="mt-1 grid max-w-[560px] grid-cols-1 gap-x-7 gap-y-4 sm:grid-cols-2">
                     {PORTAL_FEATS.map((f) => (
-                      <div key={f} className="flex items-start gap-3">
-                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9ad3c8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none"><path d="M20 6L9 17l-5-5" /></svg>
-                        <span className="text-[15px] leading-snug text-[#d7e4e0]">{f}</span>
-                      </div>
+                      <div key={f} className="flex items-start gap-3"><Check /><span className="text-[15px] leading-snug text-[#d7e4e0]">{f}</span></div>
                     ))}
                   </div>
                 </div>
@@ -245,8 +356,8 @@ export default function Home() {
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
                     Prihlásiť sa
                   </Link>
-                  <a href="#kontakt" className="inline-flex items-center justify-center rounded-[10px] border border-white/30 px-[22px] py-[13px] text-[15.5px] font-semibold text-white transition hover:border-white hover:bg-white/10">Požiadať o prístup</a>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#8fb3ab]">Ešte nemáte konto? Ozvite sa nám a zriadime vám prístup do portálu.</p>
+                  <a href="#ako-zacat" className="inline-flex items-center justify-center rounded-[10px] border border-white/30 px-[22px] py-[13px] text-[15.5px] font-semibold text-white transition hover:border-white hover:bg-white/10">Ešte nie ste zákazník?</a>
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#8fb3ab]">Prístup zriadime po prvej objednávke. Ozvite sa a poradíme, ako začať.</p>
                 </div>
               </div>
             </div>
@@ -254,7 +365,7 @@ export default function Home() {
         </section>
 
         {/* ===== PREČO MOONID ===== */}
-        <section className="relative overflow-hidden text-mintbg" style={{ ...sectionPad, background: "radial-gradient(130% 120% at 85% -10%, #21564C 0%, #163F38 52%)" }}>
+        <section id="preco" className="relative overflow-hidden text-mintbg" style={{ ...sectionPad, background: "radial-gradient(130% 120% at 85% -10%, #21564C 0%, #163F38 52%)" }}>
           <div className={wrap}>
             <div className="reveal mb-[clamp(40px,5vw,64px)] max-w-[640px]">
               <span className="text-[12.5px] font-semibold uppercase tracking-[0.16em] text-mint-2">Prečo Moonid</span>
@@ -276,8 +387,28 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ===== FAQ ===== */}
+        <section id="faq" style={sectionPad}>
+          <div className={wrap}>
+            <div className="reveal mb-[clamp(36px,4vw,56px)] max-w-[680px]">
+              <span className={eyebrow}>Časté otázky</span>
+              <h2 className="mt-3.5 text-ink" style={{ ...h2style, textWrap: "balance" }}>Na čo sa zákazníci pýtajú</h2>
+            </div>
+            <div className="mx-auto grid max-w-[1000px] gap-3 md:grid-cols-2">
+              {FAQ.map((f) => (
+                <div key={f.q} className="rounded-[14px] border border-line bg-white p-[clamp(22px,2.5vw,28px)]">
+                  <h3 className="text-[17px] font-semibold text-ink">{f.q}</h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-muted">{f.a}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-7 text-center text-[15px] text-muted-2">Nenašli ste odpoveď? <a href="#kontakt" className="font-semibold text-brand">Napíšte nám</a>.</p>
+          </div>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+        </section>
+
         {/* ===== REFERENCIE ===== */}
-        <section id="referencie" style={sectionPad}>
+        <section id="referencie" className="border-t border-line bg-cream" style={sectionPad}>
           <div className={wrap}>
             <div className="reveal mx-auto max-w-[920px] text-center">
               <span className={eyebrow}>Dôverujú nám</span>
@@ -287,7 +418,7 @@ export default function Home() {
               {CLIENTS.map((c) => (
                 <div key={c.alt} className="flex h-[104px] items-center justify-center rounded-[14px] border border-line bg-white px-[22px] py-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.src} alt={c.alt} className="w-auto object-contain" style={{ maxHeight: c.h, maxWidth: "80%" }} />
+                  <img src={c.src} alt={c.alt} loading="lazy" className="w-auto object-contain" style={{ maxHeight: c.h, maxWidth: "80%" }} />
                 </div>
               ))}
             </div>
