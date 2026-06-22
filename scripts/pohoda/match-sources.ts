@@ -41,8 +41,9 @@ async function main() {
     }
   }
 
+  // Re-processuje VŠETKY SUGGESTED (re-scoring) — CONFIRMED/REJECTED preskakuje.
   const sources = await prisma.productSource.findMany({
-    where: { productId: null, matchStatus: "SUGGESTED" },
+    where: { matchStatus: "SUGGESTED" },
     select: { id: true, externalSku: true, title: true },
   });
 
@@ -51,14 +52,16 @@ async function main() {
     let productId: string | null = null;
     let method: "CODE" | "NAME" | null = null;
     let score: number | null = null;
+    const st = s.title ? toks(s.title) : new Set<string>();
 
     const ns = s.externalSku ? norm(s.externalSku) : "";
     if (ns && byNormSku.has(ns)) {
+      // CODE: kódy sú nezávislé systémy → zhoda kódu môže byť náhodná.
+      // matchScore = podobnosť NÁZVU (signál pre admina, nie 1.0).
       productId = byNormSku.get(ns)!;
       method = "CODE";
-      score = 1.0;
-    } else if (s.title) {
-      const st = toks(s.title);
+      score = st.size ? jaccard(st, tokById.get(productId)!) : 0;
+    } else if (st.size) {
       const cand = new Set<string>();
       for (const t of st) { const ids = inv.get(t); if (ids) for (const id of ids) cand.add(id); }
       let best = 0, bestId: string | null = null;
@@ -69,15 +72,13 @@ async function main() {
       if (bestId && best >= NAME_THRESHOLD) { productId = bestId; method = "NAME"; score = best; }
     }
 
-    if (productId) {
-      await prisma.productSource.update({
-        where: { id: s.id },
-        data: { productId, matchMethod: method, matchScore: score },
-      });
-      if (method === "CODE") code++; else name++;
-    } else {
-      none++;
-    }
+    await prisma.productSource.update({
+      where: { id: s.id },
+      data: { productId, matchMethod: method, matchScore: score },
+    });
+    if (productId && method === "CODE") code++;
+    else if (productId) name++;
+    else none++;
   }
 
   console.log(`Matcher: CODE=${code}, NAME(>=${NAME_THRESHOLD})=${name}, bez zhody=${none} (z ${sources.length} nespárovaných)`);

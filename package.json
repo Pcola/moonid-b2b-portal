@@ -17,6 +17,8 @@
     "import:catalog": "tsx scripts/pohoda/import-catalog.ts",
     "import:sources": "tsx scripts/pohoda/import-sources.ts",
     "match:sources": "tsx scripts/pohoda/match-sources.ts",
+    "export:candidates": "tsx scripts/pohoda/export-candidates.ts",
+    "apply:verdicts": "tsx scripts/pohoda/apply-verdicts.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {
