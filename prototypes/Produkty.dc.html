@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:'Hanken Grotesk',system-ui,-apple-system,sans-serif;color:#1A1A17;background:#FFFFFF;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #163F38;outline-offset:3px;border-radius:4px;}
+  h1,h2,h3{margin:0;font-weight:400;}
+  p{margin:0;}
+  .serif{font-family:'Hanken Grotesk',system-ui,sans-serif;}
+  @keyframes riseIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes shimmer{0%{background-position:-520px 0;}100%{background-position:520px 0;}}
+  .navlink2{position:relative;transition:color .2s ease;}
+  .navlink2::after{content:"";position:absolute;left:0;bottom:-5px;height:1.5px;width:0;background:#163F38;transition:width .28s cubic-bezier(.2,.7,.2,1);}
+  .navlink2:hover::after{width:100%;}
+  /* Katalóg layout */
+  .catalog{display:grid;grid-template-columns:240px 1fr;gap:clamp(30px,4vw,60px);align-items:start;}
+  .rail{position:sticky;top:96px;display:flex;flex-direction:column;gap:1px;}
+  .rail-item{display:flex;align-items:baseline;justify-content:space-between;gap:14px;width:100%;text-align:left;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:14.5px;letter-spacing:-0.005em;padding:11px 14px;border-radius:10px;transition:background .18s ease,color .18s ease;}
+  .rail-item:hover{background:#F1F4F3;}
+  .rail-count{font-size:12px;font-variant-numeric:tabular-nums;}
+  /* Produktová dlaždica — editoriálna, bez ťažkého rámu */
+  .prod-card{animation:riseIn .5s cubic-bezier(.2,.7,.2,1) both;display:flex;flex-direction:column;text-decoration:none;}
+  .prod-tile{position:relative;aspect-ratio:1/1;background:#F6F7F6;border:1px solid #ECEFEE;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:border-color .3s ease,box-shadow .3s ease;}
+  .prod-card:hover .prod-tile{border-color:#CBD8D3;box-shadow:0 20px 44px -28px rgba(22,40,29,0.45);}
+  .prod-img{width:100%;height:100%;object-fit:contain;padding:20px;transition:transform .6s cubic-bezier(.2,.7,.2,1);}
+  .prod-card:hover .prod-img{transform:scale(1.05);}
+  .dopyt-arrow{transition:transform .25s ease;}
+  .prod-card:hover .dopyt-arrow{transform:translateX(4px);}
+  .prod-card:hover .prod-name{color:#163F38;}
+  .prod-name{transition:color .2s ease;}
+  .skel{background:linear-gradient(90deg,#EEF1F0 0%,#F7F9F8 50%,#EEF1F0 100%);background-size:1040px 100%;animation:shimmer 1.5s infinite linear;}
+  .field{transition:border-color .18s ease,box-shadow .18s ease;}
+  .field:focus{border-color:#163F38;box-shadow:0 0 0 3px rgba(22,63,56,0.12);outline:none;}
+  @media (max-width:900px){
+    .catalog{grid-template-columns:1fr;gap:22px;}
+    .rail{position:static;flex-direction:row;overflow-x:auto;gap:8px;padding-bottom:6px;}
+    .rail-item{flex:none;width:auto;background:#F4F6F5;}
+    .rail-item:hover{background:#E8EEEC;}
+  }
+  @media (max-width:780px){ .nav-d{display:none !important;} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none !important;transition-duration:.01ms !important;} }
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#163F38"/><text x="50" y="70" font-family="Georgia, 'Times New Roman', serif" font-size="58" fill="#FBF9F4" text-anchor="middle">m</text></svg>
+</template>
+
+<!-- Utility bar -->
+<div style="background:#122F2A;color:#A9C2BB;">
+  <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);height:40px;display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:13px;">
+    <span style="letter-spacing:0.02em;">B2B dodávateľ hygieny, čistenia a vybavenia · Slovensko</span>
+    <a href="tel:+421919216908" style="text-decoration:none;color:#D7E4E0;font-weight:600;">0919 216 908</a>
+  </div>
+</div>
+
+<!-- Header -->
+<header style="position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.92);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid #E7EBE9;">
+  <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <a href="Moonid v3.dc.html#top" style="font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.02em;text-decoration:none;color:#163F38;line-height:1;">moonid</a>
+    <nav class="nav-d" aria-label="Hlavná navigácia" style="display:flex;align-items:center;gap:32px;">
+      <a class="navlink2" href="Moonid v3.dc.html#top" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Domov</a>
+      <a class="navlink2" href="Moonid v3.dc.html#sortiment" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Sortiment</a>
+      <a class="navlink2" href="Produkty.dc.html" style="text-decoration:none;color:#163F38;font-size:14.5px;font-weight:600;">Produkty</a>
+      <a class="navlink2" href="Moonid v3.dc.html#prekoho" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Pre koho</a>
+      <a class="navlink2" href="Moonid v3.dc.html#kontakt" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Kontakt</a>
+    </nav>
+    <a href="Moonid v3.dc.html#kontakt" style="text-decoration:none;background:#163F38;color:#fff;font-weight:600;font-size:14.5px;padding:11px 20px;border-radius:9px;white-space:nowrap;transition:background .2s ease;" style-hover="background:#1E5249;">Vyžiadať ponuku</a>
+  </div>
+</header>
+
+<main>
+  <!-- Intro -->
+  <section style="border-bottom:1px solid #EBEEED;padding:clamp(48px,7vw,88px) 0 clamp(34px,4vw,48px);">
+    <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);">
+      <span style="font-size:12.5px;letter-spacing:0.18em;text-transform:uppercase;color:#1E5249;font-weight:600;">Katalóg</span>
+      <h1 class="serif" style="font-size:clamp(38px,6vw,72px);line-height:1.02;letter-spacing:-0.025em;color:#16201D;margin-top:16px;text-wrap:balance;">Produkty</h1>
+      <p style="font-size:clamp(16px,1.6vw,20px);line-height:1.55;color:#54514A;margin-top:18px;max-width:620px;text-wrap:pretty;">Hygiena, čistiace prostriedky, papierový program, gastro a ďalší sortiment od overených značiek. Ceny pripravíme na mieru — vyžiadajte si nezáväznú cenovú ponuku.</p>
+    </div>
+  </section>
+
+  <!-- Catalog -->
+  <section style="padding:clamp(34px,4vw,56px) 0 clamp(72px,9vw,120px);">
+    <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);">
+      <div class="catalog">
+
+        <!-- Bočná lišta kategórií -->
+        <aside>
+          <div class="rail">
+            <span style="font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;color:#9A958B;font-weight:600;padding:0 14px 10px;">Kategórie</span>
+            <sc-for list="{{ cats }}" as="c" hint-placeholder-count="0">
+              <button class="rail-item" type="button" onClick="{{ c.onClick }}" style="color:{{ c.color }};font-weight:{{ c.weight }};box-shadow:inset 2px 0 0 {{ c.bar }};">
+                <span>{{ c.label }}</span>
+                <span class="rail-count" style="color:{{ c.countColor }};">{{ c.count }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </aside>
+
+        <!-- Pravý stĺpec -->
+        <div>
+          <!-- Toolbar -->
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:clamp(22px,3vw,34px);padding-bottom:clamp(20px,2.5vw,26px);border-bottom:1px solid #EBEEED;">
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span class="serif" style="font-size:22px;color:#16201D;letter-spacing:-0.01em;">{{ activeCatLabel }}</span>
+              <span style="font-size:13.5px;color:#9A958B;">{{ countLabel }}</span>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <label style="position:relative;display:flex;align-items:center;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9A958B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:14px;pointer-events:none;"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+                <input class="field" type="text" value="{{ query }}" onInput="{{ onSearch }}" placeholder="Hľadať produkt…" style="width:240px;max-width:52vw;font-size:14.5px;padding:11px 16px 11px 40px;border:1px solid #DDE2E0;border-radius:10px;background:#fff;color:#1A1A17;" />
+              </label>
+              <select class="field" value="{{ sort }}" onChange="{{ onSort }}" style="font-size:14px;font-weight:500;padding:11px 14px;border:1px solid #DDE2E0;border-radius:10px;background:#fff;color:#3C3A33;cursor:pointer;">
+                <option value="az">Názov A–Z</option>
+                <option value="za">Názov Z–A</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Loading skeleton -->
+          <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:clamp(18px,2vw,26px);">
+              <sc-for list="{{ skeletons }}" as="s" hint-placeholder-count="9">
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                  <div class="skel" style="width:100%;aspect-ratio:1/1;border-radius:16px;"></div>
+                  <div class="skel" style="height:11px;width:40%;border-radius:6px;"></div>
+                  <div class="skel" style="height:14px;width:88%;border-radius:6px;"></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- Error / fallback -->
+          <sc-if value="{{ showError }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid #E7D7C2;background:#FBF3E8;border-radius:14px;padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">
+              <span style="font-weight:600;color:#7A5A1E;font-size:15.5px;">Produktové dáta sa nepodarilo načítať</span>
+              <p style="font-size:14.5px;line-height:1.55;color:#7A6A4E;">Nižšie zobrazujeme ukážkový sortiment. Skontrolujte súbor s dátami produktov.</p>
+            </div>
+          </sc-if>
+
+          <!-- Grid -->
+          <sc-if value="{{ hasItems }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:clamp(18px,2vw,26px);">
+              <sc-for list="{{ items }}" as="p" hint-placeholder-count="0">
+                <a class="prod-card" href="{{ p.detail }}">
+                  <div class="prod-tile">
+                    <img class="prod-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" />
+                  </div>
+                  <div style="padding:16px 2px 0;display:flex;flex-direction:column;gap:7px;flex:1;">
+                    <span style="font-size:11px;letter-spacing:0.07em;text-transform:uppercase;color:#1E5249;font-weight:600;">{{ p.category }}</span>
+                    <h3 class="prod-name" style="font-size:15px;font-weight:500;color:#16201D;line-height:1.36;">{{ p.name }}</h3>
+                    <div style="margin-top:auto;padding-top:14px;border-top:1px solid #EDF0EF;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                      <span style="font-size:12.5px;color:#9A958B;">Cena na vyžiadanie</span>
+                      <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#163F38;">Detail <svg class="dopyt-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                    </div>
+                  </div>
+                </a>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- No results -->
+          <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:clamp(50px,8vw,90px) 0;color:#9A958B;">
+              <p class="serif" style="font-size:24px;color:#16201D;">Žiadne produkty</p>
+              <p style="font-size:15px;margin-top:8px;">Pre zadané kritériá sme nič nenašli. Skúste iný výraz alebo kategóriu.</p>
+            </div>
+          </sc-if>
+
+          <!-- Load more -->
+          <sc-if value="{{ showMore }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:center;margin-top:clamp(40px,5vw,60px);">
+              <button type="button" onClick="{{ onMore }}" style="text-decoration:none;background:#fff;color:#163F38;font-weight:600;font-size:15px;padding:14px 32px;border:1px solid #163F38;border-radius:11px;cursor:pointer;transition:background .2s ease,color .2s ease;" style-hover="background:#163F38;color:#fff;">Načítať ďalšie produkty</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer style="background:#122F2A;color:#9FBAB3;padding:clamp(40px,5vw,64px) 0;">
+  <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+    <a href="Moonid v3.dc.html#top" style="font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:700;font-size:26px;color:#fff;text-decoration:none;">moonid</a>
+    <span style="font-size:13px;color:#6E908A;">Moonid s.r.o. · IČO 50 934 660 · Dolný Ohaj · moonid@moonid.sk · 0919 216 908</span>
+  </div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { products: null, error: false, query: '', activeCat: 'Všetky', sort: 'az', visible: 24 };
+
+  componentDidMount() {
+    try { document.documentElement.lang = 'sk'; } catch (e) {}
+    this.loadFeed();
+  }
+
+  async loadFeed() {
+    // Lokálny products.json (vygenerovaný z feedu humed.sk) — rovnaká doména, žiadny CORS problém.
+    try {
+      const res = await fetch('products.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const products = (data || []).map((p) => ({
+        id: p.id, name: p.n, image: p.i || '', category: p.c || 'Ostatné'
+      })).filter((p) => p.name);
+      if (!products.length) throw new Error('empty');
+      this.setState({ products: products, error: false });
+    } catch (e) {
+      this.setState({ products: this.demo(), error: true });
+    }
+  }
+
+  demo() {
+    const d = (name, category) => ({ name: name, image: '', category: category, link: '' });
+    return [
+      d('Toaletný papier 2-vrstvový, biela celulóza', 'Hygienický papier'),
+      d('Papierové utierky skladané ZZ, 2-vrstvové', 'Hygienický papier'),
+      d('Tekuté mydlo antibakteriálne 5 l', 'Mydlá'),
+      d('Univerzálny čistiaci prostriedok 5 l', 'Čistiace prostriedky'),
+      d('Dezinfekcia na plochy a povrchy 1 l', 'Dezinfekcia, repelenty, insekticídy'),
+      d('Dávkovač papierových uterákov, nerez', 'Zásobníky, dávkovače, koše'),
+      d('Jednorazové rukavice nitrilové (100 ks)', 'Rukavice jednorázové a upratovacie'),
+      d('Vrecia na odpad 120 l, čierne (rolka)', 'Vrecia'),
+      d('Mikrovláknová utierka na povrchy (5 ks)', 'Upratovacie pomôcky'),
+      d('Osviežovač vzduchu, sprej 400 ml', 'Osviežovače vzduchu'),
+      d('Prací prášok univerzál 10 kg', 'Pracie prostriedky'),
+      d('TORK papierové utierky v roli', 'TORK hygiena')
+    ];
+  }
+
+  onSearch(e) { this.setState({ query: e.target.value, visible: 24 }); }
+  setCat(cat) { this.setState({ activeCat: cat, visible: 24 }); }
+  more() { this.setState((s) => ({ visible: s.visible + 24 })); }
+
+  plural(n) { return n === 1 ? 'produkt' : (n >= 2 && n <= 4 ? 'produkty' : 'produktov'); }
+
+  renderVals() {
+    const products = this.state.products;
+    const loading = products === null;
+    const q = (this.state.query || '').trim().toLowerCase();
+    const active = this.state.activeCat;
+    const sort = this.state.sort || 'az';
+
+    const counts = {};
+    (products || []).forEach((p) => { counts[p.category] = (counts[p.category] || 0) + 1; });
+    const names = Object.keys(counts).sort((a, b) => a.localeCompare(b, 'sk'));
+    const total = (products || []).length;
+
+    const mkCat = (label, value, count) => {
+      const on = value === active;
+      return {
+        label: label, count: count,
+        onClick: () => this.setCat(value),
+        color: on ? '#163F38' : '#5C584F',
+        weight: on ? '600' : '500',
+        bar: on ? '#163F38' : 'transparent',
+        countColor: on ? '#1E5249' : '#AEB0A6'
+      };
+    };
+    const cats = [mkCat('Všetky produkty', 'Všetky', total)]
+      .concat(names.map((nm) => mkCat(nm, nm, counts[nm])));
+
+    let filtered = (products || []).filter((p) => {
+      const okCat = active === 'Všetky' || p.category === active;
+      const okQ = !q || p.name.toLowerCase().indexOf(q) !== -1;
+      return okCat && okQ;
+    });
+    filtered = filtered.slice().sort((a, b) =>
+      sort === 'za' ? b.name.localeCompare(a.name, 'sk') : a.name.localeCompare(b.name, 'sk'));
+
+    const visible = this.state.visible;
+    const shown = filtered.slice(0, visible).map((p) => ({
+      name: p.name,
+      category: p.category,
+      image: p.image || this.fallbackImg(),
+      detail: p.id ? ('Produkt.dc.html?id=' + encodeURIComponent(p.id)) : 'Moonid%20v3.dc.html#kontakt'
+    }));
+
+    return {
+      loading: loading,
+      showError: !loading && this.state.error,
+      hasItems: !loading && shown.length > 0,
+      noResults: !loading && shown.length === 0,
+      items: shown,
+      cats: loading ? [] : cats,
+      query: this.state.query,
+      onSearch: (e) => this.onSearch(e),
+      sort: sort,
+      onSort: (e) => this.setState({ sort: e.target.value }),
+      showMore: filtered.length > visible,
+      onMore: () => this.more(),
+      activeCatLabel: active === 'Všetky' ? 'Všetky produkty' : active,
+      countLabel: loading ? 'Načítavam…' : (filtered.length + ' ' + this.plural(filtered.length)),
+      skeletons: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    };
+  }
+
+  fallbackImg() {
+    const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23F6F7F6'/><g fill='none' stroke='%23C2CEC9' stroke-width='2'><rect x='66' y='73' width='68' height='54' rx='4'/><circle cx='84' cy='91' r='6'/><path d='M70 121l20-18 14 12 12-10 18 16'/></g></svg>";
+    return "data:image/svg+xml;utf8," + svg;
+  }
+}
+</script>
+</body>
+</html>

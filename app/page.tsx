@@ -5,13 +5,20 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 
 const BRANDS = [
-  { src: "/images/brands/tork.png", alt: "Tork" },
-  { src: "/images/brands/kimberly-clark.png", alt: "Kimberly-Clark Professional" },
-  { src: "/images/brands/lotus.png", alt: "Lotus" },
-  { src: "/images/brands/katrin.png", alt: "Katrin" },
-  { src: "/images/brands/vileda.png", alt: "Vileda" },
-  { src: "/images/brands/leifheit.png", alt: "Leifheit" },
-  { src: "/images/brands/sanytol.png", alt: "Sanytol" },
+  { src: "/images/logo-tork.png", alt: "Tork" },
+  { src: "/images/logo-kimberly-clark.png", alt: "Kimberly-Clark Professional" },
+  { src: "/images/logo-lotus.png", alt: "Lotus" },
+  { src: "/images/logo-katrin.png", alt: "Katrin" },
+  { src: "/images/logo-vileda.png", alt: "Vileda" },
+  { src: "/images/logo-leifheit.png", alt: "Leifheit" },
+  { src: "/images/logo-sanytol.png", alt: "Sanytol" },
+];
+
+const CLIENTS = [
+  { src: "/images/klient-grandhotelsole.svg", alt: "Grand Hotel SOLE" },
+  { src: "/images/klient-podhajska.png", alt: "Termálne kúpalisko Podhájska" },
+  { src: "/images/klient-westend.svg", alt: "Westend" },
+  { src: "/images/klient-loko.png", alt: "LOKO trans Slovakia" },
 ];
 
 const SORTIMENT = [
@@ -64,7 +71,7 @@ export default function Home() {
       {/* HERO */}
       <section className="relative flex min-h-[560px] items-end overflow-hidden sm:min-h-[680px]">
         <Image
-          src="/images/hero-rozvoz.jpg"
+          src="/images/rozvoz.jpg"
           alt="Rozvoz tovaru dodávkou Moonid"
           fill
           priority
@@ -152,13 +159,13 @@ export default function Home() {
         <Container className="grid items-center gap-10 lg:grid-cols-2">
           <div className="order-2 grid grid-cols-2 gap-4 lg:order-1">
             <div className="relative col-span-2 aspect-[16/10] overflow-hidden rounded-2xl">
-              <Image src="/images/foto-hotel-izba.png" alt="Hotelová izba s amenitami" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
+              <Image src="/images/hotel-vybavenie-izieb.png" alt="Vybavenie hotelových izieb" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
             </div>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-              <Image src="/images/foto-hotel-amenity.png" alt="Hotelová kozmetika a amenity" fill sizes="(max-width:1024px) 50vw, 25vw" className="object-cover" />
+              <Image src="/images/hotel-kozmetika.png" alt="Hotelová kozmetika a amenity" fill sizes="(max-width:1024px) 50vw, 25vw" className="object-cover" />
             </div>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-              <Image src="/images/foto-cistenie.png" alt="Čistiace prostriedky" fill sizes="(max-width:1024px) 50vw, 25vw" className="object-cover" />
+              <Image src="/images/hero-cleaning.png" alt="Čistiace prostriedky" fill sizes="(max-width:1024px) 50vw, 25vw" className="object-cover" />
             </div>
           </div>
           <div className="order-1 lg:order-2">
@@ -268,7 +275,13 @@ export default function Home() {
       <section className="border-y border-line bg-tile py-16 sm:py-24">
         <Container>
           <h2 className="font-serif text-3xl font-medium tracking-tight text-ink">Dôverujú nám</h2>
-          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          <div className="mt-8 flex flex-wrap items-center gap-x-12 gap-y-6">
+            {CLIENTS.map((c) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={c.alt} src={c.src} alt={c.alt} className="h-12 w-auto object-contain opacity-85" />
+            ))}
+          </div>
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
             {REFERENCIE.map((r) => (
               <figure key={r.a} className="flex flex-col rounded-2xl bg-paper p-6">
                 <blockquote className="font-serif text-lg leading-relaxed text-ink">„{r.q}“</blockquote>

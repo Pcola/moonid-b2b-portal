@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:'Hanken Grotesk',system-ui,-apple-system,sans-serif;color:#1A1A17;background:#FFFFFF;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  a:focus-visible,button:focus-visible{outline:2px solid #163F38;outline-offset:3px;border-radius:4px;}
+  h1,h2,h3{margin:0;font-weight:400;}
+  p{margin:0;}
+  .serif{font-family:'Hanken Grotesk',system-ui,sans-serif;}
+  @keyframes riseIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes shimmer{0%{background-position:-520px 0;}100%{background-position:520px 0;}}
+  .navlink2{position:relative;transition:color .2s ease;}
+  .navlink2::after{content:"";position:absolute;left:0;bottom:-5px;height:1.5px;width:0;background:#163F38;transition:width .28s cubic-bezier(.2,.7,.2,1);}
+  .navlink2:hover::after{width:100%;}
+  .skel{background:linear-gradient(90deg,#EEF1F0 0%,#F7F9F8 50%,#EEF1F0 100%);background-size:1040px 100%;animation:shimmer 1.5s infinite linear;}
+  .detail-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(32px,4.5vw,72px);align-items:start;}
+  .img-col{position:sticky;top:96px;animation:riseIn .5s cubic-bezier(.2,.7,.2,1) both;}
+  .info-col{animation:riseIn .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:.06s;}
+  .rel-card{text-decoration:none;display:flex;flex-direction:column;}
+  .rel-tile{aspect-ratio:1/1;background:#F6F7F6;border:1px solid #ECEFEE;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;transition:border-color .25s ease,box-shadow .25s ease;}
+  .rel-card:hover .rel-tile{border-color:#CBD8D3;box-shadow:0 16px 36px -24px rgba(22,40,29,0.4);}
+  .rel-img{width:100%;height:100%;object-fit:contain;padding:16px;transition:transform .5s cubic-bezier(.2,.7,.2,1);}
+  .rel-card:hover .rel-img{transform:scale(1.05);}
+  .cta-primary{transition:background .2s ease,transform .2s ease;}
+  .cta-primary:hover{background:#1E5249;transform:translateY(-1px);}
+  @media (max-width:880px){ .detail-grid{grid-template-columns:1fr;gap:28px;} .img-col{position:static;} }
+  @media (max-width:780px){ .nav-d{display:none !important;} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none !important;transition-duration:.01ms !important;} }
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#163F38"/><text x="50" y="70" font-family="Georgia, 'Times New Roman', serif" font-size="58" fill="#FBF9F4" text-anchor="middle">m</text></svg>
+</template>
+
+<!-- Utility bar -->
+<div style="background:#122F2A;color:#A9C2BB;">
+  <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);height:40px;display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:13px;">
+    <span style="letter-spacing:0.02em;">B2B dodávateľ hygieny, čistenia a vybavenia · Slovensko</span>
+    <a href="tel:+421919216908" style="text-decoration:none;color:#D7E4E0;font-weight:600;">0919 216 908</a>
+  </div>
+</div>
+
+<!-- Header -->
+<header style="position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.92);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid #E7EBE9;">
+  <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px;">
+    <a href="Moonid v3.dc.html#top" style="font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.02em;text-decoration:none;color:#163F38;line-height:1;">moonid</a>
+    <nav class="nav-d" aria-label="Hlavná navigácia" style="display:flex;align-items:center;gap:32px;">
+      <a class="navlink2" href="Moonid v3.dc.html#top" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Domov</a>
+      <a class="navlink2" href="Moonid v3.dc.html#sortiment" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Sortiment</a>
+      <a class="navlink2" href="Produkty.dc.html" style="text-decoration:none;color:#163F38;font-size:14.5px;font-weight:600;">Produkty</a>
+      <a class="navlink2" href="Moonid v3.dc.html#prekoho" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Pre koho</a>
+      <a class="navlink2" href="Moonid v3.dc.html#kontakt" style="text-decoration:none;color:#3C3A33;font-size:14.5px;font-weight:500;">Kontakt</a>
+    </nav>
+    <a href="Moonid v3.dc.html#kontakt" style="text-decoration:none;background:#163F38;color:#fff;font-weight:600;font-size:14.5px;padding:11px 20px;border-radius:9px;white-space:nowrap;transition:background .2s ease;" style-hover="background:#1E5249;">Vyžiadať ponuku</a>
+  </div>
+</header>
+
+<main style="max-width:1320px;margin:0 auto;padding:clamp(22px,3vw,34px) clamp(20px,5vw,56px) clamp(72px,9vw,120px);">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="Omrvinková navigácia" style="display:flex;flex-wrap:wrap;align-items:center;gap:9px;font-size:13.5px;color:#9A958B;margin-bottom:clamp(26px,3vw,40px);">
+    <a href="Produkty.dc.html" style="color:#5C584F;text-decoration:none;">Produkty</a>
+    <span>/</span>
+    <span style="color:#1E5249;">{{ crumbCat }}</span>
+  </nav>
+
+  <!-- Loading -->
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
+    <div class="detail-grid">
+      <div class="skel" style="width:100%;aspect-ratio:1/1;border-radius:20px;"></div>
+      <div style="display:flex;flex-direction:column;gap:16px;padding-top:8px;">
+        <div class="skel" style="height:13px;width:34%;border-radius:6px;"></div>
+        <div class="skel" style="height:34px;width:90%;border-radius:8px;"></div>
+        <div class="skel" style="height:13px;width:100%;border-radius:6px;margin-top:10px;"></div>
+        <div class="skel" style="height:13px;width:96%;border-radius:6px;"></div>
+        <div class="skel" style="height:13px;width:88%;border-radius:6px;"></div>
+        <div class="skel" style="height:52px;width:60%;border-radius:11px;margin-top:18px;"></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Not found -->
+  <sc-if value="{{ notFound }}" hint-placeholder-val="{{ false }}">
+    <div style="text-align:center;padding:clamp(50px,9vw,110px) 0;">
+      <p class="serif" style="font-size:clamp(26px,3.5vw,38px);color:#16201D;">Produkt sa nenašiel</p>
+      <p style="font-size:16px;color:#86827A;margin-top:12px;">Tento produkt už nie je dostupný alebo bol odkaz neúplný.</p>
+      <a href="Produkty.dc.html" style="display:inline-block;margin-top:26px;text-decoration:none;background:#163F38;color:#fff;font-weight:600;font-size:15px;padding:13px 28px;border-radius:11px;">Späť na produkty</a>
+    </div>
+  </sc-if>
+
+  <!-- Product -->
+  <sc-if value="{{ found }}" hint-placeholder-val="{{ false }}">
+    <div class="detail-grid">
+
+      <!-- Obrázok -->
+      <div class="img-col">
+        <div style="aspect-ratio:1/1;background:#F6F7F6;border:1px solid #ECEFEE;border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+          <img src="{{ image }}" alt="{{ name }}" style="width:100%;height:100%;object-fit:contain;padding:clamp(28px,4vw,56px);" />
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="info-col">
+        <span style="font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;color:#1E5249;font-weight:600;">{{ category }}</span>
+        <h1 class="serif" style="font-size:clamp(28px,3.6vw,46px);line-height:1.1;letter-spacing:-0.015em;color:#16201D;margin-top:12px;text-wrap:balance;">{{ name }}</h1>
+
+        <div style="margin-top:22px;padding:18px 22px;background:#F4F6F5;border:1px solid #E7EBE9;border-radius:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#86827A;font-weight:600;">Cena</span>
+            <span class="serif" style="font-size:22px;color:#16201D;">Na vyžiadanie</span>
+          </div>
+          <a class="cta-primary" href="{{ mailtoHref }}" style="text-decoration:none;background:#163F38;color:#fff;font-weight:600;font-size:15px;padding:14px 26px;border-radius:11px;white-space:nowrap;">Vyžiadať cenovú ponuku</a>
+        </div>
+
+        <sc-if value="{{ hasDesc }}" hint-placeholder-val="{{ false }}">
+          <p style="font-size:15.5px;line-height:1.7;color:#4A4842;margin-top:26px;text-wrap:pretty;">{{ description }}</p>
+        </sc-if>
+
+        <sc-if value="{{ hasSpecs }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:28px;border-top:1px solid #EBEEED;">
+            <sc-for list="{{ specs }}" as="sp" hint-placeholder-count="0">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:20px;padding:13px 2px;border-bottom:1px solid #EDF0EF;">
+                <span style="font-size:13.5px;color:#86827A;">{{ sp.label }}</span>
+                <span style="font-size:14.5px;color:#16201D;font-weight:500;text-align:right;">{{ sp.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:28px;">
+          <a href="{{ contactHref }}" style="text-decoration:none;color:#163F38;font-weight:600;font-size:14.5px;padding:12px 0;border-bottom:1.5px solid #163F38;">Prejsť na kontaktný formulár</a>
+          <span style="color:#D6DEDB;">·</span>
+          <a href="Produkty.dc.html" style="text-decoration:none;color:#5C584F;font-weight:500;font-size:14.5px;">Späť na produkty</a>
+        </div>
+
+        <p style="font-size:12.5px;color:#9A958B;margin-top:22px;line-height:1.5;">Cena a dostupnosť závisia od objemu a aktuálnych skladových zásob. Najpredávanejšie produkty držíme skladom, zvyšok dodáme na objednávku.</p>
+      </div>
+    </div>
+
+    <!-- Súvisiace -->
+    <sc-if value="{{ hasRelated }}" hint-placeholder-val="{{ false }}">
+      <section style="margin-top:clamp(64px,8vw,110px);border-top:1px solid #EBEEED;padding-top:clamp(40px,5vw,60px);">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:clamp(24px,3vw,36px);">
+          <h2 class="serif" style="font-size:clamp(22px,2.6vw,32px);color:#16201D;letter-spacing:-0.01em;">Podobné produkty</h2>
+          <a href="Produkty.dc.html" style="text-decoration:none;color:#163F38;font-weight:600;font-size:14px;white-space:nowrap;">Celý katalóg →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:clamp(16px,2vw,24px);">
+          <sc-for list="{{ related }}" as="r" hint-placeholder-count="0">
+            <a class="rel-card" href="{{ r.detail }}">
+              <div class="rel-tile"><img class="rel-img" src="{{ r.image }}" alt="{{ r.name }}" loading="lazy" /></div>
+              <span style="font-size:14px;color:#16201D;font-weight:500;line-height:1.35;margin-top:13px;">{{ r.name }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+  </sc-if>
+
+</main>
+
+<!-- Footer -->
+<footer style="background:#122F2A;color:#9FBAB3;padding:clamp(40px,5vw,64px) 0;">
+  <div style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,56px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+    <a href="Moonid v3.dc.html#top" style="font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:700;font-size:26px;color:#fff;text-decoration:none;">moonid</a>
+    <span style="font-size:13px;color:#6E908A;">Moonid s.r.o. · IČO 50 934 660 · Dolný Ohaj · moonid@moonid.sk · 0919 216 908</span>
+  </div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { product: null, related: [], loading: true, notFound: false };
+
+  componentDidMount() {
+    try { document.documentElement.lang = 'sk'; } catch (e) {}
+    try {
+      const params = new URLSearchParams(window.location.search);
+      this.pid = params.get('id');
+    } catch (e) { this.pid = null; }
+    this.load();
+  }
+
+  async load() {
+    if (!this.pid) { this.setState({ loading: false, notFound: true }); return; }
+    try {
+      const res = await fetch('products-detail.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const map = await res.json();
+      const p = map[this.pid];
+      if (!p) { this.setState({ loading: false, notFound: true }); return; }
+      const related = [];
+      for (const k in map) {
+        if (k !== this.pid && map[k].c === p.c) {
+          related.push({ id: k, name: map[k].n, image: map[k].i || this.fallbackImg() });
+          if (related.length >= 4) break;
+        }
+      }
+      this.setState({ product: p, related: related, loading: false, notFound: false });
+    } catch (e) {
+      this.setState({ loading: false, notFound: true });
+    }
+  }
+
+  renderVals() {
+    const p = this.state.product;
+    const loading = this.state.loading;
+    if (!p) {
+      return {
+        loading: loading, notFound: this.state.notFound, found: false,
+        crumbCat: '', name: '', category: '', image: '', description: '',
+        hasDesc: false, hasSpecs: false, specs: [], hasRelated: false, related: [],
+        mailtoHref: '#', contactHref: 'Moonid%20v3.dc.html#kontakt'
+      };
+    }
+    const specs = [];
+    if (p.s) specs.push({ label: 'Kód produktu (SKU)', value: p.s });
+    if (p.b) specs.push({ label: 'Balenie', value: p.b + ' ks / balenie' });
+    if (p.pal) specs.push({ label: 'Paleta', value: p.pal + ' ks / paleta' });
+    if (p.cf) specs.push({ label: 'Zaradenie', value: p.cf.replace(/\s*>\s*/g, ' › ') });
+
+    const subj = 'Dopyt: ' + p.n + (p.s ? (' (SKU ' + p.s + ')') : '');
+    const body = 'Dobrý deň,\n\nmám záujem o cenovú ponuku na produkt:\n' + p.n + (p.s ? ('\nSKU: ' + p.s) : '') + '\n\nMnožstvo: \nPrevádzka: \n\nĎakujem.';
+    const mailtoHref = 'mailto:moonid@moonid.sk?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
+
+    const related = (this.state.related || []).map((r) => ({
+      name: r.name,
+      image: r.image,
+      detail: 'Produkt.dc.html?id=' + encodeURIComponent(r.id)
+    }));
+
+    return {
+      loading: false,
+      notFound: false,
+      found: true,
+      crumbCat: p.c || 'Produkty',
+      name: p.n,
+      category: p.c || '',
+      image: p.i || this.fallbackImg(),
+      description: p.d || '',
+      hasDesc: !!p.d,
+      hasSpecs: specs.length > 0,
+      specs: specs,
+      hasRelated: related.length > 0,
+      related: related,
+      mailtoHref: mailtoHref,
+      contactHref: 'Moonid%20v3.dc.html#kontakt'
+    };
+  }
+
+  fallbackImg() {
+    const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><rect width='240' height='240' fill='%23F6F7F6'/><g fill='none' stroke='%23C2CEC9' stroke-width='2'><rect x='82' y='90' width='76' height='60' rx='4'/><circle cx='102' cy='110' r='7'/><path d='M86 144l24-20 16 14 14-12 20 18'/></g></svg>";
+    return "data:image/svg+xml;utf8," + svg;
+  }
+}
+</script>
+</body>
+</html>
