@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
-type P = { id: string; n: string; i: string; c: string };
+type P = { id: string; n: string; i: string; c: string; slug: string };
 type Sort = "rec" | "az" | "za";
 
 function plural(n: number) {
@@ -111,8 +112,9 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
           {/* grid */}
           <div className="mt-7 grid gap-[clamp(14px,1.6vw,22px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(208px,1fr))" }}>
             {shown.map((p) => (
-              <div
+              <Link
                 key={p.id}
+                href={`/produkt/${p.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_14px_34px_-16px_rgba(16,42,38,0.22)]"
               >
                 <div className="flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
@@ -131,7 +133,7 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
                     <svg className="text-muted-2 transition group-hover:translate-x-0.5 group-hover:text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 

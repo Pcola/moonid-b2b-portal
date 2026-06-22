@@ -41,6 +41,7 @@ export default async function Produkty() {
       n: p.nameDisplay || p.name,
       i: p.media[0]?.storagePath ?? "",
       c: p.category?.name ?? "Ostatné",
+      slug: p.slug ?? p.id,
     }))
     .sort((a, b) => (b.i ? 1 : 0) - (a.i ? 1 : 0)); // produkty s obrázkom hore
 
