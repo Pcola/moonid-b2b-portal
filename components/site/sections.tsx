@@ -205,7 +205,6 @@ export function PortalSection() {
     <section id="portal" className="bg-white" style={pad}>
       <div className={wrap}>
         <div className="reveal relative overflow-hidden rounded-[24px] text-mintbg" style={{ background: "radial-gradient(130% 130% at 88% -20%, #21564C 0%, #163F38 56%)" }}>
-          <div aria-hidden="true" className="pointer-events-none absolute select-none font-bold" style={{ right: "-2%", bottom: "-34%", fontSize: "clamp(240px,32vw,420px)", lineHeight: 0.8, letterSpacing: "-0.05em", color: "rgba(255,255,255,0.05)" }}>m</div>
           <div className="relative z-[2] grid items-center gap-[clamp(36px,5vw,72px)] p-[clamp(34px,5vw,72px)] lg:grid-cols-[1.15fr_0.85fr]">
             <div className="flex flex-col gap-[22px]">
               <span className="inline-flex items-center gap-2.5 text-[12.5px] font-semibold uppercase tracking-[0.16em] text-mint"><span className="h-[1.5px] w-[26px] bg-mint" /> Objednávkový portál</span>
