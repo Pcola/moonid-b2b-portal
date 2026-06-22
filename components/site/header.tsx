@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const NAV = [
-  { label: "Sortiment", href: "/#sortiment" },
+  { label: "Sortiment", href: "/produkty" },
   { label: "Dávkovače", href: "/#davkovace" },
   { label: "Portál", href: "/#portal" },
   { label: "O nás", href: "/o-nas" },

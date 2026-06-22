@@ -173,20 +173,20 @@ export function SortimentSection() {
               <span className="text-white" style={{ fontSize: "clamp(34px,4vw,48px)", lineHeight: 1 }}>Cez 1 600 položiek<br />v sortimente</span>
               <p className="max-w-[420px] text-[15.5px] leading-relaxed text-[#a9c2bb]">Najpredávanejšie produkty držíme skladom, zvyšok objednáme pri vašej objednávke — od čistiacej chémie a papiera až po dávkovače, gastro a kancelárske potreby.</p>
             </div>
-            <Link href="/kontakt" className="inline-flex items-center gap-2.5 self-start rounded-[10px] bg-white px-[22px] py-[13px] text-[15px] font-semibold text-brand transition hover:-translate-y-px">Vyžiadať cenník na mieru <Arrow /></Link>
+            <Link href="/produkty" className="inline-flex items-center gap-2.5 self-start rounded-[10px] bg-white px-[22px] py-[13px] text-[15px] font-semibold text-brand transition hover:-translate-y-px">Pozrieť celý sortiment <Arrow /></Link>
           </div>
           <div className="relative min-h-[280px] overflow-hidden rounded-2xl border border-line">
             <Image src="/images/rozvoz.jpg" alt="Vlastný rozvoz Moonid — dodávka naložená tovarom" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
           </div>
         </div>
-        <div className="reveal-cascade grid gap-[clamp(16px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,300px),1fr))" }}>
+        <p className="mb-4 text-[14px] font-semibold uppercase tracking-[0.14em] text-muted-2">Kategórie sortimentu</p>
+        <div className="flex flex-wrap gap-2.5">
           {CATEGORIES.map((c) => (
-            <div key={c.t} className="card-hover flex min-h-[172px] flex-col gap-3 rounded-[14px] border border-line bg-white p-[clamp(22px,2.5vw,28px)]">
-              <div className="flex justify-end"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e5249" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></div>
-              <h3 className="mt-0.5 text-[18.5px] font-semibold leading-[1.25] text-ink">{c.t}</h3>
-              <p className="text-[15.5px] leading-relaxed text-muted">{c.d}</p>
-            </div>
+            <Link key={c.t} href="/produkty" className="rounded-full border border-line bg-white px-4 py-2 text-[14px] font-medium text-muted transition hover:border-brand/40 hover:text-ink">{c.t}</Link>
           ))}
+        </div>
+        <div className="mt-8">
+          <Link href="/produkty" className="inline-flex items-center gap-2.5 rounded-[10px] bg-brand px-[26px] py-[14px] text-base font-semibold text-white transition hover:bg-brand-2">Pozrieť celý katalóg <Arrow /></Link>
         </div>
       </div>
     </section>

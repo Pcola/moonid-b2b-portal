@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const NAV = [
-  { label: "Sortiment", href: "/#sortiment" },
+  { label: "Sortiment", href: "/produkty" },
   { label: "Dávkovače", href: "/#davkovace" },
   { label: "Portál", href: "/#portal" },
   { label: "O nás", href: "/o-nas" },
