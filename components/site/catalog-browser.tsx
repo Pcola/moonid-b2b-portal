@@ -5,16 +5,13 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 type P = { id: string; n: string; i: string; c: string; slug: string };
-type Active = { q: string; cat: string; brand: string; sort: string };
+type Active = { q: string; cat: string; sub: string; brand: string; sort: string };
+type Facet = { name: string; count: number };
 
-function plural(n: number) {
-  return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "produkty" : "produktov";
-}
+function plural(n: number) { return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "produkty" : "produktov"; }
 
-export function CatalogBrowser({ products, categories, brands, total, page, pageSize, active }: {
-  products: P[];
-  categories: { name: string; count: number }[];
-  brands: { name: string; count: number }[];
+export function CatalogBrowser({ products, categories, subcategories, brands, total, page, pageSize, active }: {
+  products: P[]; categories: Facet[]; subcategories: Facet[]; brands: Facet[];
   total: number; page: number; pageSize: number; active: Active;
 }) {
   const router = useRouter();
@@ -25,7 +22,6 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
   const brandsShown = brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
 
   const pages = Math.max(1, Math.ceil(total / pageSize));
-  const anyFilter = !!(active.cat || active.brand || active.q);
 
   function go(patch: Partial<Active & { page: number }>) {
     const merged: Record<string, string> = { ...active, page: "1", ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, String(v)])) };
@@ -37,6 +33,18 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
     const qs = usp.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: true });
   }
+  const clearAll = () => { setQ(""); setBrandQ(""); router.push(pathname); };
+
+  const chips: { key: string; label: string }[] = [];
+  if (active.q) chips.push({ key: "q", label: `„${active.q}"` });
+  if (active.cat) chips.push({ key: "cat", label: active.cat });
+  if (active.sub) chips.push({ key: "sub", label: active.sub });
+  if (active.brand) chips.push({ key: "brand", label: active.brand });
+  const removeChip = (key: string) => {
+    if (key === "q") setQ("");
+    if (key === "cat") go({ cat: "", sub: "" });
+    else go({ [key]: "" } as Partial<Active>);
+  };
 
   const facetRow = (label: string, count: number, on: boolean, onClick: () => void) => (
     <button key={label} type="button" onClick={onClick}
@@ -50,26 +58,26 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
     <div className="flex flex-col gap-7">
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
-          placeholder="Hľadať v sortimente…"
-          className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand"
-        />
+        <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
+          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
       </div>
-
-      {anyFilter && (
-        <button type="button" onClick={() => { setQ(""); router.push(pathname); }} className="self-start text-[13px] font-semibold text-brand transition hover:text-brand-2">✕ Zrušiť filtre</button>
-      )}
 
       <div>
         <p className="mb-2.5 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">Kategórie</p>
         <div className="flex flex-col gap-0.5">
           {facetRow("Všetko", total, !active.cat && !active.brand, () => router.push(pathname))}
-          {categories.map((c) => facetRow(c.name, c.count, active.cat === c.name, () => go({ cat: active.cat === c.name ? "" : c.name })))}
+          {categories.map((c) => facetRow(c.name, c.count, active.cat === c.name, () => go({ cat: active.cat === c.name ? "" : c.name, sub: "" })))}
         </div>
       </div>
+
+      {active.cat && subcategories.length > 0 && (
+        <div>
+          <p className="mb-2.5 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">Podkategória</p>
+          <div className="flex max-h-[230px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+            {subcategories.map((s) => facetRow(s.name, s.count, active.sub === s.name, () => go({ sub: active.sub === s.name ? "" : s.name })))}
+          </div>
+        </div>
+      )}
 
       {brands.length > 0 && (
         <div>
@@ -92,33 +100,22 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
   return (
     <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
       <div className="grid gap-x-10 gap-y-6 lg:grid-cols-[244px_1fr]">
-        {/* sidebar (desktop) */}
         <aside className="hidden lg:block">
           <div className="sticky top-[104px] max-h-[calc(100vh-124px)] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">{sidebar}</div>
         </aside>
 
         <div className="min-w-0">
-          {/* top bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((o) => !o)}
-                className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
-                Filtre
+              <button type="button" onClick={() => setFiltersOpen(true)} className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>Filtre{chips.length > 0 && <span className="ml-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white">{chips.length}</span>}
               </button>
               <p className="text-[14px] text-muted-2"><span className="font-semibold text-ink">{total}</span> {plural(total)}</p>
             </div>
             <div className="flex items-center gap-2 text-[14px] text-muted">
               <span className="hidden sm:inline">Zoradiť</span>
               <div className="relative">
-                <select
-                  value={active.sort}
-                  onChange={(e) => go({ sort: e.target.value })}
-                  className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand"
-                >
+                <select value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
                   <option value="rec">Odporúčané</option>
                   <option value="az">Názov A–Z</option>
                   <option value="za">Názov Z–A</option>
@@ -128,10 +125,18 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
             </div>
           </div>
 
-          {/* mobile filters */}
-          {filtersOpen && <div className="mt-5 rounded-2xl border border-line p-4 lg:hidden">{sidebar}</div>}
+          {chips.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {chips.map((c) => (
+                <button key={c.key} type="button" onClick={() => removeChip(c.key)} className="inline-flex items-center gap-1.5 rounded-full border border-mint/50 bg-mintbg/60 py-1 pl-3 pr-2 text-[13px] font-medium text-brand transition hover:bg-mintbg">
+                  {c.label}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              ))}
+              <button type="button" onClick={clearAll} className="text-[13px] font-semibold text-muted transition hover:text-ink">Vymazať všetko</button>
+            </div>
+          )}
 
-          {/* grid */}
           <div className="mt-7 grid gap-[clamp(14px,1.6vw,22px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(208px,1fr))" }}>
             {products.map((p) => (
               <Link
@@ -160,7 +165,7 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
           </div>
 
           {products.length === 0 && (
-            <p className="mt-14 text-center text-muted">Nič sa nenašlo. <button type="button" onClick={() => { setQ(""); router.push(pathname); }} className="font-semibold text-brand">Zrušiť filtre</button> alebo nás kontaktujte.</p>
+            <p className="mt-14 text-center text-muted">Nič sa nenašlo. <button type="button" onClick={clearAll} className="font-semibold text-brand">Zrušiť filtre</button> alebo nás kontaktujte.</p>
           )}
 
           {pages > 1 && (
@@ -172,6 +177,26 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
           )}
         </div>
       </div>
+
+      {/* mobilný drawer */}
+      {filtersOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+          <div className="absolute inset-0 bg-brand-deep/40" onClick={() => setFiltersOpen(false)} />
+          <div className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
+            <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
+              <span className="text-[16px] font-semibold text-ink">Filtre</span>
+              <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">{sidebar}</div>
+            <div className="flex gap-2 border-t border-line p-3">
+              {chips.length > 0 && <button type="button" onClick={clearAll} className="rounded-[10px] border border-line px-4 py-3 text-[14px] font-semibold text-muted">Vymazať</button>}
+              <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 rounded-[10px] bg-brand py-3 text-[15px] font-semibold text-white">Zobraziť {total} {plural(total)}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

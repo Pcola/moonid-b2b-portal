@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 };
 
 const PAGE = 24;
-type SP = { q?: string; cat?: string; brand?: string; sort?: string; page?: string };
-type Active = { q: string; cat: string; brand: string; sort: string };
+type SP = { q?: string; cat?: string; sub?: string; brand?: string; sort?: string; page?: string };
+type Active = { q: string; cat: string; sub: string; brand: string; sort: string };
 
 function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput {
   // listing zobrazí 1 kartu na skupinu: default variant alebo samostatný produkt
@@ -26,6 +26,7 @@ function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput
   if (a.q && exclude !== "q") and.push({ OR: [{ name: { contains: a.q, mode: "insensitive" } }, { nameDisplay: { contains: a.q, mode: "insensitive" } }] });
   const w: Prisma.ProductWhereInput = { isPublished: true, AND: and };
   if (a.cat && exclude !== "cat") w.category = { name: a.cat };
+  if (a.sub && exclude !== "sub") w.subcategory = a.sub;
   if (a.brand && exclude !== "brand") w.brand = a.brand;
   return w;
 }
@@ -39,16 +40,19 @@ const publicProductSelect = {
 
 export default async function Produkty({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
-  const a: Active = { q: (sp.q ?? "").trim(), cat: sp.cat ?? "", brand: sp.brand ?? "", sort: sp.sort ?? "rec" };
+  const a: Active = { q: (sp.q ?? "").trim(), cat: sp.cat ?? "", sub: sp.sub ?? "", brand: sp.brand ?? "", sort: sp.sort ?? "rec" };
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const where = buildWhere(a, null);
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     a.sort === "az" ? [{ name: "asc" }] : a.sort === "za" ? [{ name: "desc" }] : [{ shelfStatus: "asc" }, { media: { _count: "desc" } }, { name: "asc" }];
 
-  const [rows, total, catRows, brandRows, allCats] = await Promise.all([
+  const [rows, total, catRows, subRows, brandRows, allCats] = await Promise.all([
     prisma.product.findMany({ where, orderBy, take: PAGE, skip: (page - 1) * PAGE, select: publicProductSelect }),
     prisma.product.count({ where }),
     prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat"), _count: { _all: true } }),
+    a.cat
+      ? prisma.product.groupBy({ by: ["subcategory"], where: { ...buildWhere(a, "sub"), subcategory: { not: null } }, _count: { _all: true }, orderBy: { _count: { subcategory: "desc" } } })
+      : Promise.resolve([] as { subcategory: string | null; _count: { _all: number } }[]),
     prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
     prisma.category.findMany({ select: { id: true, name: true } }),
   ]);
@@ -58,6 +62,7 @@ export default async function Produkty({ searchParams }: { searchParams: Promise
     .filter((r) => r.categoryId && catName.get(r.categoryId))
     .map((r) => ({ name: catName.get(r.categoryId!)!, count: r._count._all }))
     .sort((x, y) => y.count - x.count);
+  const subcategories = subRows.filter((r) => r.subcategory).map((r) => ({ name: r.subcategory!, count: r._count._all }));
   const brands = brandRows.filter((r) => r.brand).map((r) => ({ name: r.brand!, count: r._count._all }));
 
   const products = rows.map((p) => ({
@@ -75,7 +80,7 @@ export default async function Produkty({ searchParams }: { searchParams: Promise
           subtitle="Sortiment pre hygienu, čistenie a chod vašej prevádzky. Ceny vidíte po prihlásení do portálu alebo na vyžiadanie."
         />
         <section style={{ padding: "clamp(48px,6vw,80px) 0" }}>
-          <CatalogBrowser products={products} categories={categories} brands={brands} total={total} page={page} pageSize={PAGE} active={a} />
+          <CatalogBrowser products={products} categories={categories} subcategories={subcategories} brands={brands} total={total} page={page} pageSize={PAGE} active={a} />
         </section>
         <CtaBand />
       </main>

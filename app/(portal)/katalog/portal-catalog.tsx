@@ -7,11 +7,11 @@ import type { PricedLine } from "@/lib/pricing";
 import { addToCart } from "../kosik/actions";
 
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; price: PricedLine };
-type Active = { q: string; cat: string; brand: string; stock: string; kind: string; sort: string };
+type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
 type Facets = {
   categories: { name: string; count: number }[];
+  subcategories: { name: string; count: number }[];
   brands: { name: string; count: number }[];
-  kinds: { value: string; label: string; count: number }[];
   stockCount: number;
 };
 
@@ -46,7 +46,6 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(total, page * pageSize);
 
-  // poskladá URL z aktívnych filtrov + patch; prázdne vyhodí; reset page (ak nie je v patchi)
   function go(patch: Partial<Active & { page: number }>) {
     const merged: Record<string, string> = { ...active, page: "1", ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, String(v)])) };
     const usp = new URLSearchParams();
@@ -57,8 +56,20 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
     const qs = usp.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }
+  const clearAll = () => { setQ(""); setBrandQ(""); router.push(pathname); };
 
-  const anyFilter = !!(active.cat || active.brand || active.stock || active.kind || active.q);
+  // aktívne filtre ako chips
+  const chips: { key: string; label: string }[] = [];
+  if (active.q) chips.push({ key: "q", label: `„${active.q}"` });
+  if (active.cat) chips.push({ key: "cat", label: active.cat });
+  if (active.sub) chips.push({ key: "sub", label: active.sub });
+  if (active.brand) chips.push({ key: "brand", label: active.brand });
+  if (active.stock === "1") chips.push({ key: "stock", label: "Skladom" });
+  const removeChip = (key: string) => {
+    if (key === "q") setQ("");
+    if (key === "cat") go({ cat: "", sub: "" });
+    else go({ [key]: "" } as Partial<Active>);
+  };
 
   const facetRow = (label: string, count: number, on: boolean, onClick: () => void) => (
     <button key={label} type="button" onClick={onClick}
@@ -68,7 +79,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
     </button>
   );
 
-  const FacetGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  const Group = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div>
       <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">{title}</p>
       <div className="flex flex-col gap-0.5">{children}</div>
@@ -83,24 +94,22 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
           placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
-      {anyFilter && (
-        <button type="button" onClick={() => { setQ(""); router.push(pathname); }} className="self-start text-[13px] font-semibold text-brand transition hover:text-brand-2">✕ Zrušiť filtre</button>
+      <Group title="Kategórie">
+        {facetRow("Všetko", total, !active.cat && !active.brand && !active.stock, () => router.push(pathname))}
+        {facets.categories.map((c) => facetRow(c.name, c.count, active.cat === c.name, () => go({ cat: active.cat === c.name ? "" : c.name, sub: "" })))}
+      </Group>
+
+      {active.cat && facets.subcategories.length > 0 && (
+        <Group title="Podkategória">
+          <div className="flex max-h-[230px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+            {facets.subcategories.map((s) => facetRow(s.name, s.count, active.sub === s.name, () => go({ sub: active.sub === s.name ? "" : s.name })))}
+          </div>
+        </Group>
       )}
 
-      <FacetGroup title="Kategórie">
-        {facetRow("Všetko", total, !active.cat && !active.brand && !active.stock && !active.kind, () => router.push(pathname))}
-        {facets.categories.map((c) => facetRow(c.name, c.count, active.cat === c.name, () => go({ cat: active.cat === c.name ? "" : c.name })))}
-      </FacetGroup>
-
-      <FacetGroup title="Dostupnosť">
+      <Group title="Dostupnosť">
         {facetRow("Skladom", facets.stockCount, active.stock === "1", () => go({ stock: active.stock === "1" ? "" : "1" }))}
-      </FacetGroup>
-
-      {facets.kinds.length > 1 && (
-        <FacetGroup title="Typ">
-          {facets.kinds.map((k) => facetRow(k.label, k.count, active.kind === k.value, () => go({ kind: active.kind === k.value ? "" : k.value })))}
-        </FacetGroup>
-      )}
+      </Group>
 
       {facets.brands.length > 0 && (
         <div>
@@ -132,10 +141,11 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
             <span className="font-semibold">Zobrazené ceny sú vaše firemné ceny{tierCode ? ` (úroveň ${tierCode})` : ""}.</span>
             <span className="text-muted-3">Ceny sú bez DPH (s DPH uvedené pod cenou).</span>
           </div>
+
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setFiltersOpen((o) => !o)} className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>Filtre
+              <button type="button" onClick={() => setFiltersOpen(true)} className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>Filtre{chips.length > 0 && <span className="ml-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white">{chips.length}</span>}
               </button>
               <p className="text-[14px] text-muted-2"><span className="font-semibold text-ink">{total}</span> {plural(total)}{total > 0 ? ` · ${from}–${to}` : ""}</p>
             </div>
@@ -151,7 +161,18 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
             </div>
           </div>
 
-          {filtersOpen && <div className="mt-5 rounded-2xl border border-line p-4 lg:hidden">{sidebar}</div>}
+          {/* aktívne filtre — chips */}
+          {chips.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {chips.map((c) => (
+                <button key={c.key} type="button" onClick={() => removeChip(c.key)} className="inline-flex items-center gap-1.5 rounded-full border border-mint/50 bg-mintbg/60 py-1 pl-3 pr-2 text-[13px] font-medium text-brand transition hover:bg-mintbg">
+                  {c.label}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              ))}
+              <button type="button" onClick={clearAll} className="text-[13px] font-semibold text-muted transition hover:text-ink">Vymazať všetko</button>
+            </div>
+          )}
 
           <div className="mt-7 grid gap-[clamp(14px,1.6vw,22px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(208px,1fr))" }}>
             {items.map((p) => (
@@ -184,7 +205,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
             ))}
           </div>
 
-          {items.length === 0 && <p className="mt-14 text-center text-muted">Nič sa nenašlo. <button type="button" onClick={() => { setQ(""); router.push(pathname); }} className="font-semibold text-brand">Zrušiť filtre</button></p>}
+          {items.length === 0 && <p className="mt-14 text-center text-muted">Nič sa nenašlo. <button type="button" onClick={clearAll} className="font-semibold text-brand">Zrušiť filtre</button></p>}
 
           {pages > 1 && (
             <div className="mt-12 flex items-center justify-center gap-3">
@@ -195,6 +216,26 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
           )}
         </div>
       </div>
+
+      {/* mobilný drawer */}
+      {filtersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-brand-deep/40" onClick={() => setFiltersOpen(false)} />
+          <div className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
+            <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
+              <span className="text-[16px] font-semibold text-ink">Filtre</span>
+              <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">{sidebar}</div>
+            <div className="flex gap-2 border-t border-line p-3">
+              {chips.length > 0 && <button type="button" onClick={clearAll} className="rounded-[10px] border border-line px-4 py-3 text-[14px] font-semibold text-muted">Vymazať</button>}
+              <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 rounded-[10px] bg-brand py-3 text-[15px] font-semibold text-white">Zobraziť {total} {plural(total)}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -106,6 +106,7 @@ async function main() {
     const topRaw = r?.categories?.[0]?.split(">")[0].trim();
     const canonical = topRaw && CATEGORY_MAP[topRaw] ? CATEGORY_MAP[topRaw] : "Príslušenstvo";
     const fullPath = r?.categories?.[1] || r?.categories?.[0] || null;
+    const subcategory = fullPath && fullPath.includes(">") ? fullPath.split(">").pop()!.trim() : null;
 
     let slug = slugify(title);
     if (usedSlugs.has(slug)) slug = `${slug}-h${s.externalId}`;
@@ -122,7 +123,7 @@ async function main() {
       data: {
         sku, origin: "FEED", name: title, nameDisplay: title,
         categoryId: catId.get(canonical) ?? null,
-        brand: brand ?? undefined, packSize: packSize ?? undefined, color: color ?? undefined,
+        brand: brand ?? undefined, packSize: packSize ?? undefined, color: color ?? undefined, subcategory: subcategory ?? undefined,
         attributes: Object.keys(attributes).length ? attributes : undefined,
         vatRate: 23, isStocked: false, isPublished: true, shelfStatus: "CATALOG", contentStatus: "STUB",
         slug,

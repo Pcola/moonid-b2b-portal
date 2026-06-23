@@ -263,6 +263,7 @@ model Product {
   categoryId         String?
   brand              String?
   systemCode         String? // Tork N4/H2/S4/T3...
+  subcategory        String? // [P] 2. úroveň kategórie (z feed kategoriaPlna) — kaskádový facet
   scent              String? // [P] vôňa — facet
   color              String? // [P] farba — facet
   material           String? // [P] materiál — facet
@@ -315,6 +316,7 @@ model Product {
   @@index([origin])
   @@index([brand])
   @@index([systemCode])
+  @@index([subcategory])
   @@index([scent])
   @@index([color])
   @@index([packSize])

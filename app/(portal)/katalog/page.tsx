@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Katalóg — Moonid portál", robots: { index: false, follow: false } };
 
 const PAGE = 24;
-type SP = { q?: string; cat?: string; brand?: string; stock?: string; kind?: string; sort?: string; page?: string };
-type Active = { q: string; cat: string; brand: string; stock: string; kind: string; sort: string };
+type SP = { q?: string; cat?: string; sub?: string; brand?: string; stock?: string; sort?: string; page?: string };
+type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
 
 // where so VŠETKÝMI aktívnymi filtrami OKREM `exclude` (pre faceted counts)
 function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput {
@@ -18,9 +18,9 @@ function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput
   if (a.q && exclude !== "q") and.push({ OR: [{ name: { contains: a.q, mode: "insensitive" } }, { nameDisplay: { contains: a.q, mode: "insensitive" } }] });
   const w: Prisma.ProductWhereInput = { isPublished: true, AND: and };
   if (a.cat && exclude !== "cat") w.category = { name: a.cat };
+  if (a.sub && exclude !== "sub") w.subcategory = a.sub;
   if (a.brand && exclude !== "brand") w.brand = a.brand;
   if (a.stock === "1" && exclude !== "stock") w.isStocked = true;
-  if (a.kind && exclude !== "kind") w.productKind = a.kind as Prisma.EnumProductKindFilter["equals"];
   return w;
 }
 
@@ -28,21 +28,20 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const user = await requireUser();
   const tierCode = user.company?.priceTier?.code ?? null;
-  // discountPct LEN na serveri (nikdy do klienta)
   const discountPct = tierCode
     ? Number((await prisma.priceTier.findUnique({ where: { code: tierCode }, select: { discountPct: true } }))?.discountPct ?? 0)
     : 0;
 
   const a: Active = {
-    q: (sp.q ?? "").trim(), cat: sp.cat ?? "", brand: sp.brand ?? "",
-    stock: sp.stock === "1" ? "1" : "", kind: sp.kind ?? "", sort: sp.sort ?? "rec",
+    q: (sp.q ?? "").trim(), cat: sp.cat ?? "", sub: sp.sub ?? "", brand: sp.brand ?? "",
+    stock: sp.stock === "1" ? "1" : "", sort: sp.sort ?? "rec",
   };
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const where = buildWhere(a, null);
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
     a.sort === "az" ? [{ name: "asc" }] : [{ shelfStatus: "asc" }, { media: { _count: "desc" } }, { name: "asc" }];
 
-  const [rows, total, catRows, brandRows, kindRows, stockCount, allCats] = await Promise.all([
+  const [rows, total, catRows, subRows, brandRows, stockCount, allCats] = await Promise.all([
     prisma.product.findMany({
       where, orderBy, take: PAGE, skip: (page - 1) * PAGE,
       select: {
@@ -55,8 +54,11 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     }),
     prisma.product.count({ where }),
     prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat"), _count: { _all: true } }),
+    // podkategórie LEN keď je vybraná kategória (kaskáda)
+    a.cat
+      ? prisma.product.groupBy({ by: ["subcategory"], where: { ...buildWhere(a, "sub"), subcategory: { not: null } }, _count: { _all: true }, orderBy: { _count: { subcategory: "desc" } } })
+      : Promise.resolve([] as { subcategory: string | null; _count: { _all: number } }[]),
     prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
-    prisma.product.groupBy({ by: ["productKind"], where: buildWhere(a, "kind"), _count: { _all: true } }),
     prisma.product.count({ where: { ...buildWhere(a, "stock"), isStocked: true } }),
     prisma.category.findMany({ select: { id: true, name: true } }),
   ]);
@@ -66,9 +68,8 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     .filter((r) => r.categoryId && catName.get(r.categoryId))
     .map((r) => ({ name: catName.get(r.categoryId!)!, count: r._count._all }))
     .sort((x, y) => y.count - x.count);
+  const subcategories = subRows.filter((r) => r.subcategory).map((r) => ({ name: r.subcategory!, count: r._count._all }));
   const brands = brandRows.filter((r) => r.brand).map((r) => ({ name: r.brand!, count: r._count._all }));
-  const KIND_LABEL: Record<string, string> = { CONSUMABLE: "Spotrebný materiál", DISPENSER: "Dávkovače", EQUIPMENT: "Vybavenie" };
-  const kinds = kindRows.map((r) => ({ value: r.productKind, label: KIND_LABEL[r.productKind] ?? r.productKind, count: r._count._all }));
 
   const items = rows.map((p) => {
     const price = resolveUnitPrice({
@@ -89,7 +90,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     <PortalCatalog
       items={items} tierCode={tierCode}
       total={total} page={page} pageSize={PAGE}
-      facets={{ categories, brands, kinds, stockCount }}
+      facets={{ categories, subcategories, brands, stockCount }}
       active={a}
     />
   );
