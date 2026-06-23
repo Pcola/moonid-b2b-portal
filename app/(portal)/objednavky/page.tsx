@@ -27,8 +27,7 @@ export default async function ObjednavkyPage() {
   });
 
   return (
-    <div className="mx-auto max-w-[900px]">
-      <h1 className="mb-6 text-[26px] font-semibold text-ink">Objednávky</h1>
+    <div className="max-w-[980px]">
       {orders.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white p-10 text-center text-muted">
           Zatiaľ žiadne objednávky. <Link href="/katalog" className="font-semibold text-brand hover:text-brand-2">Prejsť do katalógu</Link>

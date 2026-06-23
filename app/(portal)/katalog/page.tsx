@@ -6,7 +6,8 @@ import { PortalCatalog } from "./portal-catalog";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Katalóg — Moonid portál", robots: { index: false, follow: false } };
 
-export default async function KatalogPage() {
+export default async function KatalogPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
   const user = await requireUser();
   const tierCode = user.company?.priceTier?.code ?? null;
   // discountPct si držíme LEN tu na serveri (nikdy nejde do user objektu/klienta)
@@ -56,5 +57,5 @@ export default async function KatalogPage() {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  return <PortalCatalog items={items} categories={categories} tierCode={tierCode} />;
+  return <PortalCatalog items={items} categories={categories} tierCode={tierCode} initialQ={q ?? ""} />;
 }

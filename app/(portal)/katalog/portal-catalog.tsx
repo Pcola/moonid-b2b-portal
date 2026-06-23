@@ -25,8 +25,8 @@ function AddBtn({ productId }: { productId: string }) {
   );
 }
 
-export function PortalCatalog({ items, categories, tierCode }: { items: Item[]; categories: { name: string; count: number }[]; tierCode: string | null }) {
-  const [q, setQ] = useState("");
+export function PortalCatalog({ items, categories, tierCode, initialQ = "" }: { items: Item[]; categories: { name: string; count: number }[]; tierCode: string | null; initialQ?: string }) {
+  const [q, setQ] = useState(initialQ);
   const [cat, setCat] = useState("");
   const [sort, setSort] = useState<Sort>("rec");
   const [limit, setLimit] = useState(24);

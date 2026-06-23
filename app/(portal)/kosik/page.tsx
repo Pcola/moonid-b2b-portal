@@ -14,8 +14,7 @@ export default async function KosikPage() {
     : 0;
   const cart = await getCartDetail(user.companyId ?? "__none__", tierCode, discountPct);
   return (
-    <div className="mx-auto max-w-[900px]">
-      <h1 className="mb-6 text-[26px] font-semibold text-ink">Košík</h1>
+    <div className="max-w-[940px]">
       <CartView cart={cart} />
     </div>
   );
