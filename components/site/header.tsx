@@ -21,7 +21,7 @@ function LoginIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ solid = false }: { solid?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -32,8 +32,10 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navColor = scrolled ? "#3c3a33" : "#e6efec";
-  const logoColor = scrolled ? "#163f38" : "#ffffff";
+  // solid = stránka bez tmavého hero (napr. detail produktu) → hlavička biela hneď od načítania
+  const solidUI = solid || scrolled;
+  const navColor = solidUI ? "#3c3a33" : "#e6efec";
+  const logoColor = solidUI ? "#163f38" : "#ffffff";
 
   return (
     <div className="fixed inset-x-0 top-0 z-50">
@@ -50,7 +52,7 @@ export function SiteHeader() {
       </div>
 
       {/* header */}
-      <header className="transition-all duration-300" style={{ background: scrolled ? "rgba(255,255,255,0.92)" : "transparent", backdropFilter: scrolled ? "saturate(180%) blur(16px)" : "none", WebkitBackdropFilter: scrolled ? "saturate(180%) blur(16px)" : "none", borderBottom: `1px solid ${scrolled ? "#e7ebe9" : "transparent"}` }}>
+      <header className="transition-all duration-300" style={{ background: solidUI ? "rgba(255,255,255,0.92)" : "transparent", backdropFilter: solidUI ? "saturate(180%) blur(16px)" : "none", WebkitBackdropFilter: solidUI ? "saturate(180%) blur(16px)" : "none", borderBottom: `1px solid ${solidUI ? "#e7ebe9" : "transparent"}` }}>
         <div className="mx-auto flex h-[74px] max-w-[1240px] items-center justify-between gap-5 px-5 sm:px-8">
           <Link href="/" className="text-[30px] font-bold leading-none tracking-[-0.02em] transition-colors" style={{ color: logoColor }}>moonid</Link>
 
@@ -64,13 +66,13 @@ export function SiteHeader() {
             <Link href="/login" className="navlink inline-flex items-center gap-2 whitespace-nowrap text-[14.5px] font-semibold transition-colors" style={{ color: navColor }}>
               <LoginIcon /> Prihlásiť sa
             </Link>
-            <Link href="/kontakt" className="whitespace-nowrap rounded-[9px] px-5 py-[11px] text-[14.5px] font-semibold transition-colors" style={{ background: scrolled ? "#163f38" : "#ffffff", color: scrolled ? "#ffffff" : "#163f38" }}>
+            <Link href="/kontakt" className="whitespace-nowrap rounded-[9px] px-5 py-[11px] text-[14.5px] font-semibold transition-colors" style={{ background: solidUI ? "#163f38" : "#ffffff", color: solidUI ? "#ffffff" : "#163f38" }}>
               Vyžiadať ponuku
             </Link>
           </div>
 
-          <button onClick={() => setOpen((v) => !v)} aria-label="Otvoriť menu" className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[9px] lg:hidden" style={{ border: `1px solid ${scrolled ? "#d6dedb" : "rgba(255,255,255,0.5)"}`, background: scrolled ? "#fff" : "rgba(255,255,255,0.12)" }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={scrolled ? "#163f38" : "#fff"} strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+          <button onClick={() => setOpen((v) => !v)} aria-label="Otvoriť menu" className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[9px] lg:hidden" style={{ border: `1px solid ${solidUI ? "#d6dedb" : "rgba(255,255,255,0.5)"}`, background: solidUI ? "#fff" : "rgba(255,255,255,0.12)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={solidUI ? "#163f38" : "#fff"} strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
         </div>
 

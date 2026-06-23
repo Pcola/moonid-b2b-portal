@@ -8,11 +8,10 @@ import { CookieBanner } from "@/components/site/cookie-banner";
 
 export const dynamic = "force-dynamic";
 
-// Verejný výber — ZÁMERNE bez cien/nákladov.
 const detailSelect = {
   id: true, slug: true, sku: true, name: true, nameDisplay: true,
-  brand: true, ean: true, unit: true, isStocked: true, descriptionLong: true,
-  categoryId: true,
+  brand: true, ean: true, unit: true, packSize: true, isStocked: true, descriptionLong: true,
+  categoryId: true, subcategory: true,
   category: { select: { name: true } },
   media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
 } as const;
@@ -35,18 +34,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-function ImgBox({ src, alt }: { src: string; alt: string }) {
-  return (
-    <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[20px] border border-line bg-[#f6f7f6]">
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="h-full w-full object-contain p-[clamp(28px,4vw,56px)]" />
-      ) : (
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-      )}
-    </div>
-  );
-}
+const TRUST = [
+  { t: "Vlastný rozvoz", s: "Nové Zámky a Nitriansky kraj", icon: <><path d="M3 7h11v8H3z" /><path d="M14 10h4l3 3v2h-7z" /><circle cx="7" cy="17" r="1.6" /><circle cx="17.5" cy="17" r="1.6" /></> },
+  { t: "Faktúra so splatnosťou", s: "bez platby vopred", icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 9h6M9 13h4" /></> },
+  { t: "Ceny na mieru", s: "podľa objemu odberu", icon: <><path d="M20 12l-8 8-9-9V4h7z" /><circle cx="7.5" cy="7.5" r="1.4" /></> },
+  { t: "9 rokov na trhu", s: "spoľahlivý partner od 2017", icon: <><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5L12 21l-5 -2.9 1-5.5-4-3.9 5.5-.8z" /></> },
+];
 
 export default async function ProduktDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -59,7 +52,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
 
   const relatedRaw = p.categoryId
     ? await prisma.product.findMany({
-        where: { isPublished: true, categoryId: p.categoryId, id: { not: p.id } },
+        where: { isPublished: true, categoryId: p.categoryId, id: { not: p.id }, OR: [{ variantGroupId: null }, { isDefaultVariant: true }] },
         select: { id: true, slug: true, name: true, nameDisplay: true, media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } } },
         take: 14,
       })
@@ -68,16 +61,14 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
 
   const specs: { label: string; value: string }[] = [{ label: "Kód produktu", value: p.sku }];
   if (p.brand) specs.push({ label: "Značka", value: p.brand });
+  if (p.subcategory) specs.push({ label: "Zaradenie", value: p.subcategory });
+  if (p.packSize) specs.push({ label: "Balenie", value: p.packSize });
   if (p.ean) specs.push({ label: "EAN", value: p.ean });
   if (p.unit) specs.push({ label: "Merná jednotka", value: p.unit });
   specs.push({ label: "Dostupnosť", value: p.isStocked ? "Skladom" : "Na objednávku" });
 
   const ld = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name,
-    category: cat,
-    sku: p.sku,
+    "@context": "https://schema.org", "@type": "Product", name, category: cat, sku: p.sku,
     ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
     ...(p.ean ? { gtin13: p.ean } : {}),
     ...(img ? { image: img } : {}),
@@ -87,67 +78,98 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
 
   return (
     <>
-      <SiteHeader />
-      <main id="top" className="mx-auto max-w-[1240px] px-5 sm:px-8" style={{ paddingTop: "clamp(126px,14vw,150px)", paddingBottom: "clamp(72px,9vw,120px)" }}>
+      <SiteHeader solid />
+      <main id="top" className="mx-auto max-w-[1240px] px-5 sm:px-8" style={{ paddingTop: "clamp(118px,13vw,142px)", paddingBottom: "clamp(72px,9vw,120px)" }}>
         {/* breadcrumb */}
-        <nav aria-label="Omrvinková navigácia" className="mb-[clamp(24px,3vw,40px)] flex flex-wrap items-center gap-2.5 text-[13.5px] text-muted-2">
+        <nav aria-label="Omrvinková navigácia" className="mb-[clamp(22px,3vw,38px)] flex flex-wrap items-center gap-2.5 text-[13.5px] text-muted-2">
           <Link href="/produkty" className="text-muted transition hover:text-brand">Produkty</Link>
-          <span>/</span>
-          <span className="text-brand-2">{cat}</span>
+          <span className="text-line">/</span>
+          <Link href={`/produkty?cat=${encodeURIComponent(cat)}`} className="text-muted transition hover:text-brand">{cat}</Link>
+          <span className="text-line">/</span>
+          <span className="truncate text-brand-2">{name}</span>
         </nav>
 
         <div className="grid items-start gap-[clamp(32px,4.5vw,72px)] lg:grid-cols-[1.05fr_1fr]">
-          {/* obrázok (sticky) */}
-          <div className="lg:sticky lg:top-[104px]">
-            <ImgBox src={img} alt={name} />
+          {/* obrázok */}
+          <div className="lg:sticky lg:top-[100px]">
+            <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-line shadow-[0_36px_70px_-46px_rgba(16,42,38,0.45)]" style={{ background: "radial-gradient(125% 120% at 28% 0%, #ffffff 0%, #f1f5f3 100%)" }}>
+              <span className="absolute left-4 top-4 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-2 backdrop-blur">{cat}</span>
+              <span className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${p.isStocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.isStocked ? "#1aa15f" : "#c98a14" }} />{p.isStocked ? "Skladom" : "Na objednávku"}
+              </span>
+              {img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={img} alt={name} className="h-full w-full object-contain p-[clamp(34px,5vw,68px)]" />
+              ) : (
+                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-30" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
+              )}
+            </div>
           </div>
 
           {/* info */}
           <div>
-            <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-brand-2">{cat}</span>
-            <h1 className="mt-3 text-ink" style={{ fontSize: "clamp(28px,3.6vw,44px)", lineHeight: 1.1, letterSpacing: "-0.015em", textWrap: "balance" }}>{name}</h1>
-
-            {/* dostupnosť */}
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium"
-              style={p.isStocked ? { borderColor: "#bbe7d3", background: "#ecfdf3", color: "#14633f" } : { borderColor: "#f0dcb0", background: "#fdf6e7", color: "#8a5a00" }}>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.isStocked ? "#1aa15f" : "#c98a14" }} />
-              {p.isStocked ? "Skladom" : "Na objednávku"}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {p.brand && <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-brand">{p.brand}</span>}
+              <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-muted-2">{cat}</span>
             </div>
+            <h1 className="mt-2.5 font-normal text-ink" style={{ fontSize: "clamp(27px,3.5vw,42px)", lineHeight: 1.1, letterSpacing: "-0.015em", textWrap: "balance" }}>{name}</h1>
 
             {/* cena + CTA */}
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-cream px-[clamp(18px,2.4vw,24px)] py-[clamp(16px,2vw,20px)]">
-              <div className="flex flex-col gap-1">
-                <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-2">Cena</span>
-                <span className="text-[22px] text-ink">Na vyžiadanie</span>
+            <div className="mt-7 overflow-hidden rounded-[18px] border border-mint/45" style={{ background: "linear-gradient(135deg,#f3f8f6 0%,#eaf1ee 100%)" }}>
+              <div className="flex flex-wrap items-center justify-between gap-4 p-[clamp(18px,2.4vw,24px)]">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted-2">Cena</span>
+                  <span className="text-[24px] font-medium text-ink">Na vyžiadanie</span>
+                  <span className="text-[12.5px] text-muted-3">Firemné ceny vidíte po prihlásení do portálu.</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Link href="/kontakt#form" className="whitespace-nowrap rounded-[11px] bg-brand px-[24px] py-[13px] text-center text-[14.5px] font-semibold text-white transition hover:-translate-y-px hover:bg-brand-2">Vyžiadať ponuku</Link>
+                  <Link href="/login" className="whitespace-nowrap rounded-[11px] border border-brand/30 bg-white/70 px-[24px] py-[12px] text-center text-[14px] font-semibold text-brand transition hover:bg-white">Ceny po prihlásení</Link>
+                </div>
               </div>
-              <Link href="/kontakt#form" className="cta-primary whitespace-nowrap rounded-[11px] bg-brand px-[26px] py-[14px] text-[15px] font-semibold text-white transition hover:-translate-y-px hover:bg-brand-2">
-                Vyžiadať cenovú ponuku
-              </Link>
             </div>
 
-            {p.descriptionLong && (
-              <p className="mt-7 text-[15.5px] leading-relaxed text-muted-3" style={{ textWrap: "pretty" }}>{p.descriptionLong}</p>
-            )}
-
-            {/* parametre */}
-            <div className="mt-8 border-t border-line">
-              {specs.map((s) => (
-                <div key={s.label} className="flex items-baseline justify-between gap-5 border-b border-line py-3">
-                  <span className="text-[13.5px] text-muted-2">{s.label}</span>
-                  <span className="text-right text-[14.5px] font-medium text-ink">{s.value}</span>
+            {/* trust strip */}
+            <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-4 rounded-[16px] border border-line bg-white p-[clamp(16px,2vw,22px)] sm:grid-cols-2">
+              {TRUST.map((it) => (
+                <div key={it.t} className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-mintbg text-brand">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{it.icon}</svg>
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-[13.5px] font-semibold leading-tight text-ink">{it.t}</span>
+                    <span className="text-[12px] leading-tight text-muted-2">{it.s}</span>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-7 flex flex-wrap items-center gap-4">
-              <Link href="/kontakt#form" className="border-b-[1.5px] border-brand py-2 text-[14.5px] font-semibold text-brand transition hover:text-brand-2">Prejsť na kontaktný formulár</Link>
-              <span className="text-line">·</span>
-              <a href="tel:+421919216908" className="text-[14.5px] font-medium text-muted transition hover:text-ink">0919 216 908</a>
-              <span className="text-line">·</span>
-              <Link href="/produkty" className="text-[14.5px] font-medium text-muted transition hover:text-ink">Späť na produkty</Link>
+            {p.descriptionLong && (
+              <div className="mt-8">
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-muted-2">Popis produktu</h2>
+                <p className="mt-2.5 text-[15.5px] leading-relaxed text-muted-3" style={{ textWrap: "pretty" }}>{p.descriptionLong}</p>
+              </div>
+            )}
+
+            {/* parametre */}
+            <div className="mt-8">
+              <h2 className="text-[13px] font-semibold uppercase tracking-[0.1em] text-muted-2">Parametre</h2>
+              <div className="mt-3 overflow-hidden rounded-[14px] border border-line">
+                {specs.map((s, i) => (
+                  <div key={s.label} className={`flex items-baseline justify-between gap-5 px-4 py-3 ${i % 2 ? "bg-cream/50" : "bg-white"}`}>
+                    <span className="text-[13.5px] text-muted-2">{s.label}</span>
+                    <span className="text-right text-[14.5px] font-medium text-ink">{s.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <p className="mt-6 text-[12.5px] leading-relaxed text-muted-2">Cena a dostupnosť závisia od objemu a aktuálnych skladových zásob. Najpredávanejšie produkty držíme skladom, zvyšok dodáme na objednávku pravidelným rozvozom.</p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px]">
+              <span className="text-muted-2">Otázka k produktu?</span>
+              <a href="tel:+421919216908" className="font-semibold text-brand transition hover:text-brand-2">0919 216 908</a>
+              <span className="text-line">·</span>
+              <a href="mailto:moonid@moonid.sk" className="font-medium text-muted transition hover:text-ink">moonid@moonid.sk</a>
+            </div>
           </div>
         </div>
 
@@ -155,13 +177,13 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
         {related.length > 0 && (
           <section className="mt-[clamp(64px,8vw,110px)] border-t border-line pt-[clamp(40px,5vw,60px)]">
             <div className="mb-[clamp(24px,3vw,36px)] flex items-baseline justify-between gap-4">
-              <h2 className="text-ink" style={{ fontSize: "clamp(22px,2.6vw,32px)", letterSpacing: "-0.01em" }}>Podobné produkty</h2>
-              <Link href="/produkty" className="whitespace-nowrap text-[14px] font-semibold text-brand transition hover:text-brand-2">Celý katalóg →</Link>
+              <h2 className="font-normal text-ink" style={{ fontSize: "clamp(22px,2.6vw,32px)", letterSpacing: "-0.01em" }}>Podobné produkty</h2>
+              <Link href={`/produkty?cat=${encodeURIComponent(cat)}`} className="whitespace-nowrap text-[14px] font-semibold text-brand transition hover:text-brand-2">Celá kategória →</Link>
             </div>
             <div className="grid gap-[clamp(16px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,190px),1fr))" }}>
               {related.map((r) => (
                 <Link key={r.id} href={`/produkt/${r.slug}`} className="group flex flex-col">
-                  <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[14px] border border-line bg-[#f6f7f6] transition group-hover:border-brand/30 group-hover:shadow-[0_16px_36px_-24px_rgba(22,40,29,0.4)]">
+                  <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[16px] border border-line bg-[#f6f7f6] transition duration-200 group-hover:-translate-y-1 group-hover:border-brand/30 group-hover:shadow-[0_18px_40px_-26px_rgba(22,40,29,0.45)]">
                     {r.media[0]?.storagePath ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={r.media[0].storagePath} alt={r.nameDisplay || r.name} loading="lazy" className="h-full w-full object-contain p-4 transition duration-500 group-hover:scale-105" />
@@ -169,7 +191,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
                       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2 opacity-40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
                     )}
                   </div>
-                  <span className="mt-3 line-clamp-2 text-[14px] font-medium leading-snug text-ink">{r.nameDisplay || r.name}</span>
+                  <span className="mt-3 line-clamp-2 text-[14px] font-medium leading-snug text-ink transition group-hover:text-brand">{r.nameDisplay || r.name}</span>
                 </Link>
               ))}
             </div>
