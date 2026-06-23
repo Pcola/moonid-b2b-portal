@@ -15,10 +15,9 @@ export default async function ZiadostiPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-[900px] px-5 py-10 sm:px-8">
-      <h1 className="text-[26px] font-semibold text-ink">Žiadosti o prístup</h1>
-      <p className="mt-1.5 text-[15px] text-muted">Schváľte žiadosť — priradí sa cenová úroveň, založí/napojí firma a vytvorí sa pozvánka.</p>
-      <div className="mt-7">
+    <div className="max-w-[900px]">
+      <p className="text-[15px] text-muted">Schváľte žiadosť — priradí sa cenová úroveň, založí/napojí firma a vytvorí sa pozvánka.</p>
+      <div className="mt-6">
         <RequestList
           requests={requests.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }))}
           tiers={tiers.map((t) => ({ code: t.code, name: t.name, discountPct: String(t.discountPct) }))}

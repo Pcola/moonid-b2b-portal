@@ -45,9 +45,8 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
   };
 
   return (
-    <div className="mx-auto max-w-[1100px] px-5 py-10 sm:px-8">
-      <h1 className="text-[28px] font-semibold text-ink">Katalóg — párovanie zdrojov</h1>
-      <p className="mt-1 text-[15px] text-muted-3">Potvrď alebo odmietni navrhnuté zhody humed → Pohoda. Pri potvrdení sa obrázok a popis priradia k produktu.</p>
+    <div className="max-w-[1100px]">
+      <p className="text-[15px] text-muted-3">Potvrď alebo odmietni navrhnuté zhody humed → Pohoda. Pri potvrdení sa obrázok a popis priradia k produktu.</p>
 
       <div className="mt-6 flex flex-wrap gap-2.5">
         <Chip label="čaká spolu" value={stats.pendingTotal} tone="warn" />
