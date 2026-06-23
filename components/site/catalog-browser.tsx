@@ -1,50 +1,48 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 
 type P = { id: string; n: string; i: string; c: string; slug: string };
-type Sort = "rec" | "az" | "za";
+type Active = { q: string; cat: string; brand: string; sort: string };
 
 function plural(n: number) {
   return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "produkty" : "produktov";
 }
 
-export function CatalogBrowser({ products, categories }: { products: P[]; categories: { name: string; count: number }[] }) {
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("");
-  const [sort, setSort] = useState<Sort>("rec");
-  const [limit, setLimit] = useState(24);
+export function CatalogBrowser({ products, categories, brands, total, page, pageSize, active }: {
+  products: P[];
+  categories: { name: string; count: number }[];
+  brands: { name: string; count: number }[];
+  total: number; page: number; pageSize: number; active: Active;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [q, setQ] = useState(active.q);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const total = products.length;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const anyFilter = !!(active.cat || active.brand || active.q);
 
-  const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
-    let r = products.filter((p) => (!cat || p.c === cat) && (!qq || p.n.toLowerCase().includes(qq)));
-    if (sort === "az") r = [...r].sort((a, b) => a.n.localeCompare(b.n, "sk"));
-    else if (sort === "za") r = [...r].sort((a, b) => b.n.localeCompare(a.n, "sk"));
-    return r;
-  }, [q, cat, sort, products]);
+  function go(patch: Partial<Active & { page: number }>) {
+    const merged: Record<string, string> = { ...active, page: "1", ...Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, String(v)])) };
+    const usp = new URLSearchParams();
+    for (const [k, v] of Object.entries(merged)) {
+      if (!v || v === "rec" || (k === "page" && v === "1")) continue;
+      usp.set(k, v);
+    }
+    const qs = usp.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: true });
+  }
 
-  const shown = filtered.slice(0, limit);
-
-  const catRow = (name: string, count: number) => {
-    const active = cat === name;
-    return (
-      <button
-        key={name || "__all"}
-        type="button"
-        onClick={() => { setCat(name); setLimit(24); setFiltersOpen(false); }}
-        className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[9px] text-left text-[14px] transition ${
-          active ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"
-        }`}
-      >
-        <span className="truncate pr-2">{name || "Všetko"}</span>
-        <span className={`text-[12px] tabular-nums ${active ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
-      </button>
-    );
-  };
+  const facetRow = (label: string, count: number, on: boolean, onClick: () => void) => (
+    <button key={label} type="button" onClick={onClick}
+      className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[9px] text-left text-[14px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
+      <span className="truncate pr-2">{label}</span>
+      <span className={`text-[12px] tabular-nums ${on ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
+    </button>
+  );
 
   const sidebar = (
     <div className="flex flex-col gap-7">
@@ -52,18 +50,33 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input
           value={q}
-          onChange={(e) => { setQ(e.target.value); setLimit(24); }}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
           placeholder="Hľadať v sortimente…"
           className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand"
         />
       </div>
+
+      {anyFilter && (
+        <button type="button" onClick={() => { setQ(""); router.push(pathname); }} className="self-start text-[13px] font-semibold text-brand transition hover:text-brand-2">✕ Zrušiť filtre</button>
+      )}
+
       <div>
         <p className="mb-2.5 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">Kategórie</p>
         <div className="flex flex-col gap-0.5">
-          {catRow("", total)}
-          {categories.map((c) => catRow(c.name, c.count))}
+          {facetRow("Všetko", total, !active.cat && !active.brand, () => router.push(pathname))}
+          {categories.map((c) => facetRow(c.name, c.count, active.cat === c.name, () => go({ cat: active.cat === c.name ? "" : c.name })))}
         </div>
       </div>
+
+      {brands.length > 0 && (
+        <div>
+          <p className="mb-2.5 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">Značka</p>
+          <div className="flex flex-col gap-0.5">
+            {brands.map((b) => facetRow(b.name, b.count, active.brand === b.name, () => go({ brand: active.brand === b.name ? "" : b.name })))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -87,14 +100,14 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
                 Filtre
               </button>
-              <p className="text-[14px] text-muted-2"><span className="font-semibold text-ink">{filtered.length}</span> {plural(filtered.length)}</p>
+              <p className="text-[14px] text-muted-2"><span className="font-semibold text-ink">{total}</span> {plural(total)}</p>
             </div>
             <div className="flex items-center gap-2 text-[14px] text-muted">
               <span className="hidden sm:inline">Zoradiť</span>
               <div className="relative">
                 <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as Sort)}
+                  value={active.sort}
+                  onChange={(e) => go({ sort: e.target.value })}
                   className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand"
                 >
                   <option value="rec">Odporúčané</option>
@@ -111,7 +124,7 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
 
           {/* grid */}
           <div className="mt-7 grid gap-[clamp(14px,1.6vw,22px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(208px,1fr))" }}>
-            {shown.map((p) => (
+            {products.map((p) => (
               <Link
                 key={p.id}
                 href={`/produkt/${p.slug}`}
@@ -137,19 +150,15 @@ export function CatalogBrowser({ products, categories }: { products: P[]; catego
             ))}
           </div>
 
-          {shown.length === 0 && (
-            <p className="mt-14 text-center text-muted">Nič sa nenašlo. Skúste iné hľadanie alebo nás kontaktujte.</p>
+          {products.length === 0 && (
+            <p className="mt-14 text-center text-muted">Nič sa nenašlo. <button type="button" onClick={() => { setQ(""); router.push(pathname); }} className="font-semibold text-brand">Zrušiť filtre</button> alebo nás kontaktujte.</p>
           )}
 
-          {filtered.length > limit && (
-            <div className="mt-12 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setLimit((l) => l + 24)}
-                className="rounded-[11px] border border-line bg-white px-8 py-3.5 text-[15px] font-semibold text-ink transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-[0_10px_24px_-14px_rgba(16,42,38,0.25)]"
-              >
-                Načítať ďalšie produkty
-              </button>
+          {pages > 1 && (
+            <div className="mt-12 flex items-center justify-center gap-3">
+              <button type="button" disabled={page <= 1} onClick={() => go({ page: page - 1 })} className="rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink transition hover:border-brand/40 disabled:opacity-40">‹ Späť</button>
+              <span className="text-[14px] text-muted">Strana <span className="font-semibold text-ink">{page}</span> z {pages}</span>
+              <button type="button" disabled={page >= pages} onClick={() => go({ page: page + 1 })} className="rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink transition hover:border-brand/40 disabled:opacity-40">Ďalej ›</button>
             </div>
           )}
         </div>
