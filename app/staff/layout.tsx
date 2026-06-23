@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 
-const NAV = [{ href: "/staff/katalog", label: "Katalóg / párovanie" }];
+const NAV = [
+  { href: "/staff/ziadosti", label: "Žiadosti" },
+  { href: "/staff/katalog", label: "Katalóg / párovanie" },
+];
 
 export default async function StaffLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();

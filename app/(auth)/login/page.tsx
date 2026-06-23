@@ -56,7 +56,7 @@ export default function LoginPage() {
           </Suspense>
           <p className="border-t border-line pt-5 text-[13.5px] leading-relaxed text-muted-2">
             Nemáte ešte prístup?{" "}
-            <Link href="/kontakt" className="font-semibold text-brand transition hover:text-brand-2">Požiadajte o zriadenie účtu</Link>{" "}
+            <Link href="/registracia" className="font-semibold text-brand transition hover:text-brand-2">Požiadajte o zriadenie účtu</Link>{" "}
             alebo nám napíšte na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand transition hover:text-brand-2">moonid@moonid.sk</a>.
           </p>
         </div>

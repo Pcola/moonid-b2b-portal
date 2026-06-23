@@ -67,6 +67,12 @@ enum MatchMethod {
   MANUAL // admin priradil ručne
 }
 
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum PriceSource {
   POHODA
   COMPUTED
@@ -213,6 +219,26 @@ model User {
 
   @@index([companyId])
   @@index([role])
+}
+
+// ---------- Žiadosti o prístup (onboarding) ---------- [P]
+
+model AccessRequest {
+  id           String        @id @default(cuid())
+  ico          String
+  companyName  String
+  contactName  String
+  email        String
+  phone        String?
+  note         String?
+  status       RequestStatus @default(PENDING)
+  resolvedById String? // User.id staffa, ktorý vybavil
+  resolvedAt   DateTime?
+  companyId    String? // priradená firma po schválení
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
 }
 
 // ---------- Katalóg ----------
