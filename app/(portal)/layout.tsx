@@ -3,7 +3,8 @@ import { requireUser } from "@/lib/auth";
 
 const NAV = [
   { href: "/dashboard", label: "Prehľad" },
-  // Katalóg / Objednávky / Faktúry pribudnú v ďalších fázach
+  { href: "/katalog", label: "Katalóg" },
+  // Objednávky / Faktúry pribudnú v ďalších fázach
 ];
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {

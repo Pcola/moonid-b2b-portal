@@ -13,7 +13,9 @@ export const getCurrentUser = cache(async () => {
   if (!authUser) return null;
   return prisma.user.findUnique({
     where: { authId: authUser.id },
-    include: { company: { include: { priceTier: true } } },
+    // priceTier zámerne BEZ discountPct (necitlivé code/name) — aby sa cez serializovaný
+    // user objekt nedostala zľava klientovi. discountPct si dotiahne server (lib/pricing volajúci).
+    include: { company: { include: { priceTier: { select: { id: true, code: true, name: true } } } } },
   });
 });
 
