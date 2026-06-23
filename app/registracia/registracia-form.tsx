@@ -33,7 +33,7 @@ export function RegistraciaForm() {
 
   if (done) {
     return (
-      <div className="rounded-2xl border border-line bg-white p-8 text-center">
+      <div className="py-4 text-center">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-mintbg text-brand">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </div>
@@ -45,7 +45,7 @@ export function RegistraciaForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-6 sm:p-7">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={labelCls}>Názov firmy<input name="companyName" required className={inputCls} /></label>
