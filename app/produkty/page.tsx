@@ -21,8 +21,10 @@ type SP = { q?: string; cat?: string; brand?: string; sort?: string; page?: stri
 type Active = { q: string; cat: string; brand: string; sort: string };
 
 function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput {
-  const w: Prisma.ProductWhereInput = { isPublished: true };
-  if (a.q && exclude !== "q") w.OR = [{ name: { contains: a.q, mode: "insensitive" } }, { nameDisplay: { contains: a.q, mode: "insensitive" } }];
+  // listing zobrazí 1 kartu na skupinu: default variant alebo samostatný produkt
+  const and: Prisma.ProductWhereInput[] = [{ OR: [{ variantGroupId: null }, { isDefaultVariant: true }] }];
+  if (a.q && exclude !== "q") and.push({ OR: [{ name: { contains: a.q, mode: "insensitive" } }, { nameDisplay: { contains: a.q, mode: "insensitive" } }] });
+  const w: Prisma.ProductWhereInput = { isPublished: true, AND: and };
   if (a.cat && exclude !== "cat") w.category = { name: a.cat };
   if (a.brand && exclude !== "brand") w.brand = a.brand;
   return w;

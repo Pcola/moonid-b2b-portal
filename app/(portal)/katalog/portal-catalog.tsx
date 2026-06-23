@@ -143,7 +143,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
           <div className="mt-7 grid gap-[clamp(14px,1.6vw,22px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(208px,1fr))" }}>
             {items.map((p) => (
               <div key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
-                <Link href={`/produkt/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
+                <Link href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
                   <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
                   {p.i ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -154,7 +154,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
                 </Link>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">
                   <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-2 line-clamp-1">{p.c}</span>
-                  <Link href={`/produkt/${p.slug}`} className="line-clamp-2 text-[14px] font-medium leading-snug text-ink transition hover:text-brand">{p.n}</Link>
+                  <Link href={`/katalog/${p.slug}`} className="line-clamp-2 text-[14px] font-medium leading-snug text-ink transition hover:text-brand">{p.n}</Link>
                   <div className="mt-auto pt-2">
                     {p.price.kind === "PRICE" ? (
                       <>

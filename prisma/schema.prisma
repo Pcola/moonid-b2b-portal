@@ -291,6 +291,13 @@ model Product {
   attributes         Json? // [P] voľné atribúty pre filtre (objem, paleta, hmotnosť, Tork detail…)
   isPublished        Boolean          @default(false) // verejný web zobrazuje len isPublished=true
   lastSeenInPohodaAt DateTime? // [C] pre reconcile/tombstone — čo zmizne z exportu sa archivuje
+  // ---- varianty [P] (Fáza B) ----
+  variantGroup       ProductGroup?    @relation(fields: [variantGroupId], references: [id])
+  variantGroupId     String? // null = samostatný produkt
+  variantAxis        String? // scent | color | size | pack
+  variantLabel       String? // hodnota pre prepínač ("Citrón", "1000 ml")
+  variantSort        Int?
+  isDefaultVariant   Boolean          @default(false) // reprezentant skupiny v katalógu
   prices             ProductPrice[]
   media              ProductMedia[]
   sources            ProductSource[]
@@ -312,6 +319,23 @@ model Product {
   @@index([color])
   @@index([packSize])
   @@index([attributes], type: Gin)
+  @@index([variantGroupId])
+}
+
+// ---------- Variantná skupina [P] (Fáza B) — tenký parent: zobrazenie + výber variantu; ŽIADNA cena/sklad/most ----------
+model ProductGroup {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String?   @unique
+  categoryId      String? // denormalizované pre filter (bez FK)
+  primaryAxis     String? // hlavná os variantu (scent | color | size | pack)
+  descriptionLong String?   @db.Text
+  isPublished     Boolean   @default(false) // agregát: zobrazí sa ak má aspoň 1 publikovaný variant
+  members         Product[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([categoryId])
 }
 
 // ---------- Most katalóg → Pohoda karta [P] (lazy mapping; rieši IDENTITU, nie cenu) ----------
