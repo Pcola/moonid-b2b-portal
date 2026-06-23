@@ -1,0 +1,65 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Objednávka — Moonid portál", robots: { index: false, follow: false } };
+
+const STATUS: Record<string, string> = {
+  PRIJATA: "Prijatá", POTVRDENA: "Potvrdená", PRIPRAVUJE: "Pripravuje sa", NA_CESTE: "Na ceste", DORUCENA: "Doručená", STORNO: "Stornovaná",
+};
+function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
+
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await requireUser();
+  // IDOR ochrana: objednávka MUSÍ patriť firme usera, inak 404. ZÁMERNE bez costSnapshot.
+  const order = await prisma.order.findFirst({
+    where: { id, companyId: user.companyId ?? "__none__" },
+    select: {
+      number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true, createdAt: true,
+      items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, qty: true, lineTotal: true, fulfillment: true } },
+      events: { where: { source: "PORTAL" }, orderBy: { occurredAt: "asc" }, select: { status: true, occurredAt: true } },
+    },
+  });
+  if (!order) notFound();
+
+  return (
+    <div className="mx-auto max-w-[820px]">
+      <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <h1 className="font-mono text-[24px] font-semibold text-ink">{order.number}</h1>
+        <span className="rounded-full bg-cream px-2.5 py-1 text-[12.5px] font-semibold text-brand">{STATUS[order.status] ?? order.status}</span>
+        <span className="text-[13px] text-muted-2">{new Date(order.createdAt).toLocaleString("sk")}</span>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-white">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-line bg-cream/60 px-5 py-2.5 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+          <span>Položka</span><span className="text-right">Ks</span><span className="text-right">Cena/ks</span><span className="text-right">Spolu</span>
+        </div>
+        {order.items.map((it) => (
+          <div key={it.id} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-4 border-b border-line px-5 py-3 last:border-0">
+            <div className="min-w-0">
+              <div className="truncate text-[14px] text-ink">{it.nameSnapshot}</div>
+              <div className="text-[12px] text-muted-2">{it.skuSnapshot} · {it.fulfillment === "SKLADOM" ? "Skladom" : "Na objednávku"}</div>
+            </div>
+            <span className="text-right text-[14px] tabular-nums text-muted">{Math.round(Number(it.qty))}</span>
+            <span className="text-right text-[14px] tabular-nums text-muted">{eur(Number(it.unitPriceSnapshot))}</span>
+            <span className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(Number(it.lineTotal))}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-col items-end gap-1 text-[14px]">
+        <div className="flex w-[260px] justify-between text-muted"><span>Medzisúčet (bez DPH)</span><span className="tabular-nums text-ink">{eur(Number(order.subtotal))}</span></div>
+        <div className="flex w-[260px] justify-between text-muted"><span>DPH</span><span className="tabular-nums text-ink">{eur(Number(order.vat))}</span></div>
+        <div className="flex w-[260px] justify-between border-t border-line pt-2 text-[16px] font-semibold text-ink"><span>Spolu s DPH</span><span className="tabular-nums">{eur(Number(order.total))}</span></div>
+      </div>
+
+      {order.note && <div className="mt-6 rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka</div><p className="mt-1 text-[14px] text-muted-3">{order.note}</p></div>}
+
+      <p className="mt-6 text-[13px] text-muted-2">Objednávku spracujeme a potvrdíme. O zmenách stavu vás budeme informovať.</p>
+    </div>
+  );
+}

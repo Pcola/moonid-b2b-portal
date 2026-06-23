@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { PricedLine } from "@/lib/pricing";
+import { addToCart } from "../kosik/actions";
 
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; price: PricedLine };
 type Sort = "rec" | "asc" | "desc" | "az";
@@ -9,6 +10,20 @@ type Sort = "rec" | "asc" | "desc" | "az";
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 function plural(n: number) { return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "produkty" : "produktov"; }
 function priceVal(p: PricedLine) { return p.kind === "PRICE" ? p.net : Number.POSITIVE_INFINITY; }
+
+function AddBtn({ productId }: { productId: string }) {
+  const [pending, start] = useTransition();
+  const [added, setAdded] = useState(false);
+  return (
+    <button
+      onClick={() => start(async () => { const r = await addToCart(productId, 1); if (r.ok) { setAdded(true); setTimeout(() => setAdded(false), 1500); } })}
+      disabled={pending}
+      className="mt-2.5 w-full rounded-[9px] border border-brand/30 bg-mintbg/40 px-3 py-2 text-[13px] font-semibold text-brand transition hover:bg-mintbg disabled:opacity-60"
+    >
+      {added ? "Pridané ✓" : pending ? "…" : "Do košíka"}
+    </button>
+  );
+}
 
 export function PortalCatalog({ items, categories, tierCode }: { items: Item[]; categories: { name: string; count: number }[]; tierCode: string | null }) {
   const [q, setQ] = useState("");
@@ -114,6 +129,7 @@ export function PortalCatalog({ items, categories, tierCode }: { items: Item[]; 
                       <span className="text-[13.5px] font-semibold text-brand-2">Cena na vyžiadanie</span>
                     )}
                   </div>
+                  {p.price.kind === "PRICE" && <AddBtn productId={p.id} />}
                 </div>
               </div>
             ))}

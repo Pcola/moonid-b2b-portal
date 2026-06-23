@@ -456,6 +456,12 @@ model OrderStatusEvent {
   @@index([orderId])
 }
 
+// Atomické číslovanie objednávok (per rok) — race-safe cez increment v $transaction.
+model OrderCounter {
+  year    Int @id
+  lastSeq Int @default(0)
+}
+
 // ---------- Faktúry ---------- [C] cache z Pohody + PDF
 
 model Invoice {
