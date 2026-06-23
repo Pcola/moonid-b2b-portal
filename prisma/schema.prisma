@@ -492,6 +492,7 @@ model Order {
   pohodaObjNumber       String?
   pohodaFaNumber        String?
   pohodaPushedAt        DateTime?
+  pohodaCancelRequested Boolean            @default(false) // storno vyžiadané kým OBJ in-flight → kompenzačné CANCEL
   items                 OrderItem[]
   events                OrderStatusEvent[]
   invoice               Invoice?
@@ -644,16 +645,18 @@ model PohodaSyncJob {
   orderId   String
   kind      SyncJobKind
   payload   Json?
-  status    SyncJobStatus @default(QUEUED)
-  attempts  Int           @default(0)
-  claimedBy String?
-  claimedAt DateTime?
-  lastError String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  status        SyncJobStatus @default(QUEUED)
+  attempts      Int           @default(0)
+  nextAttemptAt DateTime? // backoff: job sa nclaimuje až po tomto čase
+  claimedBy     String?
+  claimedAt     DateTime?
+  lastError     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([status])
   @@index([orderId])
+  @@index([status, nextAttemptAt])
 }
 
 model DocDedup {
