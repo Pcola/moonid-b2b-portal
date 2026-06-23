@@ -14,7 +14,7 @@ export const getCurrentUser = cache(async () => {
   return prisma.user.findUnique({
     where: { authId: authUser.id },
     // priceTier zámerne BEZ discountPct (necitlivé code/name) — aby sa cez serializovaný
-    // user objekt nedostala zľava klientovi. discountPct si dotiahne server (lib/pricing volajúci).
+    // user objekt nedostala zľava klientovi. discountPct si dotiahne server podľa potreby.
     include: { company: { include: { priceTier: { select: { id: true, code: true, name: true } } } } },
   });
 });
@@ -30,7 +30,6 @@ export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1");
-  // zákazník musí mať priradenú firmu; staff/admin nie
   if (!user.companyId && !isStaff(user.role)) redirect("/cakajuce");
   return user;
 }
@@ -39,6 +38,7 @@ export async function requireUser(): Promise<SessionUser> {
 export async function requireStaff(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (!user.active) redirect("/login?disabled=1"); // deaktivovaný staff nesmie prejsť
   if (!isStaff(user.role)) redirect("/dashboard");
   return user;
 }
@@ -47,6 +47,7 @@ export async function requireStaff(): Promise<SessionUser> {
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (!user.active) redirect("/login?disabled=1");
   if (user.role !== "ADMIN") redirect("/dashboard");
   return user;
 }

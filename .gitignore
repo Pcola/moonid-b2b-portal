@@ -17,9 +17,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files (NEVER commit secrets)
-.env
-.env*.local
+# env files (NEVER commit secrets) — pokrýva .env, .env.local, .env.production, .env.staging...
+.env*
+!.env.example
 
 # typescript
 *.tsbuildinfo

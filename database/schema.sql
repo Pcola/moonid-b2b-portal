@@ -1,8 +1,11 @@
 -- ============================================================
---  Moonid B2B Portál — PostgreSQL schéma + Row-Level Security
---  Referencia pre handoff. Cieľ: Supabase (Postgres) alebo AWS RDS.
---  Prisma schéma je v ../prisma/schema.prisma — toto je SQL pohľad
---  vrátane RLS politík, ktoré Prisma sama negeneruje.
+--  ⚠️ TENTO SQL SA NEAPLIKUJE A JE ZASTARANÝ — LEN REFERENCIA/HANDOFF.
+--  Kánonická schéma = ../prisma/schema.prisma (+ prisma/migrations/).
+--  RLS politiky NIŽŠIE NIE SÚ V DB NASADENÉ. Multi-tenant izolácia je
+--  VÝHRADNE v app vrstve (lib/auth.ts + scoped Prisma dotazy), pretože
+--  Prisma sa pripája privilegovaným spojením (RLS by obišlo). Nepovažuj
+--  tento súbor za zdroj pravdy ani za bezpečnostnú záruku.
+--  (Pôvodný popis: PostgreSQL schéma + RLS, handoff referencia.)
 -- ============================================================
 
 -- ---------- Enumy ----------

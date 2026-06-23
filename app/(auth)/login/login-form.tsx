@@ -3,13 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 const labelCls = "flex flex-col gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-3";
 const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-[13px] text-[15.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
 
 export function LoginForm() {
   const router = useRouter();
-  const next = useSearchParams().get("next") || "/dashboard";
+  const next = safeNextPath(useSearchParams().get("next")); // anti open-redirect
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);

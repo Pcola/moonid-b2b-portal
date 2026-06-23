@@ -2,11 +2,13 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requireStaff } from "@/lib/auth";
 
 // Copy-on-confirm: pri potvrdení zhody sa obsah zdroja JEDNORAZOVO skopíruje do Product
 // (len ak je pole prázdne — manuálne/existujúce hodnoty vyhrávajú). Re-import feedu
 // Product už neprepíše. Žiadny nočný projekčný engine.
 export async function confirmMatch(sourceId: string) {
+  await requireStaff(); // server action si rolu MUSÍ overiť sama (layout chráni len render)
   const src = await prisma.productSource.findUnique({
     where: { id: sourceId },
     include: { product: { include: { media: true } } },
@@ -39,6 +41,7 @@ export async function confirmMatch(sourceId: string) {
 
 // REJECT necháva productId vyplnené → matcher nenavrhne tú istú dvojicu znova.
 export async function rejectMatch(sourceId: string) {
+  await requireStaff();
   await prisma.productSource.update({
     where: { id: sourceId },
     data: { matchStatus: "REJECTED", matchedAt: new Date() },
@@ -47,6 +50,7 @@ export async function rejectMatch(sourceId: string) {
 }
 
 export async function togglePublish(productId: string, value: boolean) {
+  await requireStaff();
   await prisma.product.update({ where: { id: productId }, data: { isPublished: value } });
   revalidatePath("/staff/katalog");
 }
