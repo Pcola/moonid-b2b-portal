@@ -100,25 +100,27 @@ async function main() {
   for (const s of sources) {
     const sku = `HUM-${s.externalId}`;
     if (existing.has(sku)) { skipped++; continue; }
+    const title = s.title ?? "";
+    if (!title) { skipped++; continue; }
     const r = s.raw as { categories?: string[] } | null;
     const topRaw = r?.categories?.[0]?.split(">")[0].trim();
     const canonical = topRaw && CATEGORY_MAP[topRaw] ? CATEGORY_MAP[topRaw] : "Príslušenstvo";
     const fullPath = r?.categories?.[1] || r?.categories?.[0] || null;
 
-    let slug = slugify(s.title);
+    let slug = slugify(title);
     if (usedSlugs.has(slug)) slug = `${slug}-h${s.externalId}`;
     usedSlugs.add(slug);
 
-    const brand = parseBrand(s.title);
-    const packSize = parseVolume(s.title);
-    const color = parseColor(s.title);
+    const brand = parseBrand(title);
+    const packSize = parseVolume(title);
+    const color = parseColor(title);
     const attributes: Record<string, string> = {};
     if (fullPath) attributes.kategoriaPlna = fullPath;
     if (packSize) attributes.objem = packSize;
 
     await prisma.product.create({
       data: {
-        sku, origin: "FEED", name: s.title, nameDisplay: s.title,
+        sku, origin: "FEED", name: title, nameDisplay: title,
         categoryId: catId.get(canonical) ?? null,
         brand: brand ?? undefined, packSize: packSize ?? undefined, color: color ?? undefined,
         attributes: Object.keys(attributes).length ? attributes : undefined,
