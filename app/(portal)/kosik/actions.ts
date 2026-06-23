@@ -92,6 +92,7 @@ export async function createOrder(note?: string): Promise<{ ok: boolean; error?:
           basePrice: true, costPrice: true, vatRate: true, isSubsidized: true,
           isStocked: true, stockCache: true, stockSyncedAt: true,
           prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
+          pohodaLink: { select: { pohodaSku: true, linkStatus: true } },
         },
       },
     },
@@ -102,7 +103,7 @@ export async function createOrder(note?: string): Promise<{ ok: boolean; error?:
   const year = now.getFullYear();
   const FRESH_MS = 48 * 3600 * 1000;
 
-  type Snap = { productId: string; skuSnapshot: string; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
+  type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
   let subtotal = 0, vat = 0, hasBackorder = false;
 
@@ -125,8 +126,10 @@ export async function createOrder(note?: string): Promise<{ ok: boolean; error?:
     const lineTotal = r2(price.net * qty);
     subtotal += lineTotal;
     vat += r2((price.gross - price.net) * qty);
+    // most do Pohody: zamkni kód karty (len ak je most ACTIVE), inak null = nepôjde do Pohody
+    const pohodaSku = p.pohodaLink && p.pohodaLink.linkStatus === "ACTIVE" ? p.pohodaLink.pohodaSku : null;
     items.push({
-      productId: p.id, skuSnapshot: p.sku, nameSnapshot: p.nameDisplay || p.name,
+      productId: p.id, skuSnapshot: p.sku, pohodaSkuSnapshot: pohodaSku, nameSnapshot: p.nameDisplay || p.name,
       unitPriceSnapshot: price.net, costSnapshot: p.costPrice != null ? Number(p.costPrice) : null,
       qty, lineTotal, fulfillment: inStock ? "SKLADOM" : "NA_OBJEDNAVKU",
     });
@@ -142,7 +145,7 @@ export async function createOrder(note?: string): Promise<{ ok: boolean; error?:
         number, companyId: user.companyId!, createdById: user.id,
         status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
         hasBackorder, subtotal, vat, total, note: note?.trim() || null,
-        items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
+        items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
         events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
       },
       select: { id: true, number: true },
