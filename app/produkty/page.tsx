@@ -49,7 +49,7 @@ export default async function Produkty({ searchParams }: { searchParams: Promise
     prisma.product.findMany({ where, orderBy, take: PAGE, skip: (page - 1) * PAGE, select: publicProductSelect }),
     prisma.product.count({ where }),
     prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat"), _count: { _all: true } }),
-    prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 18 }),
+    prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
     prisma.category.findMany({ select: { id: true, name: true } }),
   ]);
 

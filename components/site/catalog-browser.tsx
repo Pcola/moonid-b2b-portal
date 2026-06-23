@@ -20,7 +20,9 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState(active.q);
+  const [brandQ, setBrandQ] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const brandsShown = brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
 
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const anyFilter = !!(active.cat || active.brand || active.q);
@@ -72,8 +74,15 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
       {brands.length > 0 && (
         <div>
           <p className="mb-2.5 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">Značka</p>
-          <div className="flex flex-col gap-0.5">
-            {brands.map((b) => facetRow(b.name, b.count, active.brand === b.name, () => go({ brand: active.brand === b.name ? "" : b.name })))}
+          {brands.length > 5 && (
+            <div className="relative mb-2">
+              <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+              <input value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-line bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
+            </div>
+          )}
+          <div className="flex max-h-[210px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+            {brandsShown.map((b) => facetRow(b.name, b.count, active.brand === b.name, () => go({ brand: active.brand === b.name ? "" : b.name })))}
+            {brandsShown.length === 0 && <p className="px-3 py-1.5 text-[13px] text-muted-2">Žiadna značka.</p>}
           </div>
         </div>
       )}
@@ -85,7 +94,7 @@ export function CatalogBrowser({ products, categories, brands, total, page, page
       <div className="grid gap-x-10 gap-y-6 lg:grid-cols-[244px_1fr]">
         {/* sidebar (desktop) */}
         <aside className="hidden lg:block">
-          <div className="sticky top-[104px]">{sidebar}</div>
+          <div className="sticky top-[104px] max-h-[calc(100vh-124px)] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">{sidebar}</div>
         </aside>
 
         <div className="min-w-0">

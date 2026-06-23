@@ -38,7 +38,9 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState(active.q);
+  const [brandQ, setBrandQ] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const brandsShown = facets.brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
 
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -101,24 +103,35 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       )}
 
       {facets.brands.length > 0 && (
-        <FacetGroup title="Značka">
-          {facets.brands.map((b) => facetRow(b.name, b.count, active.brand === b.name, () => go({ brand: active.brand === b.name ? "" : b.name })))}
-        </FacetGroup>
+        <div>
+          <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">Značka</p>
+          {facets.brands.length > 5 && (
+            <div className="relative mb-2">
+              <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+              <input value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-line bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
+            </div>
+          )}
+          <div className="flex max-h-[210px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+            {brandsShown.map((b) => facetRow(b.name, b.count, active.brand === b.name, () => go({ brand: active.brand === b.name ? "" : b.name })))}
+            {brandsShown.length === 0 && <p className="px-3 py-1.5 text-[13px] text-muted-2">Žiadna značka.</p>}
+          </div>
+        </div>
       )}
     </div>
   );
 
   return (
     <div className="mx-auto max-w-[1240px]">
-      <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-mint/40 bg-mintbg/50 px-4 py-3 text-[13.5px] text-brand">
-        <span className="font-semibold">Zobrazené ceny sú vaše firemné ceny{tierCode ? ` (úroveň ${tierCode})` : ""}.</span>
-        <span className="text-muted-3">Ceny sú bez DPH (s DPH uvedené pod cenou).</span>
-      </div>
-
       <div className="grid gap-x-10 gap-y-6 lg:grid-cols-[244px_1fr]">
-        <aside className="hidden lg:block"><div className="sticky top-[88px]">{sidebar}</div></aside>
+        <aside className="hidden lg:block">
+          <div className="sticky top-[72px] max-h-[calc(100vh-92px)] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">{sidebar}</div>
+        </aside>
 
         <div className="min-w-0">
+          <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-mint/40 bg-mintbg/50 px-4 py-3 text-[13.5px] text-brand">
+            <span className="font-semibold">Zobrazené ceny sú vaše firemné ceny{tierCode ? ` (úroveň ${tierCode})` : ""}.</span>
+            <span className="text-muted-3">Ceny sú bez DPH (s DPH uvedené pod cenou).</span>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setFiltersOpen((o) => !o)} className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden">

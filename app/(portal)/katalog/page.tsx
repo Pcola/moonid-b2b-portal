@@ -55,7 +55,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     }),
     prisma.product.count({ where }),
     prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat"), _count: { _all: true } }),
-    prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 18 }),
+    prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
     prisma.product.groupBy({ by: ["productKind"], where: buildWhere(a, "kind"), _count: { _all: true } }),
     prisma.product.count({ where: { ...buildWhere(a, "stock"), isStocked: true } }),
     prisma.category.findMany({ select: { id: true, name: true } }),
