@@ -263,6 +263,10 @@ model Product {
   categoryId         String?
   brand              String?
   systemCode         String? // Tork N4/H2/S4/T3...
+  scent              String? // [P] vôňa — facet
+  color              String? // [P] farba — facet
+  material           String? // [P] materiál — facet
+  packSize           String? // [P] veľkosť balenia — facet
   unit               String           @default("ks") // [C] SKz.MJ
   mj2Koef            Decimal?         @db.Decimal(12, 3)
   vatRate            Decimal          @default(23) @db.Decimal(5, 2)
@@ -284,6 +288,7 @@ model Product {
   ean                String? // efektívny EAN (z dôveryhodného zdroja/ručne; NIE z feed g:gtin)
   descriptionShort   String?
   descriptionLong    String?          @db.Text
+  attributes         Json? // [P] voľné atribúty pre filtre (objem, paleta, hmotnosť, Tork detail…)
   isPublished        Boolean          @default(false) // verejný web zobrazuje len isPublished=true
   lastSeenInPohodaAt DateTime? // [C] pre reconcile/tombstone — čo zmizne z exportu sa archivuje
   prices             ProductPrice[]
@@ -301,6 +306,12 @@ model Product {
   @@index([productKind])
   @@index([isPublished])
   @@index([origin])
+  @@index([brand])
+  @@index([systemCode])
+  @@index([scent])
+  @@index([color])
+  @@index([packSize])
+  @@index([attributes], type: Gin)
 }
 
 // ---------- Most katalóg → Pohoda karta [P] (lazy mapping; rieši IDENTITU, nie cenu) ----------
