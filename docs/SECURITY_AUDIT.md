@@ -56,13 +56,16 @@
 - **COOP + CORP** hlavičky (`same-origin`).
 - **PII maskovanie** e-mailov v console logoch + **escapeHtml** user-hodnôt v e-mailových šablónach.
 
-## Zostáva kódom (vyžaduje migráciu/rozhodnutie — dev server zastaviť)
-- **AuditLog**: doplniť ip/userAgent/companyId/sessionId/status + populácia z `headers()`; **append-only** (REVOKE UPDATE/DELETE alebo trigger) — vyžaduje Prisma migráciu.
-- **Auth audit eventy** (login/logout/reset) — vyžaduje server-side auth hook (login je dnes klientsky).
+## ✅ Opravené kódom (2. batch, commit 89c0f01)
+- **AuditLog** +companyId +userAgent (migrácia `auditlog_enrich`); `lib/audit.writeAudit()` dopĺňa **ip + userAgent** z `headers()` do každého záznamu; všetky audity prepojené.
+- **Auth eventy** — `LOGIN_SUCCESS` (+lastLoginAt) / `LOGIN_FAILURE` / `LOGOUT` cez `app/(auth)/actions.ts`, napojené na login-form + logout.
+- **Append-only** na DB úrovni — trigger `audit_log_no_update/no_delete` (`database/audit-append-only.sql`, `npm run audit:lock`).
+
+## Zostáva kódom (rozhodnutie/naviazané na fázu)
 - **Faktúra PDF auth-gated proxy** — naviazať na Fázu 2 (faktúry ešte neexistujú; storage layout nie je hotový).
 - **`requireAdmin` + RBAC** (B2B_VIEWER, CUSTOMER_ADMIN vynútenie) — pozor na lock-out solo operátora; potrebné rozhodnutie o rolách.
 - **CSP nonce** (odstrániť `script-src 'unsafe-inline'`) — vyžaduje middleware nonce + browser overenie.
-- **Search param caps** (q) na verejných listingoch.
+- **Search param caps** (q) na verejných listingoch (nízke riziko — Prisma parametrizuje).
 
 ## Zostáva ako tvoja config/infra (nedá sa kódom)
 Supabase: **rate-limit + CAPTCHA na login**, password policy (min 12 + leaked-password), **MFA TOTP** pre staff + AAL2, JWT/session expiry · Resend: **SPF/DKIM/DMARC** DNS · **Sentry** účet (DSN) + uptime monitor · **Cloudflare WAF** · **GitHub Actions CI** (npm ci + npm audit gate) + branch protection + Dependabot · **IR plán + RoPA** · **RLS** architektúra (rozhodnutie).
