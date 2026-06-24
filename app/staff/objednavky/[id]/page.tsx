@@ -18,6 +18,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
       id: true, number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true,
       createdAt: true, confirmedAt: true, priceTierCode: true, pohodaSync: true,
       company: { select: { name: true, address: true, city: true, ico: true, splatDays: true, priceTier: { select: { code: true, name: true } } } },
+      deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
       createdBy: { select: { name: true, email: true } },
       items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, costSnapshot: true, qty: true, lineTotal: true, fulfillment: true, product: { select: { unit: true, media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } } } } } },
       events: { orderBy: { occurredAt: "asc" }, select: { id: true, status: true, occurredAt: true, note: true, source: true, changedBy: { select: { name: true, email: true } } } },
@@ -125,6 +126,17 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
               <span className="text-[14.5px] font-semibold text-ink">{order.company.name}</span>
               <span className="text-[13.5px] leading-relaxed text-muted">{[order.company.address, order.company.city].filter(Boolean).join(", ") || "—"}</span>
               <span className="text-[12.5px] text-muted-2">IČO {order.company.ico}</span>
+            </div>
+            <div className="flex flex-col gap-0.5 border-t border-line pt-3">
+              <span className="text-[12px] text-muted-2">Dodacia adresa</span>
+              {order.deliveryLocation ? (
+                <span className="text-[13.5px] leading-relaxed text-ink">
+                  {order.deliveryLocation.label ? <span className="font-medium">{order.deliveryLocation.label}: </span> : null}
+                  {[order.deliveryLocation.street, [order.deliveryLocation.zip, order.deliveryLocation.city].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "—"}
+                </span>
+              ) : (
+                <span className="text-[13.5px] text-muted">Na fakturačnú adresu firmy</span>
+              )}
             </div>
             <div className="flex flex-col gap-0.5 border-t border-line pt-3">
               <span className="text-[12px] text-muted-2">Úroveň · platba</span>

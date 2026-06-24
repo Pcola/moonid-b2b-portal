@@ -87,7 +87,15 @@ export async function removeItem(itemId: string): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-type CreateOrderOpts = { note?: string; deliveryLocationId?: string | null; requestedDeliveryDate?: string | null };
+type NewAddress = { label?: string; street: string; city: string; zip: string };
+type CreateOrderOpts = { note?: string; deliveryLocationId?: string | null; newAddress?: NewAddress | null };
+
+const newAddressSchema = z.object({
+  label: z.string().trim().max(80).optional(),
+  street: z.string().trim().min(2, "Zadajte ulicu a číslo").max(160),
+  city: z.string().trim().min(1, "Zadajte mesto").max(80),
+  zip: z.string().trim().min(3, "Zadajte PSČ").max(12),
+});
 
 export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok: boolean; error?: string; number?: string }> {
   const o: CreateOrderOpts = typeof opts === "string" ? { note: opts } : (opts ?? {});
@@ -96,17 +104,24 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
 
-  // dodacia adresa (voliteľná) — musí patriť firme usera (IDOR)
+  // dodacia adresa: nová (vytvorí sa pre firmu) alebo už uložená (IDOR check). Termín dodania
+  // si zákazník nediktuje — rozvoz plánuje dodávateľ.
   let deliveryLocationId: string | null = null;
-  if (o.deliveryLocationId) {
+  const requestedDeliveryDate: Date | null = null;
+  if (o.newAddress) {
+    const av = newAddressSchema.safeParse(o.newAddress);
+    if (!av.success) return { ok: false, error: av.error.issues[0]?.message ?? "Vyplňte dodaciu adresu." };
+    const a = av.data;
+    const count = await prisma.deliveryLocation.count({ where: { companyId: user.companyId } });
+    const loc = await prisma.deliveryLocation.create({
+      data: { companyId: user.companyId, label: a.label || "Dodacia adresa", street: a.street, city: a.city, zip: a.zip, isDefault: count === 0 },
+      select: { id: true },
+    });
+    deliveryLocationId = loc.id;
+  } else if (o.deliveryLocationId) {
     const loc = await prisma.deliveryLocation.findFirst({ where: { id: o.deliveryLocationId, companyId: user.companyId }, select: { id: true } });
     if (!loc) return { ok: false, error: "Neplatná dodacia adresa." };
     deliveryLocationId = loc.id;
-  }
-  let requestedDeliveryDate: Date | null = null;
-  if (o.requestedDeliveryDate) {
-    const d = new Date(o.requestedDeliveryDate);
-    if (!Number.isNaN(d.getTime())) requestedDeliveryDate = d;
   }
 
   const cart = await prisma.cart.findFirst({ where: { companyId: user.companyId }, select: { id: true } });

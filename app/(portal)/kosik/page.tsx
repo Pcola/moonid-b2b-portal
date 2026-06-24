@@ -20,10 +20,12 @@ export default async function KosikPage() {
         select: { id: true, label: true, street: true, city: true, zip: true },
       })
     : [];
-  const companyAddress = [user.company?.address, user.company?.city].filter(Boolean).join(", ");
+  const billing = user.company
+    ? { name: user.company.name, ico: user.company.ico, address: user.company.address, city: user.company.city }
+    : null;
   return (
     <div className="max-w-[940px]">
-      <CartView cart={cart} locations={locations} companyAddress={companyAddress} />
+      <CartView cart={cart} locations={locations} billing={billing} />
     </div>
   );
 }

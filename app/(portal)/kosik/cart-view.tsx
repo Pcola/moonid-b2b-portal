@@ -8,12 +8,17 @@ import { setQty, removeItem, createOrder } from "./actions";
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
 type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null };
+type Billing = { name: string; ico: string; address: string | null; city: string | null };
 
-export function CartView({ cart, locations = [], companyAddress = "" }: { cart: CartDetail; locations?: Loc[]; companyAddress?: string }) {
+const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+
+export function CartView({ cart, locations = [], billing = null }: { cart: CartDetail; locations?: Loc[]; billing?: Billing | null }) {
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
+  const hasLocations = locations.length > 0;
+  const [addrMode, setAddrMode] = useState<"saved" | "new">(hasLocations ? "saved" : "new");
   const [deliveryLocationId, setDeliveryLocationId] = useState<string>(locations[0]?.id ?? "");
-  const [deliveryDate, setDeliveryDate] = useState("");
+  const [na, setNa] = useState({ label: "", street: "", city: "", zip: "" });
   const [done, setDone] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -49,15 +54,22 @@ export function CartView({ cart, locations = [], companyAddress = "" }: { cart: 
 
   function order() {
     setErr(null);
+    if (addrMode === "new" && (!na.street.trim() || !na.city.trim() || !na.zip.trim())) {
+      setErr("Vyplňte dodaciu adresu — ulica, mesto a PSČ.");
+      return;
+    }
     start(async () => {
-      const res = await createOrder({ note, deliveryLocationId: deliveryLocationId || null, requestedDeliveryDate: deliveryDate || null });
+      const delivery = addrMode === "new"
+        ? { newAddress: { label: na.label.trim() || undefined, street: na.street.trim(), city: na.city.trim(), zip: na.zip.trim() } }
+        : { deliveryLocationId: deliveryLocationId || null };
+      const res = await createOrder({ note, ...delivery });
       if (!res.ok) { setErr(res.error ?? "Objednávku sa nepodarilo odoslať."); return; }
       setDone(res.number ?? "");
     });
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="flex flex-col gap-3">
         {cart.items.map((it) => (
           <div key={it.id} className="flex items-center gap-4 rounded-xl border border-line bg-white p-3.5">
@@ -92,27 +104,51 @@ export function CartView({ cart, locations = [], companyAddress = "" }: { cart: 
           <div className="flex justify-between text-muted"><span>DPH</span><span className="tabular-nums text-ink">{eur(cart.vat)}</span></div>
           <div className="mt-1 flex justify-between border-t border-line pt-2.5 text-[16px] font-semibold text-ink"><span>Spolu s DPH</span><span className="tabular-nums">{eur(cart.totalGross)}</span></div>
         </div>
-        {locations.length > 0 ? (
-          <label className="flex flex-col gap-1.5 text-[13px] text-muted-3">
-            <span className="font-semibold">Dodacia adresa</span>
-            <select value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand">
-              {locations.map((l) => <option key={l.id} value={l.id}>{l.label}{l.city ? ` — ${l.city}` : ""}</option>)}
+
+        {/* Fakturačné údaje — z firemného profilu, read-only */}
+        {billing && (
+          <div className="rounded-lg border border-line bg-[#fafbfa] px-3 py-2.5 text-[12.5px] leading-relaxed text-muted-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-2">Fakturácia</div>
+            <div className="mt-0.5 font-medium text-ink">{billing.name}</div>
+            <div>IČO {billing.ico}{[billing.address, billing.city].filter(Boolean).length ? ` · ${[billing.address, billing.city].filter(Boolean).join(", ")}` : ""}</div>
+            <div className="mt-1 text-muted-2">Fakturuje sa na firemné údaje. Zmena? Kontaktujte nás.</div>
+          </div>
+        )}
+
+        {/* Dodacia adresa */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-muted-3">Dodacia adresa</span>
+            {hasLocations && (
+              <button type="button" onClick={() => setAddrMode(addrMode === "saved" ? "new" : "saved")} className="text-[12px] font-semibold text-brand transition hover:text-brand-2">
+                {addrMode === "saved" ? "+ Nová adresa" : "Použiť uloženú"}
+              </button>
+            )}
+          </div>
+          {addrMode === "saved" && hasLocations ? (
+            <select value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className={inp}>
+              {locations.map((l) => <option key={l.id} value={l.id}>{l.label}{[l.street, l.city].filter(Boolean).length ? ` — ${[l.street, l.city].filter(Boolean).join(", ")}` : ""}</option>)}
             </select>
-          </label>
-        ) : companyAddress ? (
-          <p className="text-[12.5px] text-muted-2">Doručíme na adresu firmy: <span className="text-ink">{companyAddress}</span></p>
-        ) : null}
-        <label className="flex flex-col gap-1.5 text-[13px] text-muted-3">
-          <span className="font-semibold">Termín dodania <span className="font-normal text-muted-2">(nepovinné)</span></span>
-          <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
-        </label>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <input value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" className={inp} />
+              <div className="flex gap-2">
+                <input value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" className={`${inp} flex-1`} />
+                <input value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" className={`${inp} w-24`} />
+              </div>
+              <input value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Prevádzka centrum) — nepovinné" className={inp} />
+            </div>
+          )}
+          <p className="text-[11.5px] text-muted-2">Termín doručíme podľa nášho rozvozového plánu — potvrdíme ho.</p>
+        </div>
+
         {cart.hasOnRequest && (
           <div className="rounded-lg bg-[#fdf6e7] px-3 py-2.5 text-[12.5px] text-[#8a5a00]">
             Niektoré položky sú na vyžiadanie a nedajú sa objednať online.
             <button onClick={removeOnRequest} disabled={pending} className="mt-1.5 block font-semibold underline disabled:opacity-50">Odobrať položky na vyžiadanie</button>
           </div>
         )}
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={inp} />
         {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
         <button onClick={order} disabled={pending || cart.hasOnRequest} className="rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
           {pending ? "Odosielam…" : "Odoslať objednávku"}
