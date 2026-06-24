@@ -14,9 +14,17 @@ Auth, tenant izolácia/IDOR, server-side cenotvorba, objednávkový tok end-to-e
 - ✅ **WS6** checkout (dodacia adresa, anti-duplicita, ON_REQUEST jednoklik)
 - ✅ **WS8** globálne UI stavy, dynamický sitemap, favicon, login hlášky
 - ✅ **WS10** „Objednať znova" 1 klikom + timeline objednávky
+- ✅ **WS7** perimeter (kód): zod + max dĺžky + Origin check + honeypot na /api/dopyt aj registrácii
+- ✅ **WS9** hardening (kód): CSP hlavička, audit log (ACCESS_APPROVE/REJECT), zod rozsahy na staff akciách
 
-**Zostáva kódom (voliteľné, pre verejné spustenie):** WS7 (rate-limit/honeypot), WS9 (CSP, MFA, audit log, RLS rozhodnutie).
-**Zostáva TEBE (konfigurácia, nedá sa kódom):** Vercel env, Supabase Auth (Site URL + Redirect URLs + staff konto), overenie domény moonid.sk v Resend, založenie reálnych firiem.
+**Zostáva TEBE (konfigurácia/infra, nedá sa kódom):**
+- Vercel env premenné (DB, Supabase, RESEND_API_KEY, RESEND_FROM, NEXT_PUBLIC_SITE_URL)
+- Supabase Auth: Site URL + Redirect URLs + prvé staff konto (+ zmena seed hesla)
+- Resend: overenie domény moonid.sk (SPF/DKIM)
+- Reálne firmy s IČO/tier/adresou
+- **WS7 infra:** Cloudflare Turnstile + WAF rate-limit (pravý rate-limit; honeypot+origin už v kóde)
+- **WS9 config/rozhodnutie:** MFA (Supabase TOTP) pre staff/admin; rozhodnutie o RLS (jednovrstvové riziko pre pilot vs. DB RLS)
+- **CSP** je stredne prísna (script 'unsafe-inline'); sprísnenie na nonce = follow-up s browser overením
 
 ## Legenda
 `[ ]` TODO · `[x]` hotové · **(JA)** = kód (Claude) · **(TY)** = konfigurácia/rozhodnutie (Vercel/Supabase/Resend/DNS/biznis)
