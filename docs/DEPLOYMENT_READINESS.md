@@ -5,6 +5,19 @@
 ## Stav jadra (dobré)
 Auth, tenant izolácia/IDOR, server-side cenotvorba, objednávkový tok end-to-end, `tsc --noEmit` čistý, DB bez driftu (9 migrácií). Citlivé polia (costPrice/discountPct/marža) sa **neúnikajú** klientovi. Žiadne secrets v git histórii.
 
+## Progres (24. 6. 2026) — kódová časť
+**Hotové (commitnuté):**
+- ✅ **WS1** build/env (postinstall prisma generate, .env.example)
+- ✅ **WS3** e-maily (lib/email + notifikácie objednávok + /api/dopyt)
+- ✅ **WS4** právne/GDPR stránky + opravené mŕtve odkazy
+- ✅ **WS5** ocenenie katalógu z feedu (1888/1888 produktov má cenu)
+- ✅ **WS6** checkout (dodacia adresa, anti-duplicita, ON_REQUEST jednoklik)
+- ✅ **WS8** globálne UI stavy, dynamický sitemap, favicon, login hlášky
+- ✅ **WS10** „Objednať znova" 1 klikom + timeline objednávky
+
+**Zostáva kódom (voliteľné, pre verejné spustenie):** WS7 (rate-limit/honeypot), WS9 (CSP, MFA, audit log, RLS rozhodnutie).
+**Zostáva TEBE (konfigurácia, nedá sa kódom):** Vercel env, Supabase Auth (Site URL + Redirect URLs + staff konto), overenie domény moonid.sk v Resend, založenie reálnych firiem.
+
 ## Legenda
 `[ ]` TODO · `[x]` hotové · **(JA)** = kód (Claude) · **(TY)** = konfigurácia/rozhodnutie (Vercel/Supabase/Resend/DNS/biznis)
 
