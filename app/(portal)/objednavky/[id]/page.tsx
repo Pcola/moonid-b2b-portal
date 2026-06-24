@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ReorderButton } from "@/components/portal/reorder-button";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávka — Moonid portál", robots: { index: false, follow: false } };
@@ -28,10 +29,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   return (
     <div className="mx-auto max-w-[820px]">
       <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="font-mono text-[24px] font-semibold text-ink">{order.number}</h1>
-        <span className="rounded-full bg-cream px-2.5 py-1 text-[12.5px] font-semibold text-brand">{STATUS[order.status] ?? order.status}</span>
-        <span className="text-[13px] text-muted-2">{new Date(order.createdAt).toLocaleString("sk")}</span>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-mono text-[24px] font-semibold text-ink">{order.number}</h1>
+          <span className="rounded-full bg-cream px-2.5 py-1 text-[12.5px] font-semibold text-brand">{STATUS[order.status] ?? order.status}</span>
+          <span className="text-[13px] text-muted-2">{new Date(order.createdAt).toLocaleString("sk")}</span>
+        </div>
+        <ReorderButton orderId={id} />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-white">
@@ -58,6 +62,21 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {order.note && <div className="mt-6 rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka</div><p className="mt-1 text-[14px] text-muted-3">{order.note}</p></div>}
+
+      {order.events.length > 0 && (
+        <div className="mt-6 rounded-xl border border-line bg-white p-5">
+          <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Priebeh objednávky</div>
+          <ol className="mt-3 flex flex-col gap-3">
+            {order.events.map((e, i) => (
+              <li key={i} className="flex items-center gap-3">
+                <span className={`h-2.5 w-2.5 flex-none rounded-full ${i === order.events.length - 1 ? "bg-brand" : "bg-line"}`} />
+                <span className="text-[14px] font-medium text-ink">{STATUS[e.status] ?? e.status}</span>
+                <span className="text-[12.5px] text-muted-2">{new Date(e.occurredAt).toLocaleString("sk")}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <p className="mt-6 text-[13px] text-muted-2">Objednávku spracujeme a potvrdíme. O zmenách stavu vás budeme informovať.</p>
     </div>

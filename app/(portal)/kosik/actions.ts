@@ -165,3 +165,49 @@ export async function createOrder(note?: string): Promise<{ ok: boolean; error?:
   revalidatePath("/kosik");
   return { ok: true, number: order.number };
 }
+
+/** Skopíruje položky predošlej objednávky do košíka (opakovať objednávku). Preskočí
+ *  nedostupné/„na vyžiadanie" produkty. IDOR: objednávka musí patriť firme usera. */
+export async function reorderFromOrder(orderId: string): Promise<{ ok: boolean; error?: string; added?: number; skipped?: number }> {
+  const user = await requireUser();
+  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, companyId: user.companyId },
+    select: { id: true, items: { select: { productId: true, qty: true } } },
+  });
+  if (!order) return { ok: false, error: "Objednávka neexistuje." };
+
+  const tierCode = user.company?.priceTier?.code ?? null;
+  const discountPct = await tierDiscount(tierCode);
+  const productIds = order.items.map((i) => i.productId).filter((x): x is string => !!x);
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds }, isPublished: true },
+    select: { id: true, basePrice: true, vatRate: true, isSubsidized: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } },
+  });
+  const byId = new Map(products.map((p) => [p.id, p]));
+
+  const cart = await getOrCreateCart(user.companyId, user.id);
+  let added = 0, skipped = 0;
+  for (const it of order.items) {
+    const p = it.productId ? byId.get(it.productId) : undefined;
+    if (!p) { skipped++; continue; } // nepublikovaný / zmazaný
+    const price = resolveUnitPrice({
+      basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
+      vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized,
+      tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null,
+      discountPct,
+    });
+    if (price.kind !== "PRICE") { skipped++; continue; } // na vyžiadanie
+    const q = Math.max(1, Math.min(9999, Math.floor(Number(it.qty))));
+    await prisma.cartItem.upsert({
+      where: { cartId_productId: { cartId: cart.id, productId: p.id } },
+      create: { cartId: cart.id, productId: p.id, qty: q },
+      update: { qty: { increment: q } },
+    });
+    added++;
+  }
+  revalidatePath("/kosik");
+  revalidatePath("/katalog");
+  return { ok: true, added, skipped };
+}
