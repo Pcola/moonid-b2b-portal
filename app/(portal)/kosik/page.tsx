@@ -13,9 +13,17 @@ export default async function KosikPage() {
     ? Number((await prisma.priceTier.findUnique({ where: { code: tierCode }, select: { discountPct: true } }))?.discountPct ?? 0)
     : 0;
   const cart = await getCartDetail(user.companyId ?? "__none__", tierCode, discountPct);
+  const locations = user.companyId
+    ? await prisma.deliveryLocation.findMany({
+        where: { companyId: user.companyId },
+        orderBy: [{ isDefault: "desc" }, { label: "asc" }],
+        select: { id: true, label: true, street: true, city: true, zip: true },
+      })
+    : [];
+  const companyAddress = [user.company?.address, user.company?.city].filter(Boolean).join(", ");
   return (
     <div className="max-w-[940px]">
-      <CartView cart={cart} />
+      <CartView cart={cart} locations={locations} companyAddress={companyAddress} />
     </div>
   );
 }

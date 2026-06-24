@@ -7,11 +7,21 @@ import { setQty, removeItem, createOrder } from "./actions";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
-export function CartView({ cart }: { cart: CartDetail }) {
+type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null };
+
+export function CartView({ cart, locations = [], companyAddress = "" }: { cart: CartDetail; locations?: Loc[]; companyAddress?: string }) {
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
+  const [deliveryLocationId, setDeliveryLocationId] = useState<string>(locations[0]?.id ?? "");
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [done, setDone] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  function removeOnRequest() {
+    start(async () => {
+      for (const it of cart.items) if (it.price.kind !== "PRICE") await removeItem(it.id);
+    });
+  }
 
   if (done) {
     return (
@@ -40,7 +50,7 @@ export function CartView({ cart }: { cart: CartDetail }) {
   function order() {
     setErr(null);
     start(async () => {
-      const res = await createOrder(note);
+      const res = await createOrder({ note, deliveryLocationId: deliveryLocationId || null, requestedDeliveryDate: deliveryDate || null });
       if (!res.ok) { setErr(res.error ?? "Objednávku sa nepodarilo odoslať."); return; }
       setDone(res.number ?? "");
     });
@@ -82,7 +92,26 @@ export function CartView({ cart }: { cart: CartDetail }) {
           <div className="flex justify-between text-muted"><span>DPH</span><span className="tabular-nums text-ink">{eur(cart.vat)}</span></div>
           <div className="mt-1 flex justify-between border-t border-line pt-2.5 text-[16px] font-semibold text-ink"><span>Spolu s DPH</span><span className="tabular-nums">{eur(cart.totalGross)}</span></div>
         </div>
-        {cart.hasOnRequest && <p className="rounded-lg bg-[#fdf6e7] px-3 py-2 text-[12.5px] text-[#8a5a00]">Niektoré položky sú na vyžiadanie — pred objednaním ich odoberte alebo nás kontaktujte.</p>}
+        {locations.length > 0 ? (
+          <label className="flex flex-col gap-1.5 text-[13px] text-muted-3">
+            <span className="font-semibold">Dodacia adresa</span>
+            <select value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand">
+              {locations.map((l) => <option key={l.id} value={l.id}>{l.label}{l.city ? ` — ${l.city}` : ""}</option>)}
+            </select>
+          </label>
+        ) : companyAddress ? (
+          <p className="text-[12.5px] text-muted-2">Doručíme na adresu firmy: <span className="text-ink">{companyAddress}</span></p>
+        ) : null}
+        <label className="flex flex-col gap-1.5 text-[13px] text-muted-3">
+          <span className="font-semibold">Termín dodania <span className="font-normal text-muted-2">(nepovinné)</span></span>
+          <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
+        </label>
+        {cart.hasOnRequest && (
+          <div className="rounded-lg bg-[#fdf6e7] px-3 py-2.5 text-[12.5px] text-[#8a5a00]">
+            Niektoré položky sú na vyžiadanie a nedajú sa objednať online.
+            <button onClick={removeOnRequest} disabled={pending} className="mt-1.5 block font-semibold underline disabled:opacity-50">Odobrať položky na vyžiadanie</button>
+          </div>
+        )}
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
         {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
         <button onClick={order} disabled={pending || cart.hasOnRequest} className="rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">

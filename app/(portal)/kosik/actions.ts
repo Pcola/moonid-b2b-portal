@@ -75,11 +75,27 @@ export async function removeItem(itemId: string): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-export async function createOrder(note?: string): Promise<{ ok: boolean; error?: string; number?: string }> {
+type CreateOrderOpts = { note?: string; deliveryLocationId?: string | null; requestedDeliveryDate?: string | null };
+
+export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok: boolean; error?: string; number?: string }> {
+  const o: CreateOrderOpts = typeof opts === "string" ? { note: opts } : (opts ?? {});
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
+
+  // dodacia adresa (voliteľná) — musí patriť firme usera (IDOR)
+  let deliveryLocationId: string | null = null;
+  if (o.deliveryLocationId) {
+    const loc = await prisma.deliveryLocation.findFirst({ where: { id: o.deliveryLocationId, companyId: user.companyId }, select: { id: true } });
+    if (!loc) return { ok: false, error: "Neplatná dodacia adresa." };
+    deliveryLocationId = loc.id;
+  }
+  let requestedDeliveryDate: Date | null = null;
+  if (o.requestedDeliveryDate) {
+    const d = new Date(o.requestedDeliveryDate);
+    if (!Number.isNaN(d.getTime())) requestedDeliveryDate = d;
+  }
 
   const cart = await prisma.cart.findFirst({ where: { companyId: user.companyId }, select: { id: true } });
   if (!cart) return { ok: false, error: "Košík je prázdny." };
@@ -139,21 +155,25 @@ export async function createOrder(note?: string): Promise<{ ok: boolean; error?:
   const total = r2(subtotal + vat);
 
   const order = await prisma.$transaction(async (tx) => {
+    // delete-first guard: súbežná požiadavka (2 taby/dvojklik) — ak košík už bol spracovaný,
+    // deleteMany vráti 0 (riadky sú zamknuté/zmazané) → neduplikujeme objednávku.
+    const del = await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    if (del.count === 0) return null;
     const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
     const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
-    const created = await tx.order.create({
+    return tx.order.create({
       data: {
         number, companyId: user.companyId!, createdById: user.id,
         status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
-        hasBackorder, subtotal, vat, total, note: note?.trim() || null,
+        hasBackorder, subtotal, vat, total, note: o.note?.trim() || null,
+        deliveryLocationId, requestedDeliveryDate,
         items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
         events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
       },
       select: { id: true, number: true },
     });
-    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-    return created;
   });
+  if (!order) return { ok: false, error: "Košík bol medzičasom spracovaný — skontrolujte sekciu Objednávky." };
 
   await prisma.auditLog.create({ data: { userId: user.id, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } } });
   // e-maily — best-effort, nikdy nezhodia objednávku (sendEmail nehádže)
