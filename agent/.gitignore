@@ -1,0 +1,6 @@
+# .NET build výstupy
+**/bin/
+**/obj/
+# lokálne tajomstvá (heslá agenta) — NEcommitovať
+**/appsettings.local.json
+**/appsettings.Production.json
