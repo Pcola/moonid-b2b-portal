@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 
 // Príjem dopytu z kontaktného formulára.
-// Ak je nastavený RESEND_API_KEY + RESEND_FROM, pošle e-mail; inak dopyt zaloguje
-// (aby formulár fungoval aj pred zapojením Resend). Cieľ: moonid@moonid.sk.
-const TO = "moonid@moonid.sk";
+// Posiela cez centrálny lib/email (Resend). Ak nie je nakonfigurovaný, dopyt sa zaloguje
+// (aby formulár fungoval aj pred zapojením Resend). Cieľ: STAFF_NOTIFY (moonid@moonid.sk).
 
 export async function POST(req: Request) {
   let d: Record<string, string> = {};
@@ -32,28 +32,10 @@ export async function POST(req: Request) {
     d.sprava || "—",
   ].join("\n");
 
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM; // napr. "Moonid web <web@moonid.sk>" (overená doména)
-
-  if (key && from) {
-    try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(key);
-      await resend.emails.send({
-        from,
-        to: TO,
-        replyTo: d.email,
-        subject,
-        text: lines,
-      });
-      return NextResponse.json({ ok: true });
-    } catch (e) {
-      console.error("[dopyt] resend error:", e);
-      return NextResponse.json({ ok: false, error: "send_failed" }, { status: 502 });
-    }
+  const res = await sendEmail({ to: STAFF_NOTIFY, subject, text: lines, replyTo: d.email });
+  // sendEmail nehádže: ok=poslané, skipped=Resend nenastavený (zalogované), inak chyba odoslania
+  if (!res.ok && !res.skipped) {
+    return NextResponse.json({ ok: false, error: "send_failed" }, { status: 502 });
   }
-
-  // Fallback kým nie je zapojený Resend — dopyt sa nestratí, zaloguje sa.
-  console.log("[dopyt] (Resend nenastavený) nový dopyt:\n" + subject + "\n" + lines);
-  return NextResponse.json({ ok: true, note: "logged" });
+  return NextResponse.json({ ok: true, note: res.skipped ? "logged" : undefined });
 }
