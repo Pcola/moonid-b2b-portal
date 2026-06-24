@@ -13,8 +13,8 @@ export function SetPasswordForm() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(null);
-    if (password.length < 8) {
-      setErr("Heslo musí mať aspoň 8 znakov.");
+    if (password.length < 12) {
+      setErr("Heslo musí mať aspoň 12 znakov.");
       return;
     }
     setLoading(true);
@@ -25,6 +25,8 @@ export function SetPasswordForm() {
       setLoading(false);
       return;
     }
+    // bezpečnosť: po zmene hesla zruš ostatné relácie (kompromitované zariadenia), aktuálnu nechaj
+    await supabase.auth.signOut({ scope: "others" }).catch(() => {});
     router.replace("/dashboard");
     router.refresh();
   }
@@ -34,7 +36,7 @@ export function SetPasswordForm() {
       {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Nové heslo
-        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={8}
+        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}
           className="rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand" />
       </label>
       <button type="submit" disabled={loading}

@@ -8,7 +8,13 @@ const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SU
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const PASSWORD = "Moonid2026!";
+// BEZPEČNOSŤ: žiadne hardcoded heslo, žiadne testovacie účty v produkcii.
+// Heslo z env (silné); v produkcii beh zablokovaný okrem výslovného ALLOW_SEED=1.
+const PASSWORD = process.env.SEED_PASSWORD;
+if (!PASSWORD) throw new Error("Nastav SEED_PASSWORD (silné heslo) — seed bez neho nebeží.");
+if (process.env.NODE_ENV === "production" && process.env.ALLOW_SEED !== "1") {
+  throw new Error("seed:auth je v produkcii zablokovaný. .test účty so známym heslom = riziko. Ak naozaj treba, nastav ALLOW_SEED=1 a po pilote ich zmaž.");
+}
 
 async function ensureAuthUser(email: string): Promise<string> {
   const { data } = await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
@@ -44,7 +50,7 @@ async function main() {
     create: { authId: custId, email: "zakaznik@moonid.test", name: "Zákazník Test", role: "CUSTOMER_ADMIN", companyId: company.id },
   });
 
-  console.log(`Hotovo. Testovacie kontá (heslo: ${PASSWORD}):`);
+  console.log("Hotovo. Testovacie kontá (heslo = hodnota SEED_PASSWORD):");
   console.log("  STAFF    : staff@moonid.test  → /staff/katalog aj /dashboard");
   console.log(`  ZÁKAZNÍK : zakaznik@moonid.test  → /dashboard (firma ${company.name}, tier ${tier.code})`);
 }

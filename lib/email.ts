@@ -13,12 +13,25 @@ export function isEmailConfigured(): boolean {
   return !!(KEY && FROM);
 }
 
+/** Escapuje HTML špeciálne znaky — pre user-controlled hodnoty v e-mailových šablónach. */
+function esc(s: string): string {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** Maskuje e-mail pre logy (PII): jan@firma.sk → j**@firma.sk */
+function maskEmail(e: string): string {
+  const [u, d] = String(e).split("@");
+  if (!d) return "***";
+  return `${u.slice(0, 1)}**@${d}`;
+}
+
 type SendArgs = { to: string | string[]; subject: string; text: string; html?: string; replyTo?: string };
 
 /** Odošle e-mail. Vráti {ok}; pri nenastavení/chybe nehádže, len zaloguje. */
 export async function sendEmail(args: SendArgs): Promise<{ ok: boolean; skipped?: boolean }> {
   if (!KEY || !FROM) {
-    console.log(`[email] Resend nenastavený — skipnuté: "${args.subject}" → ${Array.isArray(args.to) ? args.to.join(", ") : args.to}`);
+    const to = Array.isArray(args.to) ? args.to.map(maskEmail).join(", ") : maskEmail(args.to);
+    console.log(`[email] Resend nenastavený — skipnuté: "${args.subject}" → ${to}`);
     return { ok: false, skipped: true };
   }
   try {
@@ -93,8 +106,8 @@ export async function emailOrderConfirmation(o: {
     "Objednávku spracujeme a o ďalších krokoch vás budeme informovať.",
   ].join("\n");
   const htmlRows = o.items.map((i) =>
-    `<tr><td style="padding:4px 0">${i.qty}× ${i.name}</td><td style="padding:4px 0;text-align:right;white-space:nowrap">${eur(i.lineTotal)}</td></tr>`).join("");
-  const html = wrapHtml(`Ďakujeme za objednávku ${o.number}`, `
+    `<tr><td style="padding:4px 0">${i.qty}× ${esc(i.name)}</td><td style="padding:4px 0;text-align:right;white-space:nowrap">${eur(i.lineTotal)}</td></tr>`).join("");
+  const html = wrapHtml(`Ďakujeme za objednávku ${esc(o.number)}`, `
     <table style="width:100%;border-collapse:collapse;font-size:14px">${htmlRows}
       <tr><td style="padding-top:10px;border-top:1px solid #e5e7eb">Medzisúčet</td><td style="padding-top:10px;border-top:1px solid #e5e7eb;text-align:right">${eur(o.subtotal)}</td></tr>
       <tr><td>DPH</td><td style="text-align:right">${eur(o.vat)}</td></tr>
@@ -112,8 +125,8 @@ export async function emailOrderStatus(o: { to: string; number: string; status: 
     o.note ? `\nPoznámka: ${o.note}` : "",
     "\nĎakujeme, že nakupujete u Moonid.",
   ].join("");
-  const html = wrapHtml(`Objednávka ${o.number}: ${label}`,
-    `<p style="font-size:14px">Stav vašej objednávky <strong>${o.number}</strong> sa zmenil na <strong>${label}</strong>.</p>
-     ${o.note ? `<p style="font-size:14px;color:#374151">${o.note}</p>` : ""}`);
+  const html = wrapHtml(`Objednávka ${esc(o.number)}: ${esc(label)}`,
+    `<p style="font-size:14px">Stav vašej objednávky <strong>${esc(o.number)}</strong> sa zmenil na <strong>${esc(label)}</strong>.</p>
+     ${o.note ? `<p style="font-size:14px;color:#374151">${esc(o.note)}</p>` : ""}`);
   return sendEmail({ to: o.to, subject: `Objednávka ${o.number}: ${label} — Moonid`, text, html });
 }

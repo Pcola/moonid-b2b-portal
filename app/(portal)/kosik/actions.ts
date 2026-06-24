@@ -6,8 +6,13 @@ import { requireUser } from "@/lib/auth";
 import { getOrCreateCart } from "@/lib/cart";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { emailNewOrderToStaff, emailOrderConfirmation } from "@/lib/email";
+import { z } from "zod";
 
 function r2(n: number) { return Math.round(n * 100) / 100; }
+
+// vstupná validácia (A03 — zod na každom server action)
+const ID = z.string().min(1).max(100);
+const QTY = z.coerce.number().int().min(1).max(9999);
 
 async function tierDiscount(tierCode: string | null): Promise<number> {
   if (!tierCode) return 0;
@@ -25,7 +30,11 @@ async function ownItemOrNull(itemId: string, companyId: string) {
 export async function addToCart(productId: string, qty = 1): Promise<{ ok: boolean; error?: string }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
-  const q = Math.max(1, Math.min(9999, Math.floor(qty)));
+  const pv = ID.safeParse(productId);
+  const qv = QTY.safeParse(qty);
+  if (!pv.success || !qv.success) return { ok: false, error: "Neplatný vstup." };
+  productId = pv.data;
+  const q = qv.data;
 
   const p = await prisma.product.findFirst({
     where: { id: productId, isPublished: true },
@@ -56,6 +65,7 @@ export async function addToCart(productId: string, qty = 1): Promise<{ ok: boole
 export async function setQty(itemId: string, qty: number): Promise<{ ok: boolean }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false };
+  if (!ID.safeParse(itemId).success) return { ok: false };
   const item = await ownItemOrNull(itemId, user.companyId);
   if (!item) return { ok: false };
   const q = Math.floor(qty);
@@ -68,6 +78,7 @@ export async function setQty(itemId: string, qty: number): Promise<{ ok: boolean
 export async function removeItem(itemId: string): Promise<{ ok: boolean }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false };
+  if (!ID.safeParse(itemId).success) return { ok: false };
   const item = await ownItemOrNull(itemId, user.companyId);
   if (!item) return { ok: false };
   await prisma.cartItem.delete({ where: { id: itemId } });
@@ -165,7 +176,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
       data: {
         number, companyId: user.companyId!, createdById: user.id,
         status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
-        hasBackorder, subtotal, vat, total, note: o.note?.trim() || null,
+        hasBackorder, subtotal, vat, total, note: o.note?.trim().slice(0, 2000) || null,
         deliveryLocationId, requestedDeliveryDate,
         items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
         events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
@@ -191,6 +202,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
 export async function reorderFromOrder(orderId: string): Promise<{ ok: boolean; error?: string; added?: number; skipped?: number }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  if (!ID.safeParse(orderId).success) return { ok: false, error: "Neplatný vstup." };
 
   const order = await prisma.order.findFirst({
     where: { id: orderId, companyId: user.companyId },
