@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { getOrCreateCart } from "@/lib/cart";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { emailNewOrderToStaff, emailOrderConfirmation } from "@/lib/email";
+import { writeAudit } from "@/lib/audit";
 import { z } from "zod";
 
 function r2(n: number) { return Math.round(n * 100) / 100; }
@@ -186,7 +187,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   });
   if (!order) return { ok: false, error: "Košík bol medzičasom spracovaný — skontrolujte sekciu Objednávky." };
 
-  await prisma.auditLog.create({ data: { userId: user.id, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } } });
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } });
   // e-maily — best-effort, nikdy nezhodia objednávku (sendEmail nehádže)
   await Promise.allSettled([
     emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),

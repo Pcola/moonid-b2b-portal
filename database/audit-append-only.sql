@@ -1,0 +1,19 @@
+-- AuditLog je APPEND-ONLY: žiadny UPDATE ani DELETE riadku po zápise (štandard §7.1).
+-- Trigger platí pre VŠETKÝCH (vrátane vlastníka tabuľky a app role cez pooler),
+-- na rozdiel od REVOKE, ktoré vlastník tabuľky obíde.
+-- Idempotentné — bezpečné spustiť opakovane. Spusti: npm run audit:lock
+-- (DDL ako ALTER TABLE nie je riadkový UPDATE/DELETE, takže migrácie schémy trigger neblokuje.)
+
+CREATE OR REPLACE FUNCTION audit_log_no_mutate() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION 'AuditLog je append-only — operácia % nie je povolená', TG_OP;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS audit_log_no_update ON "AuditLog";
+DROP TRIGGER IF EXISTS audit_log_no_delete ON "AuditLog";
+
+CREATE TRIGGER audit_log_no_update BEFORE UPDATE ON "AuditLog"
+  FOR EACH ROW EXECUTE FUNCTION audit_log_no_mutate();
+CREATE TRIGGER audit_log_no_delete BEFORE DELETE ON "AuditLog"
+  FOR EACH ROW EXECUTE FUNCTION audit_log_no_mutate();

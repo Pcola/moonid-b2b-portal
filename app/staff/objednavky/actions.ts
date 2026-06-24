@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { nextStatus, canCancel, type OrderStatus } from "@/lib/orders/transition";
 import { emailOrderStatus } from "@/lib/email";
+import { writeAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const ID = z.string().min(1).max(100);
@@ -33,7 +34,7 @@ export async function advanceOrder(orderId: string): Promise<{ ok: boolean; erro
     });
     await tx.orderStatusEvent.create({ data: { orderId: order.id, status: to, source: "PORTAL", changedById: staff.id } });
   });
-  await prisma.auditLog.create({ data: { userId: staff.id, action: "ORDER_STATUS", entity: "Order", entityId: order.id, meta: { number: order.number, from, to } } });
+  await writeAudit({ userId: staff.id, action: "ORDER_STATUS", entity: "Order", entityId: order.id, meta: { number: order.number, from, to } });
   if (order.createdBy?.email) await emailOrderStatus({ to: order.createdBy.email, number: order.number, status: to });
   revalidate(order.id);
   return { ok: true, status: to };
@@ -54,7 +55,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ o
     await tx.order.update({ where: { id: order.id }, data: { status: "STORNO" } });
     await tx.orderStatusEvent.create({ data: { orderId: order.id, status: "STORNO", source: "PORTAL", changedById: staff.id, note: cleanReason } });
   });
-  await prisma.auditLog.create({ data: { userId: staff.id, action: "ORDER_CANCEL", entity: "Order", entityId: order.id, meta: { number: order.number, from, reason: cleanReason } } });
+  await writeAudit({ userId: staff.id, action: "ORDER_CANCEL", entity: "Order", entityId: order.id, meta: { number: order.number, from, reason: cleanReason } });
   if (order.createdBy?.email) await emailOrderStatus({ to: order.createdBy.email, number: order.number, status: "STORNO", note: cleanReason });
   revalidate(order.id);
   return { ok: true };

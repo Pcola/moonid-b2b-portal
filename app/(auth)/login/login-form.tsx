@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { recordLoginSuccess, recordLoginFailure } from "@/app/(auth)/actions";
 
 const labelCls = "flex flex-col gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-3";
 const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-[13px] text-[15.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
@@ -29,10 +30,12 @@ export function LoginForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
+      await recordLoginFailure(email.trim()).catch(() => {});
       setErr("Nesprávny e-mail alebo heslo.");
       setLoading(false);
       return;
     }
+    await recordLoginSuccess().catch(() => {});
     router.replace(next);
     router.refresh();
   }

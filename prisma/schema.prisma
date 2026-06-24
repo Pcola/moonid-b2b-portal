@@ -673,14 +673,18 @@ model AuditLog {
   id        String   @id @default(cuid())
   user      User?    @relation(fields: [userId], references: [id])
   userId    String?
+  companyId String?
   action    String
   entity    String
   entityId  String?
   meta      Json?
   ip        String?
+  userAgent String?
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([companyId])
+  @@index([action])
   @@index([entity, entityId])
   @@index([createdAt])
 }

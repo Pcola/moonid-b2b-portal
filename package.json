@@ -29,6 +29,7 @@
     "price:feed": "tsx scripts/pohoda/price-feed-products.ts",
     "group:variants": "tsx scripts/pohoda/group-variants.ts",
     "pohoda:rpc": "prisma db execute --file database/pohoda-agent.sql --schema prisma/schema.prisma",
+    "audit:lock": "prisma db execute --file database/audit-append-only.sql --schema prisma/schema.prisma",
     "seed:auth": "tsx scripts/auth/seed-auth.ts",
     "db:studio": "prisma studio"
   },

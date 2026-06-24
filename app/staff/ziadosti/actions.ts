@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAudit } from "@/lib/audit";
 
 async function origin() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -67,7 +68,7 @@ export async function approveRequest(
     data: { status: "APPROVED", resolvedById: staff.id, resolvedAt: new Date(), companyId: company.id },
   });
 
-  await prisma.auditLog.create({ data: { userId: staff.id, action: "ACCESS_APPROVE", entity: "Company", entityId: company.id, meta: { requestId: id, email: req.email, ico: req.ico, tier: tierCode, splatDays } } });
+  await writeAudit({ userId: staff.id, companyId: company.id, action: "ACCESS_APPROVE", entity: "Company", entityId: company.id, meta: { requestId: id, email: req.email, ico: req.ico, tier: tierCode, splatDays } });
   // POZN: zámerne NErevalidujeme — necháme kartu zobraziť pozvánkový odkaz staffovi.
   // Po refreshi žiadosť zmizne z PENDING zoznamu (je APPROVED).
   return { ok: true, inviteLink };
@@ -79,7 +80,7 @@ export async function rejectRequest(id: string): Promise<{ ok: boolean }> {
     where: { id },
     data: { status: "REJECTED", resolvedById: staff.id, resolvedAt: new Date() },
   });
-  await prisma.auditLog.create({ data: { userId: staff.id, action: "ACCESS_REJECT", entity: "AccessRequest", entityId: id } });
+  await writeAudit({ userId: staff.id, action: "ACCESS_REJECT", entity: "AccessRequest", entityId: id });
   revalidatePath("/staff/ziadosti");
   return { ok: true };
 }
