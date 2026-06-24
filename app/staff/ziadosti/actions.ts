@@ -18,6 +18,8 @@ export async function approveRequest(
   splatDays: number
 ): Promise<{ ok: boolean; error?: string; inviteLink?: string | null }> {
   const staff = await requireStaff();
+  if (!Number.isInteger(splatDays) || splatDays < 0 || splatDays > 365) return { ok: false, error: "Splatnosť musí byť 0–365 dní." };
+  if (typeof tierCode !== "string" || tierCode.length < 1 || tierCode.length > 20) return { ok: false, error: "Neplatná cenová úroveň." };
   const req = await prisma.accessRequest.findUnique({ where: { id } });
   if (!req || req.status !== "PENDING") return { ok: false, error: "Žiadosť už nie je otvorená." };
   const tier = await prisma.priceTier.findFirst({ where: { code: tierCode } });
@@ -65,6 +67,7 @@ export async function approveRequest(
     data: { status: "APPROVED", resolvedById: staff.id, resolvedAt: new Date(), companyId: company.id },
   });
 
+  await prisma.auditLog.create({ data: { userId: staff.id, action: "ACCESS_APPROVE", entity: "Company", entityId: company.id, meta: { requestId: id, email: req.email, ico: req.ico, tier: tierCode, splatDays } } });
   // POZN: zámerne NErevalidujeme — necháme kartu zobraziť pozvánkový odkaz staffovi.
   // Po refreshi žiadosť zmizne z PENDING zoznamu (je APPROVED).
   return { ok: true, inviteLink };
@@ -76,6 +79,7 @@ export async function rejectRequest(id: string): Promise<{ ok: boolean }> {
     where: { id },
     data: { status: "REJECTED", resolvedById: staff.id, resolvedAt: new Date() },
   });
+  await prisma.auditLog.create({ data: { userId: staff.id, action: "ACCESS_REJECT", entity: "AccessRequest", entityId: id } });
   revalidatePath("/staff/ziadosti");
   return { ok: true };
 }

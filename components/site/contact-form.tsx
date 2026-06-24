@@ -101,6 +101,7 @@ export function ContactForm() {
             <input name="telefon" type="tel" placeholder="09xx xxx xxx" className={inputCls} />
           </label>
         </div>
+        <input type="text" name="web" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
         <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-muted-3">
           <input name="gdpr" type="checkbox" required className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
           <span>Súhlasím so spracovaním osobných údajov za účelom vybavenia dopytu (<a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>). *</span>

@@ -5,11 +5,12 @@ import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
   ico: z.string().trim().min(6, "Neplatné IČO").max(12),
-  companyName: z.string().trim().min(2, "Zadajte názov firmy"),
-  contactName: z.string().trim().min(2, "Zadajte meno"),
-  email: z.string().trim().email("Neplatný e-mail"),
+  companyName: z.string().trim().min(2, "Zadajte názov firmy").max(160),
+  contactName: z.string().trim().min(2, "Zadajte meno").max(120),
+  email: z.string().trim().email("Neplatný e-mail").max(160),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   note: z.string().trim().max(1000).optional().or(z.literal("")),
+  hp: z.string().optional(), // honeypot
 });
 
 export async function createAccessRequest(input: unknown): Promise<{ ok: boolean; error?: string }> {
@@ -18,6 +19,8 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Skontrolujte vyplnené polia." };
   }
   const d = parsed.data;
+  // honeypot vyplnený → bot. Tvárime sa OK, ale žiadosť nezakladáme.
+  if (d.hp && d.hp.trim()) return { ok: true };
   await prisma.accessRequest.create({
     data: {
       ico: d.ico,
