@@ -21,10 +21,13 @@ public sealed class MServer(IConfiguration cfg, ILogger<MServer> log)
     private HttpClient NewClient()
     {
         var http = new HttpClient { BaseAddress = new Uri(_baseUrl), Timeout = TimeSpan.FromSeconds(60) };
-        var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_user}:{_pass}"));
-        // Pohoda mServer akceptuje štandardný Basic aj hlavičku STW-Authorization
-        http.DefaultRequestHeaders.Add("Authorization", $"Basic {basic}");
-        http.DefaultRequestHeaders.Add("STW-Authorization", $"Basic {basic}");
+        // Auth = prihlasovací používateľ Pohody (HTTP Basic). Ak je User prázdny, mServer beží bez auth.
+        if (!string.IsNullOrWhiteSpace(_user))
+        {
+            var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_user}:{_pass}"));
+            http.DefaultRequestHeaders.Add("Authorization", $"Basic {basic}");
+            http.DefaultRequestHeaders.Add("STW-Authorization", $"Basic {basic}");
+        }
         return http;
     }
 
