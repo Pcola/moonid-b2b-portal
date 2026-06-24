@@ -10,10 +10,16 @@ const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-
 
 export function LoginForm() {
   const router = useRouter();
-  const next = safeNextPath(useSearchParams().get("next")); // anti open-redirect
+  const params = useSearchParams();
+  const next = safeNextPath(params.get("next")); // anti open-redirect
+  const initialErr = params.get("disabled")
+    ? "Váš účet je deaktivovaný. Kontaktujte nás na moonid@moonid.sk."
+    : params.get("error") === "auth"
+      ? "Prihlasovací odkaz je neplatný alebo vypršal. Skúste sa prihlásiť nižšie."
+      : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(initialErr);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
