@@ -24,7 +24,7 @@ export function CookieBanner() {
     >
       <p className="text-[13.5px] leading-relaxed text-muted-3">
         Používame iba nevyhnutné súbory cookie pre správne fungovanie webu.{" "}
-        <a href="#" className="font-semibold text-brand underline underline-offset-2">Viac informácií</a>.
+        <a href="/cookies" className="font-semibold text-brand underline underline-offset-2">Viac informácií</a>.
       </p>
       <div>
         <button

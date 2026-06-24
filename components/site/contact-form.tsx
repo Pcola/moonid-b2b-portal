@@ -103,7 +103,7 @@ export function ContactForm() {
         </div>
         <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-muted-3">
           <input name="gdpr" type="checkbox" required className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
-          <span>Súhlasím so spracovaním osobných údajov za účelom vybavenia dopytu (<a href="#" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>). *</span>
+          <span>Súhlasím so spracovaním osobných údajov za účelom vybavenia dopytu (<a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>). *</span>
         </label>
         {error && <p className="text-[14px] text-[#a23b2a]">Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908.</p>}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-4">

@@ -56,8 +56,8 @@ export function RegistraciaForm() {
         <label className={`${labelCls} sm:col-span-2`}>Poznámka <span className="text-muted-2">(nepovinné)</span><textarea name="note" rows={3} className={`${inputCls} resize-y`} placeholder="Napr. typ prevádzky, čo objednávate…" /></label>
       </div>
       <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-muted">
-        <input type="checkbox" name="gdpr" className="mt-0.5 h-4 w-4 flex-none" style={{ accentColor: "#163f38" }} />
-        Súhlasím so spracovaním údajov za účelom vybavenia žiadosti o prístup.
+        <input type="checkbox" name="gdpr" required className="mt-0.5 h-4 w-4 flex-none" style={{ accentColor: "#163f38" }} />
+        <span>Súhlasím so spracovaním údajov za účelom vybavenia žiadosti o prístup (<a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>).</span>
       </label>
       <button type="submit" disabled={loading}
         className="mt-1 self-start rounded-[10px] bg-brand px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">

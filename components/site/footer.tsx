@@ -9,12 +9,12 @@ const NAV = [
 ];
 
 const INFO = [
-  "Informácie o spoločnosti",
-  "Obchodné podmienky",
-  "Reklamačné podmienky",
-  "Doprava a platby",
-  "Ochrana osobných údajov",
-  "Zásady používania súborov cookie (EÚ)",
+  { label: "Informácie o spoločnosti", href: "/o-nas" },
+  { label: "Obchodné podmienky", href: "/obchodne-podmienky" },
+  { label: "Reklamačné podmienky", href: "/obchodne-podmienky#reklamacie" },
+  { label: "Doprava a platby", href: "/obchodne-podmienky#doprava" },
+  { label: "Ochrana osobných údajov", href: "/ochrana-osobnych-udajov" },
+  { label: "Zásady používania súborov cookie", href: "/cookies" },
 ];
 
 function LoginIcon({ size = 15 }: { size?: number }) {
@@ -66,7 +66,7 @@ export function SiteFooter() {
           <nav className="flex flex-col gap-[13px]" aria-label="Informácie">
             <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6e908a]">Informácie</span>
             {INFO.map((i) => (
-              <span key={i} className="cursor-default text-[14.5px] font-medium text-[#c7d8d3]">{i}</span>
+              <Link key={i.href} href={i.href} className="text-[14.5px] font-medium text-[#c7d8d3] transition hover:text-white">{i.label}</Link>
             ))}
           </nav>
           <div className="flex flex-col gap-[13px]">
