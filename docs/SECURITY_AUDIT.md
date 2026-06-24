@@ -49,8 +49,23 @@
 - PII (e-maily) maskovať v console/Vercel logoch; escapeHtml v e-mailových šablónach.
 - Session timeouts + cookie atribúty (Supabase config).
 
-## Čo viem opraviť kódom (bezpečne, hneď)
-Zod všade · global signOut pri zmene hesla/deaktivácii · seed guard · COOP/CORP hlavičky · PII maskovanie + escapeHtml · `requireAdmin` na citlivé operácie · obohatenie AuditLog (ip/userAgent/companyId) + append-only migrácia · auth-gated proxy pre faktúry PDF.
+## ✅ Opravené kódom (commit d0d7665, 24. 6. 2026)
+- **Zod + dĺžkové limity** na server actions (addToCart/setQty/removeItem/reorder id+qty, createOrder note cap 2000, advanceOrder/cancelOrder orderId + reason cap 500).
+- **Session invalidácia** pri zmene hesla (`signOut scope:'others'`) + min. dĺžka hesla **12**.
+- **Seed guard** — heslo z `SEED_PASSWORD`, beh v produkcii zablokovaný (`ALLOW_SEED`), žiadne hardcoded heslo.
+- **COOP + CORP** hlavičky (`same-origin`).
+- **PII maskovanie** e-mailov v console logoch + **escapeHtml** user-hodnôt v e-mailových šablónach.
+
+## Zostáva kódom (vyžaduje migráciu/rozhodnutie — dev server zastaviť)
+- **AuditLog**: doplniť ip/userAgent/companyId/sessionId/status + populácia z `headers()`; **append-only** (REVOKE UPDATE/DELETE alebo trigger) — vyžaduje Prisma migráciu.
+- **Auth audit eventy** (login/logout/reset) — vyžaduje server-side auth hook (login je dnes klientsky).
+- **Faktúra PDF auth-gated proxy** — naviazať na Fázu 2 (faktúry ešte neexistujú; storage layout nie je hotový).
+- **`requireAdmin` + RBAC** (B2B_VIEWER, CUSTOMER_ADMIN vynútenie) — pozor na lock-out solo operátora; potrebné rozhodnutie o rolách.
+- **CSP nonce** (odstrániť `script-src 'unsafe-inline'`) — vyžaduje middleware nonce + browser overenie.
+- **Search param caps** (q) na verejných listingoch.
+
+## Zostáva ako tvoja config/infra (nedá sa kódom)
+Supabase: **rate-limit + CAPTCHA na login**, password policy (min 12 + leaked-password), **MFA TOTP** pre staff + AAL2, JWT/session expiry · Resend: **SPF/DKIM/DMARC** DNS · **Sentry** účet (DSN) + uptime monitor · **Cloudflare WAF** · **GitHub Actions CI** (npm ci + npm audit gate) + branch protection + Dependabot · **IR plán + RoPA** · **RLS** architektúra (rozhodnutie).
 
 ## Čo vyžaduje tvoje účty/rozhodnutia (config/infra)
 Supabase: rate-limit + CAPTCHA + password policy + MFA enablement + JWT/session expiry · Resend: SPF/DKIM/DMARC DNS · Sentry účet (DSN) · Cloudflare WAF · GitHub Actions CI + branch protection · IR plán + RoPA · RLS architektúra (rozhodnutie).
