@@ -37,8 +37,8 @@ public sealed class MServer(IConfiguration cfg, ILogger<MServer> log)
         // DataPack so žiadosťou o zoznam zásob (listStock). Doladí sa podľa edície/verzie.
         var request = $@"<?xml version=""1.0"" encoding=""Windows-1250""?>
 <dat:dataPack version=""2.0"" id=""stock"" ico=""{_ico}"" application=""MoonidAgent"" note=""list stock""
-  xmlns:dat=""http://www.stormware.eu/schema/version_2/data.xsd""
-  xmlns:lStk=""http://www.stormware.eu/schema/version_2/list_stock.xsd"">
+  xmlns:dat=""http://www.stormware.cz/schema/version_2/data.xsd""
+  xmlns:lStk=""http://www.stormware.cz/schema/version_2/list_stock.xsd"">
   <dat:dataPackItem id=""s1"" version=""2.0"">
     <lStk:listStockRequest version=""2.0"" stockVersion=""2.0"">
       <lStk:requestStock />
