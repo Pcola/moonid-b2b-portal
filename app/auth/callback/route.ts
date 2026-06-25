@@ -11,7 +11,12 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      // odpoveď nastavuje session cookie → nikdy necachovať (CDN/proxy)
+      const res = NextResponse.redirect(`${origin}${next}`);
+      res.headers.set("Cache-Control", "private, no-store");
+      return res;
+    }
   }
   return NextResponse.redirect(`${origin}/login?error=auth`);
 }

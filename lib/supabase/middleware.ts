@@ -17,10 +17,13 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: CookieToSet[]) {
+        setAll(cookiesToSet: CookieToSet[], headers: Record<string, string>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          // @supabase/ssr 0.12: anti-cache hlavičky (Cache-Control: private,no-store…) na Set-Cookie
+          // odpovediach — aby CDN/proxy necachoval session cookie jedného usera pre iného.
+          Object.entries(headers).forEach(([k, v]) => response.headers.set(k, v));
         },
       },
     }
