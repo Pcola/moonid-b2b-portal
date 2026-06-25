@@ -1,6 +1,7 @@
 version: 2
 updates:
-  # npm závislosti — týždenné security/version PR
+  # npm závislosti — týždenné security/version PR (len minor+patch; major bumpy
+  # sú breaking → robíme ručne, nie cez auto-PR, aby sme nerozbili build)
   - package-ecosystem: npm
     directory: "/"
     schedule:
@@ -9,8 +10,14 @@ updates:
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
-  # GitHub Actions verzie
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+  # GitHub Actions verzie (len minor+patch)
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

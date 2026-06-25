@@ -19,28 +19,26 @@
 | # | Položka | Typ | Stav |
 |---|---------|-----|------|
 | P1-1 | MFA TOTP vynútené pre STAFF/ADMIN (AAL2) | config+kód | ⏳ kód (enforcement+enroll) + TY (Supabase MFA) |
-| P1-2 | Monitoring: Sentry + uptime + 3 alerty | config | ⏳ kód (wiring) + TY (DSN, uptime) |
+| P1-2 | Monitoring: Sentry + uptime + 3 alerty | config | 🟡 wiring **hotové** (inertné bez DSN, PII scrub, /monitoring tunel) + TY (DSN, uptime, alerty) |
 | P1-3 | GDPR vykonateľné práva + záznam súhlasu | kód+proces | 🟡 export + žiadosť o výmaz **hotové** (v /nastavenia); consent timestamp + RoPA ⏳/TY |
 | P1-4 | SPF/DKIM/DMARC | config(DNS) | **TY** (Resend doména moonid.sk) |
 | P1-5 | CI gate (npm ci + audit + branch protection + Dependabot) | proces | ✅ kód (workflow+dependabot) / **TY** (zapnúť branch protection + secret scanning) |
 | P1-6 | Edge WAF + rate-limit | config | **TY** (Cloudflare) |
 | P1-7 | Supabase PITR + 1 restore | config | **TY** |
-| P1-8 | IR runbook (1 strana) | proces | ⏳ draft (kód/doc) |
-| P1-9 | WCAG 2.1 AA základ + axe | kód | 🟡 focus-visible + skip-link hotové; zvyšok (axe v CI, alt/aria audit) ⏳ |
+| P1-8 | IR runbook (1 strana) | proces | ✅ **hotové** (`docs/INCIDENT_RESPONSE.md`) |
+| P1-9 | WCAG 2.1 AA základ + axe | kód | 🟡 focus-visible + skip-link + aria-labely (chrome) **hotové**; axe v CI ⏳ |
 
 ## ✅ Hotové (netreba riešiť)
 append-only audit log + auth eventy + ip/userAgent/companyId · zod + limity na server actions · PII maskovanie + escapeHtml · COOP/CORP · HIBP leaked-password (kód, nahrádza Supabase Pro) · honeypot+origin na verejných formoch.
 
-## Práve pridané (tento batch)
-CI gate (`.github/workflows/ci.yml`) + Dependabot · `security.txt` · `:focus-visible` + skip-link (WCAG) · e-mail Reply-To na `moonid@moonid.sk`.
+## Hotové kódom (celý tento push)
+CI gate + Dependabot · `security.txt` · `:focus-visible` + skip-link + aria-labely · e-mail Reply-To · **tenant-izolačné testy** (vitest 4/4, CI s efemérnou DB) · **GDPR** export+výmaz · **IR runbook** · **Sentry wiring** (verený live) · search caps · cookie consent record.
 
-## Poradie kódových krokov (čo robím ďalej)
-1. **Tenant-izolačné CI testy** (tvrdá podmienka pilotu) — vitest + A→B=403/404.
-2. **GDPR práva v portáli** (export/výmaz/záznam súhlasu) — P1-3.
-3. **Sentry wiring** (čaká na tvoj DSN) — P1-2.
-4. **MFA enforcement + enroll** (čaká na Supabase MFA) — P1-1.
-5. **RLS druhá vrstva** (pred verejným) — sekcia 4.
-6. WCAG dotiahnutie (axe v CI, alt/aria), security.txt ✅, search caps.
+## Zostáva — KÓD, ale viazaný na tvoje rozhodnutie/config (nerobiť blind)
+1. **MFA enforcement + enroll** (P1-1) — najprv zapnúť MFA v Supabase; opatrný rollout (lock-out riziko).
+2. **RLS druhá vrstva** (sekcia 4) — pred verejným; treba rozhodnutie + RLS-aware spojenie.
+3. **CSP nonce** (P2) — odstrániť `unsafe-inline`; vyžaduje browser overenie.
+4. **axe v CI** (P1-9 dotiahnutie).
 
 ## RLS rozhodnutie (sekcia 4)
 PILOT: bez RLS, ale **tenant-izolačné testy** sú tvrdá podmienka. VEREJNÉ: RLS ako druhá vrstva. Blokér pilotu = testy, nie RLS.
