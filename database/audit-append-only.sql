@@ -4,11 +4,14 @@
 -- Idempotentné — bezpečné spustiť opakovane. Spusti: npm run audit:lock
 -- (DDL ako ALTER TABLE nie je riadkový UPDATE/DELETE, takže migrácie schémy trigger neblokuje.)
 
-CREATE OR REPLACE FUNCTION audit_log_no_mutate() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION audit_log_no_mutate() RETURNS trigger
+  LANGUAGE plpgsql
+  SET search_path = ''
+AS $$
 BEGIN
   RAISE EXCEPTION 'AuditLog je append-only — operácia % nie je povolená', TG_OP;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS audit_log_no_update ON "AuditLog";
 DROP TRIGGER IF EXISTS audit_log_no_delete ON "AuditLog";
