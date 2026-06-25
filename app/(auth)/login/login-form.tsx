@@ -30,12 +30,12 @@ export function LoginForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
-      await recordLoginFailure(email.trim()).catch(() => {});
+      void recordLoginFailure(email.trim()); // audit na pozadí
       setErr("Nesprávny e-mail alebo heslo.");
       setLoading(false);
       return;
     }
-    await recordLoginSuccess().catch(() => {});
+    void recordLoginSuccess(); // audit + lastLoginAt na pozadí — neblokuje presmerovanie
     router.replace(next);
     router.refresh();
   }
