@@ -9,6 +9,22 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # efemérna Postgres DB pre tenant-izolačné testy (žiadne reálne dáta)
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: moonid_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moonid_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/moonid_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,7 +33,11 @@ jobs:
           cache: npm
       # npm ci = deterministický install zo zamknutého lock file; postinstall spustí prisma generate
       - run: npm ci
+      # aplikuj schému na efemérnu DB
+      - run: npx prisma migrate deploy
       # typová kontrola — musí prejsť
       - run: npx tsc --noEmit
+      # tenant-izolačné testy (firma A → dáta firmy B = 404)
+      - run: npm test
       # bezpečnosť závislostí — build padne pri high/critical zraniteľnosti
       - run: npm audit --audit-level=high
