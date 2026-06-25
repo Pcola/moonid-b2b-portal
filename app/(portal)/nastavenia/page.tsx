@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { GdprSection } from "./gdpr-section";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nastavenia — Moonid portál", robots: { index: false, follow: false } };
@@ -71,6 +72,8 @@ export default async function NastaveniaPage() {
           Správu používateľov (pozvánky, deaktivácia) pripravujeme. Zatiaľ nás kontaktujte.
         </div>
       </section>
+
+      <GdprSection />
     </div>
   );
 }
