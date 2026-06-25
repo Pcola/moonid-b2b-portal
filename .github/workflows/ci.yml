@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # npm ci = deterministický install zo zamknutého lock file; postinstall spustí prisma generate
+      - run: npm ci
+      # typová kontrola — musí prejsť
+      - run: npx tsc --noEmit
+      # bezpečnosť závislostí — build padne pri high/critical zraniteľnosti
+      - run: npm audit --audit-level=high

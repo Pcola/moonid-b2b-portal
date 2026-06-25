@@ -114,7 +114,7 @@ export async function emailOrderConfirmation(o: {
       <tr><td style="font-weight:700">Spolu s DPH</td><td style="font-weight:700;text-align:right">${eur(o.total)}</td></tr>
     </table>
     <p style="font-size:14px;margin-top:16px">Objednávku spracujeme a o ďalších krokoch vás budeme informovať.</p>`);
-  return sendEmail({ to: o.to, subject: `Potvrdenie objednávky ${o.number} — Moonid`, text, html });
+  return sendEmail({ to: o.to, subject: `Potvrdenie objednávky ${o.number} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
 }
 
 /** Notifikácia ZÁKAZNÍKOVI o zmene stavu objednávky. */
@@ -128,5 +128,5 @@ export async function emailOrderStatus(o: { to: string; number: string; status: 
   const html = wrapHtml(`Objednávka ${esc(o.number)}: ${esc(label)}`,
     `<p style="font-size:14px">Stav vašej objednávky <strong>${esc(o.number)}</strong> sa zmenil na <strong>${esc(label)}</strong>.</p>
      ${o.note ? `<p style="font-size:14px;color:#374151">${esc(o.note)}</p>` : ""}`);
-  return sendEmail({ to: o.to, subject: `Objednávka ${o.number}: ${label} — Moonid`, text, html });
+  return sendEmail({ to: o.to, subject: `Objednávka ${o.number}: ${label} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
 }

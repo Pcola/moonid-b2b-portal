@@ -77,6 +77,7 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
 
   return (
     <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[248px_1fr]">
+      <a href="#obsah" className="skip-link">Preskočiť na obsah</a>
       {/* desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
 
@@ -103,7 +104,7 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main id="obsah" className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );
