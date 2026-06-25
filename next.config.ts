@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Bezpečnostné hlavičky pre všetky cesty (clickjacking, sniffing, HSTS, referrer, permissions, CSP).
 // CSP: stredne prísna a NEnarúšajúca (script/style 'unsafe-inline' kvôli inline JSON-LD + Next bootstrapu).
@@ -46,4 +47,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry obal: tunelovanie cez /monitoring (same-origin → netreba meniť CSP connect-src,
+// obíde ad-blockery). Source mapy sa nahrávajú len ak je nastavený SENTRY_AUTH_TOKEN;
+// bez DSN/tokenu je build aj runtime bez Sentry réžie.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  disableLogger: true,
+  tunnelRoute: "/monitoring",
+});
