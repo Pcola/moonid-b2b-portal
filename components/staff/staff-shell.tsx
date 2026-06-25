@@ -53,7 +53,7 @@ export function StaffShell({ name, email, role, newOrders, newRequests, children
   const sidebar = (
     <div className="flex h-full flex-col gap-1.5 bg-brand-foot p-4 text-[#9fbab3]">
       <div className="flex items-center gap-2.5 px-2 pb-4 pt-1">
-        <Link href="/staff" onClick={() => setOpen(false)} className="text-[24px] font-bold tracking-[-0.02em] text-white">moonid</Link>
+        <Link href="/staff" onClick={() => setOpen(false)} prefetch={false} className="text-[24px] font-bold tracking-[-0.02em] text-white">moonid</Link>
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">{role === "ADMIN" ? "Admin" : "Staff"}</span>
       </div>
       <nav className="flex flex-col gap-1">
@@ -61,7 +61,7 @@ export function StaffShell({ name, email, role, newOrders, newRequests, children
           const active = isActive(n.href, n.exact);
           const count = badgeFor(n.badge);
           return (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)}
+            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false}
               className={`flex items-center gap-3 rounded-[10px] px-3 py-[11px] text-[14.5px] font-medium transition ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
               <Icon>{n.icon}</Icon>
               <span className="flex-1">{n.label}</span>

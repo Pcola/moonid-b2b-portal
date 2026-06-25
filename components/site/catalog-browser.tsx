@@ -141,6 +141,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
             {products.map((p) => (
               <Link
                 key={p.id}
+                prefetch={false}
                 href={`/produkt/${p.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_14px_34px_-16px_rgba(16,42,38,0.22)]"
               >

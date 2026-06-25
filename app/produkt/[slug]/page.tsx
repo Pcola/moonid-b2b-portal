@@ -182,7 +182,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
             </div>
             <div className="grid gap-[clamp(16px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,190px),1fr))" }}>
               {related.map((r) => (
-                <Link key={r.id} href={`/produkt/${r.slug}`} className="group flex flex-col">
+                <Link key={r.id} prefetch={false} href={`/produkt/${r.slug}`} className="group flex flex-col">
                   <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[16px] border border-line bg-[#f6f7f6] transition duration-200 group-hover:-translate-y-1 group-hover:border-brand/30 group-hover:shadow-[0_18px_40px_-26px_rgba(22,40,29,0.45)]">
                     {r.media[0]?.storagePath ? (
                       // eslint-disable-next-line @next/next/no-img-element

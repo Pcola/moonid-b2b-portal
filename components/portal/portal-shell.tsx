@@ -36,14 +36,14 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
   const sidebar = (
     <div className="flex h-full flex-col gap-1.5 bg-brand-foot p-4 text-[#9fbab3]">
       <div className="flex items-center gap-2.5 px-2 pb-4 pt-1">
-        <Link href="/dashboard" onClick={() => setOpen(false)} className="text-[24px] font-bold tracking-[-0.02em] text-white">moonid</Link>
+        <Link href="/dashboard" onClick={() => setOpen(false)} prefetch={false} className="text-[24px] font-bold tracking-[-0.02em] text-white">moonid</Link>
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">B2B</span>
       </div>
       <nav className="flex flex-col gap-1">
         {NAV.map((n) => {
           const active = isActive(n.href);
           return (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)}
+            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false}
               className={`flex items-center gap-3 rounded-[10px] px-3 py-[11px] text-[14.5px] font-medium transition ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
               <Icon>{n.icon}</Icon>{n.label}
             </Link>
@@ -95,7 +95,7 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hľadať produkt…" className="w-[150px] bg-transparent text-[14px] text-ink outline-none lg:w-[220px]" />
             </form>
-            <Link href="/kosik" className="relative inline-flex h-10 items-center gap-2 rounded-[10px] bg-brand px-3.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
+            <Link href="/kosik" prefetch={false} className="relative inline-flex h-10 items-center gap-2 rounded-[10px] bg-brand px-3.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6h15l-1.5 9h-12z" /><path d="M6 6 5 3H3" /><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /></svg>
               <span className="hidden sm:inline">Košík</span>
               {cartCount > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-mint px-1.5 text-[11.5px] font-bold text-brand-deep">{cartCount}</span>}
