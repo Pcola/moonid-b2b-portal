@@ -98,6 +98,85 @@ public sealed class MServer(IConfiguration cfg, ILogger<MServer> log)
         return items;
     }
 
+    // ---------- FAKTÚRY (Fáza 2) ----------
+
+    /// <summary>Vyžiada zoznam vystavených faktúr (listInvoice). Prázdny zoznam = nič/chyba (zalogované).
+    /// POZN.: presný formát listInvoice odpovede (názvy uzlov pre sumy/úhradu) sa DOLADÍ na reálnej
+    /// vzorke z tvojho mServeru — parser je preto LENIENT a surovú odpoveď loguje (Debug).</summary>
+    public async Task<IReadOnlyList<InvoiceItem>> FetchInvoicesAsync(CancellationToken ct)
+    {
+        var request = $@"<?xml version=""1.0"" encoding=""Windows-1250""?>
+<dat:dataPack version=""2.0"" id=""inv"" ico=""{_ico}"" application=""MoonidAgent"" note=""list invoice""
+  xmlns:dat=""http://www.stormware.cz/schema/version_2/data.xsd""
+  xmlns:lst=""http://www.stormware.cz/schema/version_2/list_invoice.xsd"">
+  <dat:dataPackItem id=""i1"" version=""2.0"">
+    <lst:listInvoiceRequest version=""2.0"" invoiceType=""issuedInvoice"" invoiceVersion=""2.0"">
+      <lst:requestInvoice />
+    </lst:listInvoiceRequest>
+  </dat:dataPackItem>
+</dat:dataPack>";
+
+        string body;
+        try
+        {
+            using var http = NewClient();
+            using var content = new ByteArrayContent(Win1250.GetBytes(request));
+            content.Headers.TryAddWithoutValidation("Content-Type", "text/xml; charset=Windows-1250");
+            using var resp = await http.PostAsync("/xml", content, ct);
+            var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+            body = Win1250.GetString(bytes);
+            if (!resp.IsSuccessStatusCode)
+            {
+                log.LogError("mServer (faktúry) HTTP {Code}: {Body}", (int)resp.StatusCode, Trim(body));
+                return [];
+            }
+        }
+        catch (Exception e)
+        {
+            log.LogError(e, "mServer (faktúry) nedostupný ({Url})", _baseUrl);
+            return [];
+        }
+
+        log.LogDebug("mServer invoice raw: {Body}", Trim(body, 3000));
+        return ParseInvoices(body);
+    }
+
+    /// <summary>Lenient parse faktúr: každá faktúra = element local-name "invoice"; z nej číslo,
+    /// IČO odberateľa, dátum vystavenia/splatnosti, úhrada a celková suma. Doladí sa na vzorke.</summary>
+    private IReadOnlyList<InvoiceItem> ParseInvoices(string xml)
+    {
+        var items = new List<InvoiceItem>();
+        try
+        {
+            var doc = XDocument.Parse(xml);
+            foreach (var el in doc.Descendants().Where(e => e.Name.LocalName == "invoice"))
+            {
+                var number = LocalVal(el, "number") ?? LocalVal(el, "numberRequested") ?? LocalVal(el, "id");
+                var ico = LocalVal(el, "ico");                 // IČO partnera (odberateľa) z partnerIdentity
+                var issued = LocalVal(el, "date");
+                var due = LocalVal(el, "dateDue") ?? LocalVal(el, "dateAccounting") ?? issued;
+                var paid = LocalVal(el, "dateOfPayment");      // pri uhradenej faktúre (ak je v exporte)
+                // celková suma — skús bežné názvy zo summary (doladí sa na reálnej vzorke):
+                var total = ParseDec(LocalVal(el, "priceHighSum") ?? LocalVal(el, "round") ?? LocalVal(el, "priceNone") ?? LocalVal(el, "homeCurrency"));
+
+                if (string.IsNullOrWhiteSpace(number) || string.IsNullOrWhiteSpace(ico) || string.IsNullOrWhiteSpace(issued))
+                    continue;
+
+                items.Add(new InvoiceItem(
+                    number!.Trim(), ico!.Trim(), issued!.Trim(), (due ?? issued)!.Trim(),
+                    string.IsNullOrWhiteSpace(paid) ? null : paid!.Trim(),
+                    0m, 0m, total, null));   // subtotal/vat zatiaľ 0 (UI zobrazuje len total); doladíme na vzorke
+            }
+        }
+        catch (Exception e) { log.LogError(e, "Nepodarilo sa rozparsovať faktúry (pošli vzorku na doladenie)."); }
+        log.LogInformation("mServer: prečítaných {N} faktúr", items.Count);
+        return items;
+    }
+
+    private static decimal ParseDec(string? s) =>
+        decimal.TryParse(s?.Replace(',', '.'), System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0m;
+
     private static string? LocalVal(XElement parent, string localName) =>
         parent.Descendants().FirstOrDefault(e => e.Name.LocalName == localName)?.Value;
 

@@ -51,7 +51,28 @@ public sealed class Portal(IConfiguration cfg, ILogger<Portal> log)
         log.LogInformation("ingest_stock: poslaných {Sent} položiek, aktualizovaných {Updated} produktov", items.Count, n);
         return n;
     }
+
+    /// <summary>Pošle faktúry do portálu (match na firmu cez IČO). Vráti počet spárovaných.</summary>
+    public async Task<int> IngestInvoicesAsync(IReadOnlyList<InvoiceItem> items, DateTime cursorUtc, CancellationToken ct)
+    {
+        if (items.Count == 0) return 0;
+        var json = JsonSerializer.Serialize(items);
+        await using var c = await OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand("SELECT pohoda_ingest_invoices(@items::jsonb, @cur::timestamptz)", c);
+        cmd.Parameters.AddWithValue("items", json);
+        cmd.Parameters.AddWithValue("cur", cursorUtc);
+        var res = await cmd.ExecuteScalarAsync(ct);
+        var n = Convert.ToInt32(res ?? 0);
+        log.LogInformation("ingest_invoices: poslaných {Sent}, spárovaných {Matched} faktúr", items.Count, n);
+        return n;
+    }
 }
 
 /// <summary>Jedna skladová položka: sku = Pohoda kód (SKz.IDS), stock = aktuálny stav.</summary>
 public sealed record StockItem(string sku, decimal stock);
+
+/// <summary>Jedna faktúra. Kľúče (názvy properties) MUSIA sedieť s pohoda_ingest_invoices RPC.
+/// Dátumy ako ISO string (alebo ""), paidAt null = neuhradená.</summary>
+public sealed record InvoiceItem(
+    string pohodaNumber, string ico, string issuedAt, string dueAt, string? paidAt,
+    decimal subtotal, decimal vat, decimal total, int? sourceDbYear);
