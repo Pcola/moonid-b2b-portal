@@ -13,14 +13,14 @@
 | P0-5 | Prod env oddelené | config | **TY** (Vercel prod env) |
 | P0-6 | TLS/HSTS/headers (≥A) | kód | ✅ hotové (CSP unsafe-inline OK pre pilot) |
 | P0-7 | Prvé staff konto + zmena seed hesla | config | **TY** (Supabase) |
-| **Tvrdá podmienka** | **Tenant-izolačné CI testy** (A→B = 403/404) | kód | ⏳ **ďalší krok** |
+| **Tvrdá podmienka** | **Tenant-izolačné CI testy** (A→B = 403/404) | kód | ✅ **hotové** (vitest, 4/4, CI s efemérnou DB) |
 
 ## P1 — brána k VEREJNÉMU spusteniu
 | # | Položka | Typ | Stav |
 |---|---------|-----|------|
 | P1-1 | MFA TOTP vynútené pre STAFF/ADMIN (AAL2) | config+kód | ⏳ kód (enforcement+enroll) + TY (Supabase MFA) |
 | P1-2 | Monitoring: Sentry + uptime + 3 alerty | config | ⏳ kód (wiring) + TY (DSN, uptime) |
-| P1-3 | GDPR vykonateľné práva + záznam súhlasu | kód+proces | ⏳ **kód** (export/výmaz/consent) |
+| P1-3 | GDPR vykonateľné práva + záznam súhlasu | kód+proces | 🟡 export + žiadosť o výmaz **hotové** (v /nastavenia); consent timestamp + RoPA ⏳/TY |
 | P1-4 | SPF/DKIM/DMARC | config(DNS) | **TY** (Resend doména moonid.sk) |
 | P1-5 | CI gate (npm ci + audit + branch protection + Dependabot) | proces | ✅ kód (workflow+dependabot) / **TY** (zapnúť branch protection + secret scanning) |
 | P1-6 | Edge WAF + rate-limit | config | **TY** (Cloudflare) |
