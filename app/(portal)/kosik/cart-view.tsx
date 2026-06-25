@@ -86,13 +86,13 @@ export function CartView({ cart, locations = [], billing = null }: { cart: CartD
               <div className="text-[12.5px] text-muted-2">{it.price.kind === "PRICE" ? `${eur(it.price.net)} / ${it.unit} bez DPH` : "Cena na vyžiadanie"}</div>
             </div>
             <div className="flex items-center rounded-[9px] border border-line">
-              <button onClick={() => start(async () => { await setQty(it.id, it.qty - 1); })} disabled={pending} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">−</button>
+              <button aria-label="Znížiť množstvo" onClick={() => start(async () => { await setQty(it.id, it.qty - 1); })} disabled={pending} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">−</button>
               <span className="min-w-[34px] text-center text-[14px] tabular-nums text-ink">{it.qty}</span>
-              <button onClick={() => start(async () => { await setQty(it.id, it.qty + 1); })} disabled={pending} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">+</button>
+              <button aria-label="Zvýšiť množstvo" onClick={() => start(async () => { await setQty(it.id, it.qty + 1); })} disabled={pending} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">+</button>
             </div>
             <div className="w-[92px] text-right text-[14.5px] font-semibold text-ink">{it.lineNet != null ? eur(it.lineNet) : "—"}</div>
-            <button onClick={() => start(async () => { await removeItem(it.id); })} disabled={pending} title="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+            <button aria-label="Odobrať položku" onClick={() => start(async () => { await removeItem(it.id); })} disabled={pending} title="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
             </button>
           </div>
         ))}

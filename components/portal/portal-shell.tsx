@@ -66,8 +66,8 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
             <div className="truncate text-[11.5px] text-[#7fa199]">{email}</div>
           </div>
           <form action="/auth/logout" method="post">
-            <button type="submit" title="Odhlásiť sa" className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7fa199] transition hover:bg-white/10 hover:text-white">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
+            <button type="submit" aria-label="Odhlásiť sa" title="Odhlásiť sa" className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7fa199] transition hover:bg-white/10 hover:text-white">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
             </button>
           </form>
         </div>
@@ -93,11 +93,11 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
           <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">{title}</h1>
           <div className="ml-auto flex items-center gap-2.5">
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/katalog?q=${encodeURIComponent(q.trim())}` : "/katalog"); }} className="hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hľadať produkt…" className="w-[150px] bg-transparent text-[14px] text-ink outline-none lg:w-[220px]" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+              <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať produkt" placeholder="Hľadať produkt…" className="w-[150px] bg-transparent text-[14px] text-ink outline-none lg:w-[220px]" />
             </form>
-            <Link href="/kosik" prefetch={false} className="relative inline-flex h-10 items-center gap-2 rounded-[10px] bg-brand px-3.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6h15l-1.5 9h-12z" /><path d="M6 6 5 3H3" /><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /></svg>
+            <Link href="/kosik" prefetch={false} aria-label="Košík" className="relative inline-flex h-10 items-center gap-2 rounded-[10px] bg-brand px-3.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z" /><path d="M6 6 5 3H3" /><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /></svg>
               <span className="hidden sm:inline">Košík</span>
               {cartCount > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-mint px-1.5 text-[11.5px] font-bold text-brand-deep">{cartCount}</span>}
             </Link>
