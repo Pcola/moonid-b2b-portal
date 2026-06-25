@@ -33,7 +33,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     : 0;
 
   const a: Active = {
-    q: (sp.q ?? "").trim(), cat: sp.cat ?? "", sub: sp.sub ?? "", brand: sp.brand ?? "",
+    q: (sp.q ?? "").trim().slice(0, 120), cat: (sp.cat ?? "").slice(0, 80), sub: (sp.sub ?? "").slice(0, 80), brand: (sp.brand ?? "").slice(0, 60),
     stock: sp.stock === "1" ? "1" : "", sort: sp.sort ?? "rec",
   };
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);

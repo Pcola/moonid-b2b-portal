@@ -40,7 +40,7 @@ const publicProductSelect = {
 
 export default async function Produkty({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
-  const a: Active = { q: (sp.q ?? "").trim(), cat: sp.cat ?? "", sub: sp.sub ?? "", brand: sp.brand ?? "", sort: sp.sort ?? "rec" };
+  const a: Active = { q: (sp.q ?? "").trim().slice(0, 120), cat: (sp.cat ?? "").slice(0, 80), sub: (sp.sub ?? "").slice(0, 80), brand: (sp.brand ?? "").slice(0, 60), sort: sp.sort ?? "rec" };
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const where = buildWhere(a, null);
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =

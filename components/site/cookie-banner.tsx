@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 
+// verzia cookie politiky — pri zmene textu zvýš → banner sa zobrazí znova
+const CONSENT_VERSION = 1;
+
 export function CookieBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     try {
-      if (localStorage.getItem("moonid_cookies") !== "ok") setShow(true);
+      const raw = localStorage.getItem("moonid_cookies");
+      const rec = raw ? JSON.parse(raw) : null;
+      if (!rec || rec.v !== CONSENT_VERSION) setShow(true);
     } catch {
       setShow(true);
     }
@@ -29,7 +34,8 @@ export function CookieBanner() {
       <div>
         <button
           onClick={() => {
-            try { localStorage.setItem("moonid_cookies", "ok"); } catch {}
+            // záznam súhlasu: verzia + časová pečiatka (GDPR — preukázateľnosť)
+            try { localStorage.setItem("moonid_cookies", JSON.stringify({ v: CONSENT_VERSION, ts: new Date().toISOString() })); } catch {}
             setShow(false);
           }}
           className="rounded-[9px] bg-brand px-[18px] py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2"

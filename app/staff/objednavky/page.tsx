@@ -22,5 +22,5 @@ export default async function StaffOrdersPage({ searchParams }: { searchParams: 
     count: o._count.items, total: Number(o.total), date: o.createdAt.toISOString(),
   }));
 
-  return <StaffOrders items={items} initialQ={q ?? ""} />;
+  return <StaffOrders items={items} initialQ={(q ?? "").slice(0, 120)} />;
 }
