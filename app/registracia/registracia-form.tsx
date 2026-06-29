@@ -25,6 +25,7 @@ export function RegistraciaForm() {
       email: fd.get("email"),
       phone: fd.get("phone"),
       note: fd.get("note"),
+      gdpr: fd.get("gdpr"),
       hp: fd.get("hp"),
     });
     setLoading(false);

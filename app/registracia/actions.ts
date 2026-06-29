@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
+import { writeAudit } from "@/lib/audit";
+import { PRIVACY_VERSION } from "@/lib/consent";
 
 const schema = z.object({
   ico: z.string().trim().min(6, "Neplatné IČO").max(12),
@@ -11,6 +13,7 @@ const schema = z.object({
   email: z.string().trim().email("Neplatný e-mail").max(160),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   note: z.string().trim().max(1000).optional().or(z.literal("")),
+  gdpr: z.any().optional(), // súhlas so spracovaním OÚ (checkbox)
   hp: z.string().optional(), // honeypot
 });
 
@@ -22,7 +25,9 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
   const d = parsed.data;
   // honeypot vyplnený → bot. Tvárime sa OK, ale žiadosť nezakladáme.
   if (d.hp && d.hp.trim()) return { ok: true };
-  await prisma.accessRequest.create({
+  // súhlas so spracovaním OÚ je povinný — overené aj server-side, nielen v UI
+  if (!d.gdpr) return { ok: false, error: "Potvrďte súhlas so spracovaním údajov." };
+  const req = await prisma.accessRequest.create({
     data: {
       ico: d.ico,
       companyName: d.companyName,
@@ -32,6 +37,9 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
       note: d.note || null,
     },
   });
+
+  // záznam súhlasu do append-only auditu (GDPR čl. 7 — preukázateľnosť: kto/kedy/akú verziu)
+  await writeAudit({ action: "CONSENT", entity: "AccessRequest", entityId: req.id, meta: { email: d.email, privacyVersion: PRIVACY_VERSION, basis: "registracia-pristup" } });
 
   // notifikuj Moonid o novej žiadosti (best-effort, nikdy nehádže)
   const portal = process.env.NEXT_PUBLIC_SITE_URL ?? "https://moonid-b2b-portal.vercel.app";

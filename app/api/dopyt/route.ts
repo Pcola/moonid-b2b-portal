@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
+import { writeAudit } from "@/lib/audit";
+import { PRIVACY_VERSION } from "@/lib/consent";
 
 // Príjem dopytu z kontaktného formulára. Validácia (zod + max dĺžky), kontrola Origin,
 // honeypot proti botom, sanitizácia subjectu. Posiela cez centrálny lib/email (Resend);
@@ -48,6 +50,9 @@ export async function POST(req: Request) {
   if (d.web && d.web.trim()) return NextResponse.json({ ok: true });
   // GDPR súhlas je povinný
   if (!d.gdpr || d.gdpr === "false") return NextResponse.json({ ok: false, error: "missing_fields" }, { status: 422 });
+
+  // záznam súhlasu do append-only auditu (preukázateľnosť: kto/kedy/akú verziu)
+  await writeAudit({ action: "CONSENT", entity: "Dopyt", meta: { email: d.email, privacyVersion: PRIVACY_VERSION, basis: "kontaktny-formular" } });
 
   const subject = oneLine(`Nový dopyt z webu — ${d.firma} (${d.typ || "dopyt"})`);
   const lines = [
