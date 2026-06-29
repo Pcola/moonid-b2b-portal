@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { rehostImage } from "@/lib/rehost-image";
 
 // Copy-on-confirm: pri potvrdení zhody sa obsah zdroja JEDNORAZOVO skopíruje do Product
 // (len ak je pole prázdne — manuálne/existujúce hodnoty vyhrávajú). Re-import feedu
@@ -27,9 +29,13 @@ export async function confirmMatch(sourceId: string) {
   // obrázok → ProductMedia (len ak produkt nemá primárny a zdroj má URL)
   const hasPrimary = p.media.some((m) => m.isPrimary);
   if (!hasPrimary && src.imageUrl) {
-    await prisma.productMedia.create({
-      data: { productId: p.id, storagePath: src.imageUrl, isPrimary: true, alt: p.nameDisplay || p.name },
-    });
+    // obrázok re-hostujeme do vlastného Storage — nikdy neukladáme dodávateľskú URL
+    const hosted = await rehostImage(createAdminClient(), src.imageUrl, `prod-${p.id}`);
+    if (hosted) {
+      await prisma.productMedia.create({
+        data: { productId: p.id, storagePath: hosted, isPrimary: true, alt: p.nameDisplay || p.name },
+      });
+    }
   }
 
   await prisma.productSource.update({

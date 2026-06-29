@@ -3,7 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 // Bezpečnostné hlavičky pre všetky cesty (clickjacking, sniffing, HSTS, referrer, permissions, CSP).
 // CSP: stredne prísna a NEnarúšajúca (script/style 'unsafe-inline' kvôli inline JSON-LD + Next bootstrapu).
-// Obmedzuje object/base/form-action/frame-ancestors a allowlistuje img/connect (Supabase, humed).
+// Obmedzuje object/base/form-action/frame-ancestors a allowlistuje img/connect (Supabase).
 // TODO: sprísniť na nonce-based script-src (vyžaduje úpravu inline JSON-LD + browser overenie).
 const csp = [
   "default-src 'self'",
@@ -11,7 +11,7 @@ const csp = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: https://www.partner.humed.sk https://*.supabase.co",
+  "img-src 'self' data: https://*.supabase.co",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
@@ -39,8 +39,8 @@ const nextConfig: NextConfig = {
   images: {
     // v dev neoptimalizovať (rýchlejší preview); produkcia optimalizuje
     unoptimized: process.env.NODE_ENV !== "production",
-    // dočasný zdroj obrázkov katalógu (humed) — neskôr vlastné/Supabase Storage
-    remotePatterns: [{ protocol: "https", hostname: "www.partner.humed.sk" }],
+    // obrázky produktov hostujeme vo vlastnom Supabase Storage (re-host z dodávateľa)
+    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

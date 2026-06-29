@@ -111,7 +111,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
                 {/* HUMED */}
                 <div className="flex gap-3">
                   <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-cream">
-                    {it.imageUrl ? <img src={it.imageUrl} alt="" loading="lazy" className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
+                    {it.imageUrl ? <img src={`/api/img?id=${it.id}`} alt="" loading="lazy" className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-2">Humed · {it.externalSku ?? "—"}</div>
