@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   test: {
@@ -7,5 +8,9 @@ export default defineConfig({
     hookTimeout: 40000,
     // testy zdieľajú DB → bežia sekvenčne (žiadny súbeh medzi súbormi)
     fileParallelism: false,
+  },
+  // mapuj @/ na koreň projektu (rovnako ako tsconfig paths)
+  resolve: {
+    alias: [{ find: /^@\//, replacement: fileURLToPath(new URL("./", import.meta.url)) }],
   },
 });
