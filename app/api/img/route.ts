@@ -22,11 +22,28 @@ export async function GET(req: NextRequest) {
     return new NextResponse("forbidden host", { status: 403 });
   }
 
-  const res = await fetch(target.toString());
-  if (!res.ok) return new NextResponse("upstream error", { status: 502 });
+  // Hardening (SECURITY_AUDIT L-4): timeout proti zaseknutiu, redirect:'manual' aby
+  // upstream nepresmeroval fetch na iný (interný) cieľ, kontrola content-type + veľkosti.
+  const MAX_BYTES = 10 * 1024 * 1024; // 10 MB strop
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 8000);
+  let res: Response;
+  try {
+    res = await fetch(target.toString(), { redirect: "manual", signal: controller.signal });
+  } catch {
+    return new NextResponse("upstream timeout", { status: 504 });
+  } finally {
+    clearTimeout(t);
+  }
+  if (!res.ok) return new NextResponse("upstream error", { status: 502 }); // 3xx (manual) → !ok → nenásledujeme
 
   const ct = res.headers.get("content-type") ?? "image/jpeg";
+  if (!ct.startsWith("image/")) return new NextResponse("not an image", { status: 415 });
+  const len = Number(res.headers.get("content-length") ?? 0);
+  if (len > MAX_BYTES) return new NextResponse("too large", { status: 413 });
+
   const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.byteLength > MAX_BYTES) return new NextResponse("too large", { status: 413 });
   return new NextResponse(buf, {
     status: 200,
     headers: { "Content-Type": ct, "Cache-Control": "private, max-age=3600" },

@@ -35,12 +35,21 @@ const securityHeaders =
     ? [{ key: "Content-Security-Policy", value: csp }, ...baseHeaders]
     : baseHeaders;
 
+// Presný Supabase host z env (nie wildcard *.supabase.co — viď SECURITY_AUDIT L-6),
+// aby image optimizer neproxoval obrázky z cudzích Supabase projektov.
+const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : "*.supabase.co";
+
 const nextConfig: NextConfig = {
   images: {
     // v dev neoptimalizovať (rýchlejší preview); produkcia optimalizuje
     unoptimized: process.env.NODE_ENV !== "production",
-    // obrázky produktov hostujeme vo vlastnom Supabase Storage (re-host z dodávateľa)
-    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
+    // obrázky produktov hostujeme vo vlastnom Supabase Storage (re-host z dodávateľa);
+    // len verejný storage prefix konkrétneho projektu
+    remotePatterns: [
+      { protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" },
+    ],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

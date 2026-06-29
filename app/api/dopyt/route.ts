@@ -22,16 +22,22 @@ const schema = z.object({
 });
 
 function originOk(req: Request): boolean {
+  // Anti-CSRF: požaduj Origin alebo aspoň Referer zhodný s vlastným hostom/SITE_URL.
+  // Prehliadačový fetch (kontaktný formulár) posiela Origin pri POST vždy; požiadavka
+  // bez Origin aj Referer (holý skript) sa odmietne (SECURITY_AUDIT M-1).
   const origin = req.headers.get("origin");
-  if (!origin) return true; // niektorí klienti Origin neposielajú — netvrdíme spam
+  const referer = req.headers.get("referer");
+  let candidate: string | null = null;
   try {
-    const o = new URL(origin).host;
-    const host = req.headers.get("host");
-    const site = process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL).host : null;
-    return o === host || o === site;
+    if (origin) candidate = new URL(origin).host;
+    else if (referer) candidate = new URL(referer).host;
   } catch {
     return false;
   }
+  if (!candidate) return false;
+  const host = req.headers.get("host");
+  const site = process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL).host : null;
+  return candidate === host || candidate === site;
 }
 
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
