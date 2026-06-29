@@ -1,7 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
 // Globálny error boundary (zachytáva chyby aj v root layoute) — musí renderovať <html>/<body>.
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => { Sentry.captureException(error); }, [error]);
   return (
     <html lang="sk">
       <body style={{ fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif", display: "grid", placeItems: "center", minHeight: "100vh", margin: 0, padding: 24, textAlign: "center", color: "#1a1a1a" }}>

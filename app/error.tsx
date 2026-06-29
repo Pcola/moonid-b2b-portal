@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(() => { console.error(error); }, [error]);
+  useEffect(() => { console.error(error); Sentry.captureException(error); }, [error]);
   return (
     <main className="grid min-h-[70vh] place-items-center px-6 py-20 text-center">
       <div className="flex max-w-md flex-col items-center gap-5">

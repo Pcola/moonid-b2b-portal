@@ -3,6 +3,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Verejný bucket s obrázkami produktov (vlastné hostovanie — nie dodávateľ).
 export const PRODUCT_BUCKET = "products";
 
+// Anti-SSRF: re-hostovať sa smie len z dôveryhodného zdroja (dodávateľský feed).
+const ALLOWED_SOURCE_HOSTS = new Set(["www.partner.humed.sk"]);
+
 function extFromContentType(ct: string | null): string {
   if (!ct) return "jpg";
   if (ct.includes("png")) return "png";
@@ -23,9 +26,16 @@ export async function rehostImage(
   key: string
 ): Promise<string | null> {
   try {
-    const res = await fetch(sourceUrl);
+    let u: URL;
+    try { u = new URL(sourceUrl); } catch { return null; }
+    // len https + dôveryhodný host (anti-SSRF: žiadne interné/link-local ciele)
+    if (u.protocol !== "https:" || !ALLOWED_SOURCE_HOSTS.has(u.hostname)) return null;
+
+    const res = await fetch(u.toString());
     if (!res.ok) return null;
     const ct = res.headers.get("content-type");
+    // žiadne SVG — vo verejnom buckete by <script> v SVG bol stored-XSS vektor
+    if (ct && /svg/i.test(ct)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     const path = `${key}.${extFromContentType(ct)}`;
     const { error } = await supabase.storage

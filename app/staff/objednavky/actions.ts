@@ -27,13 +27,17 @@ export async function advanceOrder(orderId: string): Promise<{ ok: boolean; erro
   const to = nextStatus(from);
   if (!to) return { ok: false, error: "Objednávka je už vo finálnom stave." };
 
+  let raced = false;
   await prisma.$transaction(async (tx) => {
-    await tx.order.update({
-      where: { id: order.id },
+    // optimistic lock: posuň len ak je stav STÁLE 'from' (anti dvojklik / súbeh 2 staffov)
+    const res = await tx.order.updateMany({
+      where: { id: order.id, status: from },
       data: { status: to, ...(to === "POTVRDENA" ? { confirmedAt: new Date() } : {}) },
     });
+    if (res.count === 0) { raced = true; return; }
     await tx.orderStatusEvent.create({ data: { orderId: order.id, status: to, source: "PORTAL", changedById: staff.id } });
   });
+  if (raced) return { ok: false, error: "Stav objednávky sa medzitým zmenil — obnovte stránku." };
   await writeAudit({ userId: staff.id, action: "ORDER_STATUS", entity: "Order", entityId: order.id, meta: { number: order.number, from, to } });
   if (order.createdBy?.email) await emailOrderStatus({ to: order.createdBy.email, number: order.number, status: to });
   revalidate(order.id);
@@ -51,10 +55,13 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ o
   const from = order.status as OrderStatus;
   if (!canCancel(from)) return { ok: false, error: "Túto objednávku už nemožno stornovať." };
 
+  let raced = false;
   await prisma.$transaction(async (tx) => {
-    await tx.order.update({ where: { id: order.id }, data: { status: "STORNO" } });
+    const res = await tx.order.updateMany({ where: { id: order.id, status: from }, data: { status: "STORNO" } });
+    if (res.count === 0) { raced = true; return; }
     await tx.orderStatusEvent.create({ data: { orderId: order.id, status: "STORNO", source: "PORTAL", changedById: staff.id, note: cleanReason } });
   });
+  if (raced) return { ok: false, error: "Stav objednávky sa medzitým zmenil — obnovte stránku." };
   await writeAudit({ userId: staff.id, action: "ORDER_CANCEL", entity: "Order", entityId: order.id, meta: { number: order.number, from, reason: cleanReason } });
   if (order.createdBy?.email) await emailOrderStatus({ to: order.createdBy.email, number: order.number, status: "STORNO", note: cleanReason });
   revalidate(order.id);

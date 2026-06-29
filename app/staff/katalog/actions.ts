@@ -124,6 +124,17 @@ export async function createProduct(formData: FormData): Promise<{ ok: boolean; 
   const vatRate = Number(vatRaw);
   if (!Number.isFinite(vatRate) || vatRate < 0 || vatRate > 100) return { ok: false, error: "Neplatná sadzba DPH." };
 
+  // validácia uploadu pred vytvorením (žiadny orphan produkt pri zlom obrázku)
+  let imageFile: File | null = null;
+  if (image && typeof image !== "string" && image.size > 0) {
+    const f = image as File;
+    if (f.size > 5 * 1024 * 1024) return { ok: false, error: "Obrázok je príliš veľký (max 5 MB)." };
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(f.type)) {
+      return { ok: false, error: "Nepovolený formát obrázka (povolené: JPG, PNG, WEBP, GIF)." };
+    }
+    imageFile = f;
+  }
+
   if (await prisma.product.findUnique({ where: { sku }, select: { id: true } })) {
     return { ok: false, error: "Produkt s týmto SKU už existuje." };
   }
@@ -136,12 +147,11 @@ export async function createProduct(formData: FormData): Promise<{ ok: boolean; 
     },
   });
 
-  if (image && typeof image !== "string" && image.size > 0) {
-    const file = image as File;
-    const buf = Buffer.from(await file.arrayBuffer());
-    const ext = (file.type.split("/")[1] || "jpg").replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
+  if (imageFile) {
+    const buf = Buffer.from(await imageFile.arrayBuffer());
+    const ext = (imageFile.type.split("/")[1] || "jpg").replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
     const admin = createAdminClient();
-    const { error } = await admin.storage.from(PRODUCT_BUCKET).upload(`manual-${product.id}.${ext}`, buf, { contentType: file.type || "image/jpeg", upsert: true });
+    const { error } = await admin.storage.from(PRODUCT_BUCKET).upload(`manual-${product.id}.${ext}`, buf, { contentType: imageFile.type || "image/jpeg", upsert: true });
     if (!error) {
       const url = admin.storage.from(PRODUCT_BUCKET).getPublicUrl(`manual-${product.id}.${ext}`).data.publicUrl;
       await prisma.productMedia.create({ data: { productId: product.id, storagePath: url, isPrimary: true, alt: name } });
