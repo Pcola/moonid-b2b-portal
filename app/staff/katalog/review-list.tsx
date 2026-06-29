@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import Link from "next/link";
 import { confirmMatch, rejectMatch, togglePublish } from "./actions";
 
 type Item = {
@@ -51,7 +52,10 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
 
   return (
     <div className="max-w-[1100px]">
-      <p className="text-[15px] text-muted-3">Potvrď alebo odmietni navrhnuté zhody humed → Pohoda. Pri potvrdení sa obrázok a popis priradia k produktu.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[15px] text-muted-3">Potvrď alebo odmietni navrhnuté zhody humed → Pohoda. Pri potvrdení sa obrázok a popis priradia k produktu.</p>
+        <Link href="/staff/katalog/novy" className="inline-flex flex-none items-center gap-1.5 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">+ Pridať produkt</Link>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2.5">
         <Chip label="čaká spolu" value={stats.pendingTotal} tone="warn" />
