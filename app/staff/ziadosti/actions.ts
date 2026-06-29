@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAudit } from "@/lib/audit";
+import { sendEmail } from "@/lib/email";
 
 async function origin() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -71,6 +72,26 @@ export async function approveRequest(
   await writeAudit({ userId: staff.id, companyId: company.id, action: "ACCESS_APPROVE", entity: "Company", entityId: company.id, meta: { requestId: id, email: req.email, ico: req.ico, tier: tierCode, splatDays } });
   // POZN: zámerne NErevalidujeme — necháme kartu zobraziť pozvánkový odkaz staffovi.
   // Po refreshi žiadosť zmizne z PENDING zoznamu (je APPROVED).
+
+  // pošli pozvánku aj priamo zákazníkovi (best-effort, popri zobrazení staffovi)
+  if (inviteLink) {
+    await sendEmail({
+      to: req.email,
+      subject: "Prístup do Moonid B2B portálu",
+      text: [
+        "Dobrý deň,",
+        "",
+        `pripravili sme vám prístup do B2B portálu Moonid pre firmu ${company.name}.`,
+        "Heslo si nastavte cez tento odkaz:",
+        inviteLink,
+        "",
+        `Potom sa prihlásite na ${await origin()}/login.`,
+        "",
+        "Tím Moonid",
+      ].join("\n"),
+    });
+  }
+
   return { ok: true, inviteLink };
 }
 

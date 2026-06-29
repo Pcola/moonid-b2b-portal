@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 
 const schema = z.object({
   ico: z.string().trim().min(6, "Neplatné IČO").max(12),
@@ -31,5 +32,23 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
       note: d.note || null,
     },
   });
+
+  // notifikuj Moonid o novej žiadosti (best-effort, nikdy nehádže)
+  const portal = process.env.NEXT_PUBLIC_SITE_URL ?? "https://moonid-b2b-portal.vercel.app";
+  await sendEmail({
+    to: STAFF_NOTIFY,
+    subject: `Nová žiadosť o prístup — ${d.companyName}`,
+    replyTo: d.email,
+    text: [
+      "Nová žiadosť o prístup do B2B portálu:",
+      "",
+      `Firma:    ${d.companyName} (IČO ${d.ico})`,
+      `Kontakt:  ${d.contactName} <${d.email}>${d.phone ? ", tel. " + d.phone : ""}`,
+      d.note ? `Poznámka: ${d.note}` : "",
+      "",
+      `Spracovať: ${portal}/staff/ziadosti`,
+    ].filter(Boolean).join("\n"),
+  });
+
   return { ok: true };
 }

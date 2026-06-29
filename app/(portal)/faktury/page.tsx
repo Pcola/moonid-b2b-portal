@@ -30,7 +30,7 @@ export default async function FakturyPage() {
   const invoices = await prisma.invoice.findMany({
     where: { companyId: user.companyId },
     orderBy: { issuedAt: "desc" },
-    select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true, pdfStoragePath: true, order: { select: { number: true } } },
+    select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true, order: { select: { number: true } } },
   });
 
   const num = (d: typeof invoices) => d.reduce((s, i) => s + Number(i.total), 0);
@@ -67,14 +67,8 @@ export default async function FakturyPage() {
                 <span className="text-[13.5px] text-muted-2">{f.order?.number ?? "—"}</span>
                 <span className="text-[13.5px] text-muted-2">{new Date(f.dueAt).toLocaleDateString("sk")}</span>
                 <span className={`justify-self-start rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
-                <span className="flex items-center justify-end gap-3">
-                  <span className="text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(f.total))}</span>
-                  {f.pdfStoragePath && (
-                    <a href={f.pdfStoragePath} title="Stiahnuť PDF" className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-brand transition hover:border-mint-2">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>
-                    </a>
-                  )}
-                </span>
+                {/* PDF na stiahnutie príde s Pohoda sync faktúr cez podpísaný auth-gated route (Fáza 2) */}
+                <span className="text-right text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(f.total))}</span>
               </div>
             );
           })}

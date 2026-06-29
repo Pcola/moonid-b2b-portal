@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { confirmMatch, rejectMatch } from "./actions";
+import { confirmMatch, rejectMatch, togglePublish } from "./actions";
 
 type Item = {
   id: string;
@@ -44,6 +44,11 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
     start(async () => { await fn(id); setBusyId(null); });
   };
 
+  const runPublish = (rowId: string, productId: string, value: boolean) => {
+    setBusyId(rowId);
+    start(async () => { await togglePublish(productId, value); setBusyId(null); });
+  };
+
   return (
     <div className="max-w-[1100px]">
       <p className="text-[15px] text-muted-3">Potvrď alebo odmietni navrhnuté zhody humed → Pohoda. Pri potvrdení sa obrázok a popis priradia k produktu.</p>
@@ -65,6 +70,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
         <div className="mt-7 flex flex-col gap-3">
           {items.map((it) => {
             if (!it.product) return null;
+            const p = it.product;
             const score = it.matchScore != null ? Math.round(it.matchScore * 100) : null;
             const isCode = it.matchMethod === "CODE";
             const cur = it.product.media[0]?.storagePath;
@@ -80,6 +86,15 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
                     <div className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-2">Pohoda · {it.product.sku}</div>
                     <div className="truncate text-[14.5px] font-medium text-ink">{it.product.nameDisplay || it.product.name}</div>
                     <div className="mt-0.5 text-[12.5px] text-muted">{it.product.category?.name ?? "— bez kategórie —"}</div>
+                    <button
+                      onClick={() => runPublish(it.id, p.id, !p.isPublished)}
+                      disabled={busy}
+                      title={p.isPublished ? "Skryť z katalógu zákazníkov" : "Zverejniť v katalógu zákazníkov"}
+                      className="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold transition disabled:opacity-50"
+                      style={p.isPublished ? { background: "#dcfce7", color: "#14532d" } : { background: "#f3f0ee", color: "#86827a" }}
+                    >
+                      {p.isPublished ? "● Publikovaný" : "○ Nepublikovaný"}
+                    </button>
                   </div>
                 </div>
 
