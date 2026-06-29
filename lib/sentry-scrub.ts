@@ -1,5 +1,6 @@
 // Odstráni PII z eventu pred odoslaním do Sentry: cookies, auth hlavičky,
 // query string (môže obsahovať tokeny) a email/ip používateľa.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function scrubPii<T extends { request?: any; user?: any }>(event: T): T {
   if (event.request) {
     delete event.request.cookies;

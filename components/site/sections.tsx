@@ -414,7 +414,7 @@ export function KontaktSection() {
                 ["Kontaktná osoba", <>Jozef Slobodník <span className="text-[#7fa59c]">— konateľ</span></>],
                 ["Otváracie hodiny", <>Po–Štv 8:00–17:00 <span className="text-[#7fa59c]">· Pia 8:00–14:00</span></>],
                 ["Adresa", <>Hlavná 39/78 <span className="text-[#7fa59c]">· 941 43 Dolný Ohaj</span></>],
-                ["Fakturačné údaje", <span className="text-[14px] text-[#8fb3ab]">IČO 50 934 660 · IČ DPH SK2120530995</span>],
+                ["Fakturačné údaje", <><span className="text-[14px] text-[#8fb3ab]">IČO 50 934 660 · IČ DPH SK2120530995</span></>],
               ].map(([k, v], idx) => (
                 <div key={idx} className="flex items-baseline gap-6 border-t border-white/10 py-[18px]"><dt className="w-[124px] flex-none pt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#6e938b]">{k}</dt><dd className="text-[15.5px] leading-relaxed text-[#e7efec]">{v}</dd></div>
               ))}

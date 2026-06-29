@@ -38,7 +38,7 @@ function Icon({ children }: { children: React.ReactNode }) {
   return <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
 }
 
-export function StaffShell({ name, email, role, newOrders, newRequests, children }: Props) {
+export function StaffShell({ name, role, newOrders, newRequests, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);

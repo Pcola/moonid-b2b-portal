@@ -37,6 +37,8 @@ jobs:
       - run: npx prisma migrate deploy
       # typová kontrola — musí prejsť
       - run: npx tsc --noEmit
+      # ESLint — errors blokujú build (warnings nie)
+      - run: npm run lint
       # tenant-izolačné testy (firma A → dáta firmy B = 404)
       - run: npm test
       # bezpečnosť závislostí — build padne pri high/critical zraniteľnosti
