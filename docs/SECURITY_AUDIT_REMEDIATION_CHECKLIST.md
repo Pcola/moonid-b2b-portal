@@ -6,18 +6,20 @@
 
 ---
 
-## 🔴 P0 — Teraz (kritické pre bezpečnosť, malé zmeny)
+## 🔴 P0 — Teraz (kritické pre bezpečnosť, malé zmeny) — ✅ HOTOVO (commit `a6d6294`)
 
-- [ ] **H-1 · 🟠 · S** — Escapovať JSON-LD proti `</script>` breakoutu
-  - Vytvoriť `lib/json-ld.ts` s helperom `safeJsonLd()` (escape `<`,`>`,`&`,U+2028/9).
-  - Použiť na `app/produkt/[slug]/page.tsx:203`, `app/layout.tsx:65`, `components/site/sections.tsx:394`.
-  - **Akceptačné kritérium:** produkt s názvom `</script><script>alert(1)</script>` sa na verejnej stránke nevykoná.
-- [ ] **M-3a · 🟡 · S** — `REVOKE EXECUTE … FROM PUBLIC, anon, authenticated` na 5 Pohoda/RLS funkciách
+- [x] **H-1 · 🟠 · S** — Escapovať JSON-LD proti `</script>` breakoutu ✅
+  - Vytvorený `lib/json-ld.ts` s helperom `safeJsonLd()` (escape `<`,`>`,`&`,U+2028/9).
+  - Aplikované na `app/produkt/[slug]/page.tsx`, `app/layout.tsx`, `components/site/sections.tsx`.
+  - **Overené:** `tsx` test — `</script><script>` sa escapuje na `<…`, round-trip cez `JSON.parse` zachová obsah; `tsc`+`eslint` čisté.
+- [x] **M-3a · 🟡 · S** — `REVOKE EXECUTE … FROM PUBLIC, anon, authenticated` na 5 Pohoda/RLS funkciách ✅
   - `pohoda_ingest_invoices`, `pohoda_ingest_stock`, `pohoda_heartbeat`, `pohoda_get_cursors`, `rls_auto_enable`.
-  - **Akceptačné kritérium:** `has_function_privilege('anon', …, 'EXECUTE')` = `false`; Pohoda agent (service_role/vlastná rola) ďalej funguje.
-- [ ] **L-2 · 🔵 · S** — Doplniť audit append-only o `TRUNCATE`
-  - `CREATE TRIGGER … BEFORE TRUNCATE ON "AuditLog"` (raise) + `REVOKE TRUNCATE, UPDATE, DELETE ON "AuditLog" FROM PUBLIC, anon, authenticated, service_role`.
-  - **Akceptačné kritérium:** `TRUNCATE "AuditLog"` zlyhá; `UPDATE`/`DELETE` naďalej blokované.
+  - Aplikované na **živú DB** + zosúladený `database/pohoda-agent.sql`.
+  - **Overené:** `has_function_privilege('anon', …)` = `false`, `('pohoda_agent', …)` = `true`.
+- [x] **L-2 · 🔵 · S** — Doplniť audit append-only o `TRUNCATE` ✅
+  - `CREATE TRIGGER audit_log_no_truncate BEFORE TRUNCATE ON "AuditLog"` (statement-level, raise).
+  - Aplikované na **živú DB** + zosúladený `database/audit-append-only.sql`.
+  - **Overené:** `pg_trigger` — `on_truncate=true`, `STMT` level. (Trigger pokrýva aj vlastníka tabuľky, preto bol zvolený namiesto/popri REVOKE.)
 
 ---
 
@@ -72,7 +74,7 @@
 
 | Tier | Položiek | Hotovo |
 |---|---|---|
-| P0 | 3 | 0 / 3 |
+| P0 | 3 | **3 / 3** ✅ |
 | P1 | 4 | 0 / 4 |
 | P2 | 5 | 0 / 5 |
 | P3 | 8 | 0 / 8 |
