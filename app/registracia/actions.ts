@@ -1,10 +1,12 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
 import { PRIVACY_VERSION } from "@/lib/consent";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   ico: z.string().trim().min(6, "Neplatné IČO").max(12),
@@ -27,6 +29,11 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
   if (d.hp && d.hp.trim()) return { ok: true };
   // súhlas so spracovaním OÚ je povinný — overené aj server-side, nielen v UI
   if (!d.gdpr) return { ok: false, error: "Potvrďte súhlas so spracovaním údajov." };
+
+  // anti-abuse: max 5 žiadostí / hod na IP (SECURITY_AUDIT M-1)
+  const rl = await rateLimit(`access-req:${clientIp(await headers())}`, { limit: 5, windowSec: 3600 });
+  if (!rl.ok) return { ok: false, error: "Priveľa pokusov. Skúste o chvíľu znova." };
+
   const req = await prisma.accessRequest.create({
     data: {
       ico: d.ico,

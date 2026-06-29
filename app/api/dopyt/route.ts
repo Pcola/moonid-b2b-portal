@@ -3,6 +3,7 @@ import { z } from "zod";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
 import { PRIVACY_VERSION } from "@/lib/consent";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 // Príjem dopytu z kontaktného formulára. Validácia (zod + max dĺžky), kontrola Origin,
 // honeypot proti botom, sanitizácia subjectu. Posiela cez centrálny lib/email (Resend);
@@ -44,6 +45,10 @@ const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
 
 export async function POST(req: Request) {
   if (!originOk(req)) return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+
+  // anti-abuse: max 5 dopytov / 10 min na IP (SECURITY_AUDIT M-1)
+  const rl = await rateLimit(`dopyt:${clientIp(req.headers)}`, { limit: 5, windowSec: 600 });
+  if (!rl.ok) return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
 
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false, error: "bad_request" }, { status: 400 }); }

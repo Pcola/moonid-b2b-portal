@@ -545,6 +545,16 @@ model OrderCounter {
   lastSeq Int @default(0)
 }
 
+// [P] Rate-limit počítadlo (fixed-window) — anti-abuse pre verejné endpointy
+// (kontaktný dopyt, registrácia). Obsluhuje lib/rate-limit.ts. Viď SECURITY_AUDIT M-1.
+model RateLimit {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+
+  @@index([windowStart])
+}
+
 // ---------- Faktúry ---------- [C] cache z Pohody + PDF
 
 model Invoice {
