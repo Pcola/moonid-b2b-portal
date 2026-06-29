@@ -1,21 +1,31 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+// Presný Supabase host z env (nie wildcard *.supabase.co — SECURITY_AUDIT L-6/M-4),
+// aby sa CSP aj image optimizer viazali len na náš projekt, nie na cudzie Supabase projekty.
+const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : "*.supabase.co";
+
 // Bezpečnostné hlavičky pre všetky cesty (clickjacking, sniffing, HSTS, referrer, permissions, CSP).
-// CSP: stredne prísna a NEnarúšajúca (script/style 'unsafe-inline' kvôli inline JSON-LD + Next bootstrapu).
-// Obmedzuje object/base/form-action/frame-ancestors a allowlistuje img/connect (Supabase).
-// TODO: sprísniť na nonce-based script-src (vyžaduje úpravu inline JSON-LD + browser overenie).
+// Prísna CSP: default-deny; object/base/frame-ancestors/frame-src/form-action zamknuté;
+// img/connect viazané na náš Supabase host (+ HIBP). script-src ponecháva 'unsafe-inline'
+// VEDOME (SECURITY_AUDIT M-4): nonce-based CSP by v App Routeri vynútil dynamické
+// renderovanie statických stránok a po oprave H-1 (escapovaný JSON-LD cez safeJsonLd) +
+// React auto-escape neostáva vektor na injekciu inline scriptu → akceptované reziduálne riziko.
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
+  "frame-src 'none'",
   "form-action 'self'",
-  "img-src 'self' data: https://*.supabase.co",
+  `img-src 'self' data: https://${supabaseHost}`,
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.pwnedpasswords.com",
+  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://api.pwnedpasswords.com`,
+  "upgrade-insecure-requests",
 ].join("; ");
 
 const baseHeaders = [
@@ -34,12 +44,6 @@ const securityHeaders =
   process.env.NODE_ENV === "production"
     ? [{ key: "Content-Security-Policy", value: csp }, ...baseHeaders]
     : baseHeaders;
-
-// Presný Supabase host z env (nie wildcard *.supabase.co — viď SECURITY_AUDIT L-6),
-// aby image optimizer neproxoval obrázky z cudzích Supabase projektov.
-const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : "*.supabase.co";
 
 const nextConfig: NextConfig = {
   images: {
