@@ -20,3 +20,10 @@ CREATE TRIGGER audit_log_no_update BEFORE UPDATE ON "AuditLog"
   FOR EACH ROW EXECUTE FUNCTION audit_log_no_mutate();
 CREATE TRIGGER audit_log_no_delete BEFORE DELETE ON "AuditLog"
   FOR EACH ROW EXECUTE FUNCTION audit_log_no_mutate();
+
+-- TRUNCATE NIE je riadkový UPDATE/DELETE → riadkové triggery ho nepokryjú a audit log
+-- by sa dal vyprázdniť (SECURITY_AUDIT_2026-06-29.md — L-2). Statement-level BEFORE
+-- TRUNCATE trigger platí pre VŠETKÝCH vrátane vlastníka tabuľky (na rozdiel od REVOKE).
+DROP TRIGGER IF EXISTS audit_log_no_truncate ON "AuditLog";
+CREATE TRIGGER audit_log_no_truncate BEFORE TRUNCATE ON "AuditLog"
+  FOR EACH STATEMENT EXECUTE FUNCTION audit_log_no_mutate();

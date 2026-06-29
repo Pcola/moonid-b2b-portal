@@ -122,3 +122,13 @@ GRANT EXECUTE ON FUNCTION pohoda_heartbeat(text, boolean) TO pohoda_agent;
 GRANT EXECUTE ON FUNCTION pohoda_get_cursors() TO pohoda_agent;
 GRANT EXECUTE ON FUNCTION pohoda_ingest_stock(jsonb, timestamptz) TO pohoda_agent;
 GRANT EXECUTE ON FUNCTION pohoda_ingest_invoices(jsonb, timestamptz) TO pohoda_agent;
+
+-- 6) bezpečnostné dotiahnutie (SECURITY_AUDIT_2026-06-29.md — M-3a):
+--    CREATE FUNCTION automaticky udeľuje EXECUTE roli PUBLIC, čím anon/authenticated
+--    získavajú právo volať tieto SECURITY DEFINER funkcie. Odoberáme ho — volať smie
+--    LEN pohoda_agent (explicitné granty vyššie). Bez tohto by stačilo vystaviť schému
+--    public cez Data API a anon by mohol injektovať faktúry/sklad.
+REVOKE EXECUTE ON FUNCTION pohoda_heartbeat(text, boolean)           FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION pohoda_get_cursors()                       FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION pohoda_ingest_stock(jsonb, timestamptz)    FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION pohoda_ingest_invoices(jsonb, timestamptz) FROM PUBLIC, anon, authenticated;

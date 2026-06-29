@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Testimonials } from "@/components/site/testimonials";
 import { ContactForm } from "@/components/site/contact-form";
+import { safeJsonLd } from "@/lib/json-ld";
 
 /* ───────── dáta ───────── */
 const STATS = [
@@ -391,7 +392,7 @@ export function FaqSection() {
           ))}
         </div>
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
     </section>
   );
 }
