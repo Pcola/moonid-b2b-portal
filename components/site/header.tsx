@@ -39,6 +39,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
 
   return (
     <div className="fixed inset-x-0 top-0 z-50">
+      <a href="#top" className="skip-link">Preskočiť na obsah</a>
       {/* util bar */}
       <div className="overflow-hidden text-[13px] transition-all duration-500" style={{ height: scrolled ? 0 : 40, opacity: scrolled ? 0 : 1, background: "#122f2a", color: "#a9c2bb" }}>
         <div className="mx-auto flex h-10 max-w-[1240px] items-center justify-between gap-5 px-5 sm:px-8">
