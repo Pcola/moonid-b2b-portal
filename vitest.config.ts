@@ -9,8 +9,11 @@ export default defineConfig({
     // testy zdieľajú DB → bežia sekvenčne (žiadny súbeh medzi súbormi)
     fileParallelism: false,
   },
-  // mapuj @/ na koreň projektu (rovnako ako tsconfig paths)
+  // mapuj @/ na koreň projektu (rovnako ako tsconfig paths) + stub "server-only" pre node testy
   resolve: {
-    alias: [{ find: /^@\//, replacement: fileURLToPath(new URL("./", import.meta.url)) }],
+    alias: [
+      { find: /^@\//, replacement: fileURLToPath(new URL("./", import.meta.url)) },
+      { find: "server-only", replacement: fileURLToPath(new URL("./tests/_stubs/empty.ts", import.meta.url)) },
+    ],
   },
 });
