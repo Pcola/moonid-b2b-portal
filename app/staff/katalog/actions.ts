@@ -61,6 +61,41 @@ export async function togglePublish(productId: string, value: boolean) {
   revalidatePath("/staff/katalog");
 }
 
+// Vyhľadá Pohoda produkty pre manuálny picker (podľa názvu/SKU).
+export async function searchPohodaProducts(q: string): Promise<{ id: string; sku: string; name: string }[]> {
+  await requireStaff();
+  const query = q.trim().slice(0, 80);
+  if (query.length < 2) return [];
+  const rows = await prisma.product.findMany({
+    where: {
+      origin: "POHODA",
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        { nameDisplay: { contains: query, mode: "insensitive" } },
+        { sku: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    select: { id: true, sku: true, name: true, nameDisplay: true },
+    take: 20,
+    orderBy: { name: "asc" },
+  });
+  return rows.map((r) => ({ id: r.id, sku: r.sku, name: r.nameDisplay || r.name }));
+}
+
+// Manuálne napárovanie feed položky na konkrétny Pohoda produkt + potvrdenie
+// (skopíruje obrázok do Storage + popis cez confirmMatch). matchMethod=MANUAL.
+export async function manualPair(sourceId: string, productId: string): Promise<{ ok: boolean; error?: string }> {
+  await requireStaff();
+  const prod = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+  if (!prod) return { ok: false, error: "Vybraný Pohoda produkt neexistuje." };
+  await prisma.productSource.update({
+    where: { id: sourceId },
+    data: { productId, matchMethod: "MANUAL", matchScore: null },
+  });
+  await confirmMatch(sourceId); // copy-on-confirm: obrázok (re-host) + popis + CONFIRMED
+  return { ok: true };
+}
+
 function slugify(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60);
