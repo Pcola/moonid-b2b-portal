@@ -41,11 +41,14 @@
 
 ## 🟠 P2 — Tento mesiac
 
-- [ ] **M-3b · 🟡 · M** — `ENABLE ROW LEVEL SECURITY` (default-deny) na všetkých 26 `public` tabuľkách
-  - Ideálne ako Prisma migrácia; Prisma privilegovaná rola RLS obchádza → app funguje.
-  - Pridať **CI gate**: kontrola, že `anon`/`authenticated` nemajú DML granty a `public` nie je vystavená cez Data API.
-- [ ] **M-4 · 🟡 · M** — Nonce-based CSP
-  - `script-src 'nonce-<rnd>' 'strict-dynamic'`, odstrániť `'unsafe-inline'` zo `script-src` (nonce na JSON-LD + Next bootstrap).
+- [x] **M-3b · 🟡 · M** — `ENABLE ROW LEVEL SECURITY` (default-deny) na app tabuľkách ✅ (commit `3f9131c`)
+  - Migrácia `20260629150000_enable_rls` — 28 tabuliek, aplikovaná na prod. Prisma (rola `postgres`, vlastník + BYPASSRLS) funguje bez zmeny; `anon`/`authenticated` (BYPASSRLS=false) sú default-deny.
+  - **CI gate:** `tests/rls-enabled.test.ts` (v `npm test`) padne pri novej tabuľke bez RLS.
+  - **Overené:** 28/28 RLS on, `/produkty` renderuje (1888 publikovaných produktov čitateľných).
+  - Pozn.: kontrola anon-grantov + Data API exposure sa nedá spustiť proti efemérnej CI DB (Supabase-špecifické) — ostáva ako periodická manuálna kontrola (v audite).
+- [x] **M-4 · 🟡 · M** — CSP sprísnenie ✅ (commit, *nonce zámerne vynechané*)
+  - **Rozhodnutie:** NErobiť nonce CSP — v App Routeri vynúti dynamické renderovanie statických stránok; po oprave H-1 (safeJsonLd) + React auto-escape neostáva inline-script vektor. `'unsafe-inline'` v `script-src` = akceptované reziduálne riziko (zdokumentované v `next.config.ts`).
+  - **Spravené (nulová réžia, statika zachovaná):** `img-src`/`connect-src` na presný Supabase host, `frame-src 'none'`, `upgrade-insecure-requests`. Build OK.
 - [ ] **L-1 · 🔵 · S** — Rozdeliť STAFF/ADMIN pre citlivé operácie
   - Cenotvorba (`priceTierCode`, `splatDays`), zakladanie produktov, deaktivácia firmy → `requireAdmin()`.
   - Alebo: zdokumentovať súčasný stav ako zámer (malý tím).
@@ -76,7 +79,7 @@
 |---|---|---|
 | P0 | 3 | **3 / 3** ✅ |
 | P1 | 3 | **1 / 3** (M-1 hotové; M-1b CAPTCHA + M-2 heslá = Supabase dashboard) |
-| P2 | 5 | **2 / 5** (L-4, L-6 hotové) |
+| P2 | 5 | **4 / 5** (M-3b, M-4, L-4, L-6 hotové; ostáva L-1) |
 | P3 | 8 | 0 / 8 |
 
 > **Zostáva na teba (Supabase dashboard, ~5 min):** M-1b CAPTCHA/Turnstile na Auth + M-2 Leaked password protection (HIBP) a min. dĺžka hesla. Návod nižšie.
