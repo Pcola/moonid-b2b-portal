@@ -87,6 +87,61 @@ export async function removeItem(itemId: string): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
+type QuickResult = { ok: boolean; error?: string; added: { sku: string; name: string; qty: number }[]; notFound: string[]; onRequest: string[] };
+
+/** Rýchla objednávka: vloží viacero položiek naraz podľa SKU (paste/CSV: "SKU, množstvo" na riadok). */
+export async function quickAddToCart(raw: string): Promise<QuickResult> {
+  const empty = { added: [], notFound: [], onRequest: [] };
+  const user = await requireUser();
+  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme.", ...empty };
+
+  // parse: každý riadok "SKU[,; \t]množstvo" (množstvo nepovinné = 1); max 500 riadkov
+  const bySku = new Map<string, number>();
+  for (const line of String(raw ?? "").split(/\r?\n/).slice(0, 500)) {
+    const parts = line.trim().split(/[,;\t]+|\s{2,}|\s+/).filter(Boolean);
+    const sku = parts[0]?.trim().slice(0, 60);
+    if (!sku) continue;
+    const qty = Math.max(1, Math.min(9999, Math.floor(Number(parts[1] ?? "1")) || 1));
+    bySku.set(sku, (bySku.get(sku) ?? 0) + qty);
+  }
+  if (bySku.size === 0) return { ok: false, error: "Zadajte aspoň jeden riadok (SKU, množstvo).", ...empty };
+
+  const tierCode = user.company?.priceTier?.code ?? null;
+  const discountPct = await tierDiscount(tierCode);
+  const products = await prisma.product.findMany({
+    where: { sku: { in: [...bySku.keys()] }, isPublished: true },
+    select: { id: true, sku: true, name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } },
+  });
+  const bySkuProduct = new Map(products.map((p) => [p.sku, p]));
+
+  const cart = await getOrCreateCart(user.companyId, user.id);
+  const added: { sku: string; name: string; qty: number }[] = [];
+  const notFound: string[] = [];
+  const onRequest: string[] = [];
+
+  for (const [sku, qty] of bySku) {
+    const p = bySkuProduct.get(sku);
+    if (!p) { notFound.push(sku); continue; }
+    const price = resolveUnitPrice({
+      basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
+      vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized,
+      tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null,
+      discountPct,
+    });
+    if (price.kind !== "PRICE") { onRequest.push(sku); continue; }
+    await prisma.cartItem.upsert({
+      where: { cartId_productId: { cartId: cart.id, productId: p.id } },
+      create: { cartId: cart.id, productId: p.id, qty },
+      update: { qty: { increment: qty } },
+    });
+    added.push({ sku, name: p.nameDisplay || p.name, qty });
+  }
+
+  revalidatePath("/kosik");
+  revalidatePath("/katalog");
+  return { ok: true, added, notFound, onRequest };
+}
+
 type NewAddress = { label?: string; street: string; city: string; zip: string };
 type CreateOrderOpts = { note?: string; deliveryLocationId?: string | null; newAddress?: NewAddress | null };
 

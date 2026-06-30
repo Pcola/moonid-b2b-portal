@@ -9,6 +9,7 @@ const NAV = [
 ];
 
 const INFO = [
+  { label: "Pomoc a časté otázky", href: "/pomoc" },
   { label: "Informácie o spoločnosti", href: "/o-nas" },
   { label: "Obchodné podmienky", href: "/obchodne-podmienky" },
   { label: "Reklamačné podmienky", href: "/obchodne-podmienky#reklamacie" },
