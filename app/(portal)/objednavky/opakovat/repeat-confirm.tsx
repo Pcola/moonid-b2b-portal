@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { placeRepeatOrder, quickAddToCart, removeItem } from "../../kosik/actions";
+import { placeRepeatOrder, quickAddToRepeatDraft, removeRepeatDraftItem } from "../../kosik/actions";
 
 type Line = { name: string; qty: number; net: number | null; usable: boolean };
-type CartLine = Line & { id: string };
+type ExtraLine = Line & { id: string };
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 function r2(n: number) { return Math.round(n * 100) / 100; }
@@ -14,25 +14,25 @@ function sumNet(lines: { net: number | null; qty: number; usable: boolean }[]) {
   return lines.reduce((s, l) => (l.usable ? s + r2((l.net ?? 0) * l.qty) : s), 0);
 }
 
-export function RepeatOrderConfirm({ sourceOrderId, items, cartLines, deliveryText, note }: {
-  sourceOrderId: string; items: Line[]; cartLines: CartLine[]; deliveryText: string | null; note: string | null;
+export function RepeatOrderConfirm({ sourceOrderId, items, extraLines, deliveryText, note }: {
+  sourceOrderId: string; items: Line[]; extraLines: ExtraLine[]; deliveryText: string | null; note: string | null;
 }) {
   const router = useRouter();
   const [skuInput, setSkuInput] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
-  const [busy, startCart] = useTransition();
+  const [busy, startDraft] = useTransition();
   const [placing, startPlace] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
-  const subtotal = r2(sumNet(items) + sumNet(cartLines));
-  const usableCount = items.filter((i) => i.usable).length + cartLines.filter((c) => c.usable).length;
+  const subtotal = r2(sumNet(items) + sumNet(extraLines));
+  const usableCount = items.filter((i) => i.usable).length + extraLines.filter((c) => c.usable).length;
 
   function addSku() {
     const q = skuInput.trim();
     if (!q || busy) return;
     setMsg(null);
-    startCart(async () => {
-      const res = await quickAddToCart(q);
+    startDraft(async () => {
+      const res = await quickAddToRepeatDraft(q);
       if (!res.ok) { setMsg(res.error ?? "Nepodarilo sa pridať."); return; }
       const notes: string[] = [];
       if (res.added.length) notes.push(`pridané: ${res.added.length}`);
@@ -44,8 +44,8 @@ export function RepeatOrderConfirm({ sourceOrderId, items, cartLines, deliveryTe
     });
   }
 
-  function removeCartItem(id: string) {
-    startCart(async () => { await removeItem(id); router.refresh(); });
+  function removeExtra(id: string) {
+    startDraft(async () => { await removeRepeatDraftItem(id); router.refresh(); });
   }
 
   function confirm() {
@@ -75,10 +75,10 @@ export function RepeatOrderConfirm({ sourceOrderId, items, cartLines, deliveryTe
           </div>
         ))}
 
-        {cartLines.length > 0 && (
+        {extraLines.length > 0 && (
           <div className="border-t border-line bg-mintbg/20 px-5 py-2 text-[12px] font-semibold uppercase tracking-wide text-brand-2">Doobjednané</div>
         )}
-        {cartLines.map((l) => (
+        {extraLines.map((l) => (
           <div key={l.id} className={`flex items-center justify-between gap-4 border-t border-line bg-mintbg/15 px-5 py-3 ${l.usable ? "" : "opacity-60"}`}>
             <div className="min-w-0">
               <div className="truncate text-[14.5px] text-ink">{l.name}</div>
@@ -87,7 +87,7 @@ export function RepeatOrderConfirm({ sourceOrderId, items, cartLines, deliveryTe
             <div className="flex flex-none items-center gap-4 text-right">
               <span className="text-[13.5px] text-muted-2">{l.qty} ks</span>
               <span className="w-[90px] text-[14px] font-semibold tabular-nums text-ink">{l.usable ? eur(r2((l.net ?? 0) * l.qty)) : "—"}</span>
-              <button onClick={() => removeCartItem(l.id)} disabled={busy} aria-label="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-40">✕</button>
+              <button onClick={() => removeExtra(l.id)} disabled={busy} aria-label="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-40">✕</button>
             </div>
           </div>
         ))}
@@ -119,7 +119,7 @@ export function RepeatOrderConfirm({ sourceOrderId, items, cartLines, deliveryTe
           </button>
         </div>
         {msg && <p className="mt-1.5 text-[12.5px] text-[#9a6b0e]">{msg}</p>}
-        <p className="mt-1.5 text-[12px] text-muted-2">Doobjednané položky sa pripočítajú k tejto objednávke.</p>
+        <p className="mt-1.5 text-[12px] text-muted-2">Doobjednané položky sa pripočítajú k tejto objednávke (nie do bežného košíka).</p>
       </div>
 
       <div className="mt-4 rounded-2xl border border-line bg-white p-5">

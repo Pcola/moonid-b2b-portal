@@ -227,6 +227,7 @@ model User {
   lastLoginAt   DateTime?
   ordersCreated Order[]            @relation("OrderCreatedBy")
   cartsCreated  Cart[]             @relation("CartCreatedBy")
+  repeatDraft   RepeatDraftItem[]
   statusEvents  OrderStatusEvent[] @relation("StatusChangedBy")
   auditLogs     AuditLog[]
   createdAt     DateTime           @default(now())
@@ -319,6 +320,7 @@ model Product {
   sources            ProductSource[]
   pohodaLink         ProductLink? // most na Pohoda kartu (1:1; null = nenamapované)
   cartItems          CartItem[]
+  repeatDraft        RepeatDraftItem[]
   orderItems         OrderItem[]
   favorites          Favorite[]
   syncedAt           DateTime?
@@ -480,6 +482,21 @@ model CartItem {
   qty       Decimal @db.Decimal(12, 3)
 
   @@unique([cartId, productId])
+}
+
+// Doobjednané položky pri opakovaní objednávky — staging ODDELENÝ od košíka (per-user).
+// Čistí sa pri každom čerstvom štarte opakovania (startRepeat), takže sa do opakovanej
+// objednávky nikdy nedostane nič, čo má zákazník rozrobené v bežnom košíku.
+model RepeatDraftItem {
+  id        String  @id @default(cuid())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  qty       Decimal @db.Decimal(12, 3)
+
+  @@unique([userId, productId])
+  @@index([userId])
 }
 
 // ---------- Objednávky ---------- [H]

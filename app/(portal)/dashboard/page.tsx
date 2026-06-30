@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice, type PricedLine } from "@/lib/pricing";
 import { QuickAddButton } from "@/components/portal/quick-add-button";
+import { startRepeat } from "../kosik/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -80,10 +81,12 @@ export default async function DashboardPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           {recent.length > 0 && (
-            <Link href="/objednavky/opakovat" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[18px] py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
-              Opakovať poslednú objednávku
-            </Link>
+            <form action={startRepeat}>
+              <button type="submit" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[18px] py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
+                Opakovať poslednú objednávku
+              </button>
+            </form>
           )}
           <Link href="/katalog" className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-[18px] py-3 text-[14.5px] font-semibold text-brand transition hover:border-mint-2">
             Nová objednávka

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { getOrCreateCart } from "@/lib/cart";
@@ -320,9 +321,105 @@ export async function reorderFromOrder(orderId: string): Promise<{ ok: boolean; 
   return { ok: true, added, skipped };
 }
 
+// ---------- Opakovanie objednávky: doobjednané sa stagujú v RepeatDraftItem (ODDELENÉ od košíka) ----------
+
+/** Začne/reštartuje opakovanie: vyčistí doobjednané (draft) tohto usera, aby sa do opakovanej
+ *  objednávky nedostalo nič staré/zabudnuté, a presmeruje na potvrdzovaciu obrazovku. Volá sa
+ *  z tlačidiel „Opakovať poslednú objednávku" (dashboard, zoznam objednávok). */
+export async function startRepeat(): Promise<void> {
+  const user = await requireUser();
+  if (user.companyId) await prisma.repeatDraftItem.deleteMany({ where: { userId: user.id } });
+  revalidatePath("/objednavky/opakovat");
+  redirect("/objednavky/opakovat");
+}
+
+/** Pridá produkt medzi doobjednané (draft) pri opakovaní — NIE do bežného košíka. */
+export async function addToRepeatDraft(productId: string, qty = 1): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  const pv = ID.safeParse(productId);
+  const qv = QTY.safeParse(qty);
+  if (!pv.success || !qv.success) return { ok: false, error: "Neplatný vstup." };
+  productId = pv.data;
+  const q = qv.data;
+
+  const tierCode = user.company?.priceTier?.code ?? null;
+  const p = await prisma.product.findFirst({
+    where: { id: productId, isPublished: true },
+    select: { id: true, basePrice: true, vatRate: true, isSubsidized: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } },
+  });
+  if (!p) return { ok: false, error: "Produkt nie je dostupný." };
+  const price = resolveUnitPrice({
+    basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
+    vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized,
+    tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null,
+    discountPct: await tierDiscount(tierCode),
+  });
+  if (price.kind !== "PRICE") return { ok: false, error: "Tento produkt je na vyžiadanie — kontaktujte nás." };
+
+  await prisma.repeatDraftItem.upsert({
+    where: { userId_productId: { userId: user.id, productId } },
+    create: { userId: user.id, productId, qty: q },
+    update: { qty: { increment: q } },
+  });
+  revalidatePath("/objednavky/opakovat");
+  return { ok: true };
+}
+
+/** Doobjednať podľa SKU (paste/CSV: „SKU, množstvo" na riadok) do draftu opakovania — NIE do košíka. */
+export async function quickAddToRepeatDraft(raw: string): Promise<QuickResult> {
+  const empty = { added: [], notFound: [], onRequest: [] };
+  const user = await requireUser();
+  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme.", ...empty };
+  const bySku = parseSkuQty(raw);
+  if (bySku.size === 0) return { ok: false, error: "Zadajte aspoň jeden riadok (SKU, množstvo).", ...empty };
+
+  const tierCode = user.company?.priceTier?.code ?? null;
+  const discountPct = await tierDiscount(tierCode);
+  const products = await prisma.product.findMany({
+    where: { sku: { in: [...bySku.keys()] }, isPublished: true },
+    select: { id: true, sku: true, name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } },
+  });
+  const bySkuProduct = new Map(products.map((p) => [p.sku, p]));
+  const added: { sku: string; name: string; qty: number }[] = [];
+  const notFound: string[] = [];
+  const onRequest: string[] = [];
+
+  for (const [sku, qty] of bySku) {
+    const p = bySkuProduct.get(sku);
+    if (!p) { notFound.push(sku); continue; }
+    const price = resolveUnitPrice({
+      basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
+      vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized,
+      tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null,
+      discountPct,
+    });
+    if (price.kind !== "PRICE") { onRequest.push(sku); continue; }
+    await prisma.repeatDraftItem.upsert({
+      where: { userId_productId: { userId: user.id, productId: p.id } },
+      create: { userId: user.id, productId: p.id, qty },
+      update: { qty: { increment: qty } },
+    });
+    added.push({ sku, name: p.nameDisplay || p.name, qty });
+  }
+  revalidatePath("/objednavky/opakovat");
+  return { ok: true, added, notFound, onRequest };
+}
+
+/** Odoberie položku z doobjednaných (draft). IDOR: musí patriť aktuálnemu userovi. */
+export async function removeRepeatDraftItem(itemId: string): Promise<{ ok: boolean }> {
+  const user = await requireUser();
+  if (!ID.safeParse(itemId).success) return { ok: false };
+  const item = await prisma.repeatDraftItem.findUnique({ where: { id: itemId }, select: { userId: true } });
+  if (!item || item.userId !== user.id) return { ok: false };
+  await prisma.repeatDraftItem.delete({ where: { id: itemId } });
+  revalidatePath("/objednavky/opakovat");
+  return { ok: true };
+}
+
 /** Zopakuje objednávku jedným potvrdením: zoberie položky z predošlej objednávky + doobjednané
- *  položky z košíka (SKU aj výber z katalógu), prepočíta aktuálne ceny/sklad a vytvorí novú
- *  objednávku (a vyprázdni košík). Dodaciu adresu prevezme z predošlej. Nedostupné vynechá. */
+ *  položky z draftu (SKU aj výber z katalógu), prepočíta aktuálne ceny/sklad a vytvorí novú
+ *  objednávku (a vyčistí draft). Dodaciu adresu prevezme z predošlej. Nedostupné vynechá. */
 export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
@@ -336,11 +433,11 @@ export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boo
 
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
-  // qty po productId: zdrojová objednávka + doobjednané položky z košíka (SKU aj výber z katalógu)
+  // qty po productId: zdrojová objednávka + doobjednané položky z draftu (SKU aj výber z katalógu)
   const qtyByPid = new Map<string, number>();
   for (const it of src.items) if (it.productId) qtyByPid.set(it.productId, (qtyByPid.get(it.productId) ?? 0) + Math.floor(Number(it.qty)));
-  const cart = await prisma.cart.findFirst({ where: { companyId: user.companyId }, select: { id: true, items: { select: { productId: true, qty: true } } } });
-  if (cart) for (const ci of cart.items) if (ci.productId) qtyByPid.set(ci.productId, (qtyByPid.get(ci.productId) ?? 0) + Math.floor(Number(ci.qty)));
+  const draft = await prisma.repeatDraftItem.findMany({ where: { userId: user.id }, select: { productId: true, qty: true } });
+  for (const d of draft) qtyByPid.set(d.productId, (qtyByPid.get(d.productId) ?? 0) + Math.floor(Number(d.qty)));
 
   const products = await prisma.product.findMany({
     where: { id: { in: [...qtyByPid.keys()] }, isPublished: true },
@@ -393,7 +490,7 @@ export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boo
   }
 
   const order = await prisma.$transaction(async (tx) => {
-    if (cart) await tx.cartItem.deleteMany({ where: { cartId: cart.id } }); // doobjednané z košíka sa premietli do objednávky → vyprázdni
+    await tx.repeatDraftItem.deleteMany({ where: { userId: user.id } }); // bezpodmienečne (idempotentné, ošetrí súbežný add) → doobjednané sa premietli, draft vyčistený
     const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
     const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
     return tx.order.create({
@@ -414,6 +511,6 @@ export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boo
     emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
   ]);
   revalidatePath("/objednavky");
-  revalidatePath("/kosik");
+  revalidatePath("/objednavky/opakovat");
   return { ok: true, number: order.number, id: order.id };
 }

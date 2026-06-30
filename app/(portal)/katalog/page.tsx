@@ -95,7 +95,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     <>
       {sp.from === "opakovat" && (
         <Link href="/objednavky/opakovat" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mint-2 bg-mintbg/40 px-4 py-3 text-[13.5px] text-ink">
-          <span><strong className="font-semibold text-brand">Dopĺňate opakovanú objednávku.</strong> Pridajte tovar do košíka a vráťte sa späť na potvrdenie.</span>
+          <span><strong className="font-semibold text-brand">Dopĺňate opakovanú objednávku.</strong> Pri produktoch kliknite „Doobjednať" a vráťte sa späť na potvrdenie.</span>
           <span className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-[13px] font-semibold text-white transition hover:bg-brand-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
             Späť na potvrdenie
@@ -106,7 +106,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
         items={items} tierCode={tierCode}
         total={total} page={page} pageSize={PAGE}
         facets={{ categories, subcategories, brands, stockCount }}
-        active={a}
+        active={a} repeatMode={sp.from === "opakovat"}
       />
     </>
   );

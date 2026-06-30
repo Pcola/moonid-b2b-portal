@@ -25,7 +25,7 @@ export default async function OpakovatPage() {
       : null;
   const pricesWhere = { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } as const;
 
-  const [last, cart] = await Promise.all([
+  const [last, draftItems] = await Promise.all([
     prisma.order.findFirst({
       where: { companyId: user.companyId },
       orderBy: { createdAt: "desc" },
@@ -35,9 +35,11 @@ export default async function OpakovatPage() {
         items: { select: { qty: true, nameSnapshot: true, product: { select: { ...PRICE_SELECT, prices: pricesWhere } } } },
       },
     }),
-    prisma.cart.findFirst({
-      where: { companyId: user.companyId },
-      select: { items: { orderBy: { id: "asc" }, select: { id: true, qty: true, product: { select: { ...PRICE_SELECT, prices: pricesWhere } } } } },
+    // doobjednané sa stagujú oddelene od košíka (per-user); čistia sa pri štarte opakovania
+    prisma.repeatDraftItem.findMany({
+      where: { userId: user.id },
+      orderBy: { id: "asc" },
+      select: { id: true, qty: true, product: { select: { ...PRICE_SELECT, prices: pricesWhere } } },
     }),
   ]);
 
@@ -57,9 +59,9 @@ export default async function OpakovatPage() {
     const price = priceOf(it.product);
     return { name: it.nameSnapshot || it.product?.nameDisplay || it.product?.name || "—", qty: Number(it.qty), net: price?.kind === "PRICE" ? price.net : null, usable: price?.kind === "PRICE" };
   });
-  const cartLines = (cart?.items ?? []).map((ci) => {
-    const price = priceOf(ci.product);
-    return { id: ci.id, name: ci.product?.nameDisplay || ci.product?.name || "—", qty: Number(ci.qty), net: price?.kind === "PRICE" ? price.net : null, usable: price?.kind === "PRICE" };
+  const extraLines = draftItems.map((d) => {
+    const price = priceOf(d.product);
+    return { id: d.id, name: d.product?.nameDisplay || d.product?.name || "—", qty: Number(d.qty), net: price?.kind === "PRICE" ? price.net : null, usable: price?.kind === "PRICE" };
   });
   const loc = last.deliveryLocation;
   const deliveryText = loc ? `${loc.label ? loc.label + " · " : ""}${loc.street}, ${loc.zip} ${loc.city}` : null;
@@ -69,7 +71,7 @@ export default async function OpakovatPage() {
       <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
       <h1 className="mt-3 text-[22px] font-normal tracking-[-0.01em] text-ink">Zopakovať objednávku <span className="font-mono text-[18px] text-muted-2">{last.number}</span></h1>
       <p className="mt-1.5 text-[14.5px] text-muted">Skontrolujte položky a adresu — nič nemusíte vypĺňať. Môžete aj doobjednať ďalší tovar. Ceny a dostupnosť sú prepočítané k dnešku.</p>
-      <RepeatOrderConfirm sourceOrderId={last.id} items={items} cartLines={cartLines} deliveryText={deliveryText} note={last.note} />
+      <RepeatOrderConfirm sourceOrderId={last.id} items={items} extraLines={extraLines} deliveryText={deliveryText} note={last.note} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import type { PricedLine } from "@/lib/pricing";
-import { addToCart } from "../kosik/actions";
+import { addToCart, addToRepeatDraft } from "../kosik/actions";
 import { FavoriteButton } from "@/components/portal/favorite-button";
 
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; fav: boolean; price: PricedLine };
@@ -19,22 +19,22 @@ type Facets = {
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 function plural(n: number) { return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "produkty" : "produktov"; }
 
-function AddBtn({ productId }: { productId: string }) {
+function AddBtn({ productId, repeat }: { productId: string; repeat?: boolean }) {
   const [pending, start] = useTransition();
   const [added, setAdded] = useState(false);
   return (
     <button
-      onClick={() => start(async () => { const r = await addToCart(productId, 1); if (r.ok) { setAdded(true); setTimeout(() => setAdded(false), 1500); } })}
+      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); setTimeout(() => setAdded(false), 1500); } })}
       disabled={pending}
       className="mt-2.5 w-full rounded-[9px] border border-brand/30 bg-mintbg/40 px-3 py-2 text-[13px] font-semibold text-brand transition hover:bg-mintbg disabled:opacity-60"
     >
-      {added ? "Pridané ✓" : pending ? "…" : "Do košíka"}
+      {added ? "Pridané ✓" : pending ? "…" : repeat ? "Doobjednať" : "Do košíka"}
     </button>
   );
 }
 
-export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, active }: {
-  items: Item[]; tierCode: string | null; total: number; page: number; pageSize: number; facets: Facets; active: Active;
+export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, active, repeatMode }: {
+  items: Item[]; tierCode: string | null; total: number; page: number; pageSize: number; facets: Facets; active: Active; repeatMode?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -201,7 +201,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
                       <span className="text-[13.5px] font-semibold text-brand-2">Cena na vyžiadanie</span>
                     )}
                   </div>
-                  {p.price.kind === "PRICE" && <AddBtn productId={p.id} />}
+                  {p.price.kind === "PRICE" && <AddBtn productId={p.id} repeat={repeatMode} />}
                 </div>
               </div>
             ))}
