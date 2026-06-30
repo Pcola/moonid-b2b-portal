@@ -1,0 +1,29 @@
+name: keep-alive
+
+# Bráni 7-dňovému auto-pauseu Supabase Free a zároveň slúži ako základný
+# uptime/latency monitor. Pinguje /api/health (robí SELECT 1 do Postgresu),
+# takže drží DB "živú". Pre produkciu doplň aj externý monitor (UptimeRobot/
+# BetterStack) — GitHub občas oneskorí/uspí cron na neaktívnych repo.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # každých 10 min (<< 7-dňový limit)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        run: |
+          url="https://moonid-b2b-portal.vercel.app/api/health"
+          out=$(curl -sS -m 30 -w '\n%{http_code} %{time_total}s' "$url")
+          body=$(printf '%s' "$out" | head -n1)
+          meta=$(printf '%s' "$out" | tail -n1)
+          code=${meta%% *}
+          echo "health=$body  (HTTP $meta)"
+          test "$code" = "200" || { echo "::error::health check failed (HTTP $code)"; exit 1; }
+          echo "$body" | grep -q '"db":"up"' || { echo "::error::DB not up"; exit 1; }

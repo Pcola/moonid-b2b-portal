@@ -20,6 +20,12 @@ yarn-error.log*
 # env files (NEVER commit secrets) — pokrýva .env, .env.local, .env.production, .env.staging...
 .env*
 !.env.example
+!.env.test.example
+
+# Playwright — session storageState (auth tokeny!) + reporty, NIKDY necommituj
+/tests/e2e/.auth/
+/playwright-report/
+/test-results/
 
 # typescript
 *.tsbuildinfo

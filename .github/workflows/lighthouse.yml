@@ -1,0 +1,27 @@
+name: lighthouse
+
+# Lab gate pre Core Web Vitals na VEREJNÝCH stránkach (autentifikované CWV
+# meria Playwright + Vercel Speed Insights). Beží na vyžiadanie a pri PR do main.
+# Pozn.: meria PRODUKČNÚ URL; ak chceš merať preview deployment, nahraď URL
+# v lighthouserc.json za URL preview buildu.
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lhci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.14.x
+          lhci autorun --config=./lighthouserc.json || echo "::warning::Lighthouse assertions failed (warn-only)"
