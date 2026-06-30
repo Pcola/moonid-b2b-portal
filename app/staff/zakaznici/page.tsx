@@ -6,6 +6,8 @@ export const dynamic = "force-dynamic";
 
 function eur(n: number) { return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €"; }
 const AV = ["#163F38", "#EAF1EE"];
+// Ohraničenie dotazu (viditeľné, nie tiché orezanie) — server-side stránkovanie až pri reálnom raste.
+const CAP = 500;
 
 export default async function StaffCustomers() {
   await requireStaff();
@@ -13,6 +15,7 @@ export default async function StaffCustomers() {
   const [companies, revRows, tiersCount] = await Promise.all([
     prisma.company.findMany({
       orderBy: [{ active: "desc" }, { name: "asc" }],
+      take: CAP,
       select: { id: true, name: true, city: true, active: true, priceTier: { select: { code: true, discountPct: true } }, users: { take: 1, orderBy: { createdAt: "asc" }, select: { email: true } }, _count: { select: { orders: true } } },
     }),
     prisma.order.groupBy({ by: ["companyId"], where: { status: { not: "STORNO" }, createdAt: { gte: new Date(year, 0, 1) } }, _sum: { total: true } }),
@@ -22,7 +25,7 @@ export default async function StaffCustomers() {
 
   return (
     <div className="flex max-w-[1240px] flex-col gap-5">
-      <p className="text-[14px] text-muted">{companies.length} zákazníkov · {tiersCount} cenové úrovne · klikni pre detail a úpravu</p>
+      <p className="text-[14px] text-muted">{companies.length}{companies.length >= CAP ? "+" : ""} zákazníkov · {tiersCount} cenové úrovne · klikni pre detail a úpravu</p>
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <div className="grid grid-cols-[2fr_1fr_1fr_0.7fr_1fr] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
           <span>Firma</span><span>Mesto</span><span>Úroveň</span><span>Obj.</span><span className="text-right">Tržby {year}</span>

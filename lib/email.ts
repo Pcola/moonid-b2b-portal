@@ -1,4 +1,5 @@
 import "server-only";
+import { reportError } from "@/lib/observability";
 
 // Centrálne odosielanie e-mailov cez Resend. Best-effort: NIKDY nehádže výnimku
 // (objednávka sa nesmie zrušiť kvôli e-mailu) a ak nie je nakonfigurované
@@ -43,7 +44,8 @@ export async function sendEmail(args: SendArgs): Promise<{ ok: boolean; skipped?
     });
     return { ok: true };
   } catch (e) {
-    console.error("[email] send error:", e);
+    // Subject je bezpečné logovať (číslo objednávky/stav); príjemcu (PII) NIE.
+    reportError("email.send", e, { subject: args.subject });
     return { ok: false };
   }
 }

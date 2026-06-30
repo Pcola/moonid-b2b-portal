@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { reportError } from "@/lib/observability";
 
 type AuditInput = {
   userId?: string | null;
@@ -34,6 +35,7 @@ export async function writeAudit(a: AuditInput): Promise<void> {
       },
     });
   } catch (e) {
-    console.error("[audit] zápis zlyhal:", e);
+    // Audit je bezpečnostne dôležitý — tiché zlyhanie musí byť viditeľné v Sentry.
+    reportError("audit.write", e, { action: a.action, entity: a.entity, entityId: a.entityId ?? undefined });
   }
 }

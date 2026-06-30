@@ -1,9 +1,20 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+
+/** App-layer brzda proti brute-force na login (doplnok k vstavaným limitom Supabase Auth).
+ *  Limituje pokusy o prihlásenie na IP; po prekročení vráti ok:false. Volá sa z login
+ *  formulára PRED signIn. Limit je NAT-veľkorysý (kancelária za jednou IP nemá problém). */
+export async function loginGate(): Promise<{ ok: boolean }> {
+  const ip = clientIp(await headers());
+  const rl = await rateLimit(`login:${ip}`, { limit: 30, windowSec: 600 });
+  return { ok: rl.ok };
+}
 
 /** Po úspešnom (klientskom) prihlásení — zapíše lastLoginAt + audit LOGIN_SUCCESS. */
 export async function recordLoginSuccess(): Promise<void> {

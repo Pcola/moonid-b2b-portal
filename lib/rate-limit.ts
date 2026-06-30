@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { reportError } from "@/lib/observability";
 
 // Jednoduchý fixed-window rate limiter nad existujúcou Postgres DB (žiadna nová infra).
 // Atomický INSERT ... ON CONFLICT — bezpečný aj pri súbežných requestoch na serverless.
@@ -24,7 +25,9 @@ export async function rateLimit(
     const count = Number(rows[0]?.count ?? 1);
     return { ok: count <= opts.limit, count };
   } catch (e) {
-    console.warn("[rate-limit] fail-open:", e instanceof Error ? e.message : e);
+    // Fail-open je zámer (limiter nesmie zhodiť web), ale MUSÍ byť viditeľný — inak
+    // tichý výpadok = neobmedzený brute-force/DoS bez varovania. keyPrefix bez IP (PII).
+    reportError("rateLimit.fail-open", e, { keyPrefix: key.split(":")[0] });
     return { ok: true, count: 0 };
   }
 }

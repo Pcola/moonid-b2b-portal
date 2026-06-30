@@ -18,7 +18,7 @@ const FILTERS: { label: string; status: OrderStatus | null }[] = [
   { label: "Storno", status: "STORNO" },
 ];
 
-export function StaffOrders({ items, initialQ = "" }: { items: Item[]; initialQ?: string }) {
+export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: { items: Item[]; initialQ?: string; capped?: boolean; cap?: number }) {
   const [active, setActive] = useState<OrderStatus | null>(null);
   const [q, setQ] = useState(initialQ);
 
@@ -76,6 +76,10 @@ export function StaffOrders({ items, initialQ = "" }: { items: Item[]; initialQ?
           );
         })}
       </div>
+
+      {capped && (
+        <p className="text-center text-[12.5px] text-muted-2">Zobrazených posledných {cap} objednávok. Staršie nájdete v detaile zákazníka.</p>
+      )}
     </div>
   );
 }

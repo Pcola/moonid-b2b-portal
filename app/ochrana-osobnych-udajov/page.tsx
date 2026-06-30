@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function OchranaOsobnychUdajov() {
   return (
-    <LegalPage title="Ochrana osobných údajov" updated="24. 6. 2026">
+    <LegalPage title="Ochrana osobných údajov" updated="30. 6. 2026">
       <P>
         Tieto zásady popisujú, ako spoločnosť <strong>Moonid s.r.o.</strong>, so sídlom Hlavná 39/78, 941 43 Dolný Ohaj,
         IČO 50&nbsp;934&nbsp;660, zapísaná v Obchodnom registri SR (ďalej len „prevádzkovateľ"), spracúva osobné údaje
@@ -35,7 +35,14 @@ export default function OchranaOsobnychUdajov() {
       <P>Osobné údaje uchovávame len po nevyhnutný čas — po dobu trvania zmluvného vzťahu a následne po dobu vyžadovanú právnymi predpismi (najmä účtovné doklady 10 rokov). Dopyty uchovávame po dobu nevyhnutnú na ich vybavenie.</P>
 
       <H2>Príjemcovia a sprostredkovatelia</H2>
-      <P>Údaje môžu byť poskytnuté spracovateľom, ktorí pre nás zabezpečujú prevádzku (hosting, e-mailové a databázové služby, účtovný systém, doručovanie). Všetci sú viazaní mlčanlivosťou a spracúvajú údaje len podľa našich pokynov. Údaje neposkytujeme do tretích krajín mimo EÚ bez primeraných záruk.</P>
+      <P>Na prevádzku portálu využívame nasledujúcich sprostredkovateľov, ktorých spracúvanie prebieha na základe zmlúv o spracúvaní osobných údajov (čl. 28 GDPR) a ktorí spracúvajú údaje výlučne podľa našich pokynov a sú viazaní mlčanlivosťou:</P>
+      <UL>
+        <li><strong>Supabase</strong> — databáza, prihlasovanie a úložisko (hosting v EÚ — Frankfurt).</li>
+        <li><strong>Vercel</strong> — hosting a doručovanie portálu/webu, CDN (región EÚ — Frankfurt).</li>
+        <li><strong>Resend</strong> — odosielanie transakčných e-mailov (potvrdenia objednávok, notifikácie).</li>
+        <li><strong>Sentry</strong> — monitorovanie chýb a stability; osobné údaje sa pred odoslaním odstraňujú (anonymizujú).</li>
+      </UL>
+      <P>Účtovné a daňové doklady spracúvame v účtovnom systéme Pohoda (Stormware). Tam, kde sprostredkovateľ spracúva údaje mimo EÚ, je prenos krytý štandardnými zmluvnými doložkami (SCC) podľa čl. 46 GDPR. Aktuálny zoznam sprostredkovateľov vám na požiadanie poskytneme na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand hover:text-brand-2">moonid@moonid.sk</a>.</P>
 
       <H2>Vaše práva</H2>
       <UL>
