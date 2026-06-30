@@ -7,6 +7,8 @@ import { RepeatOrderConfirm } from "./repeat-confirm";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Zopakovať objednávku — Moonid portál", robots: { index: false, follow: false } };
 
+const PRICE_SELECT = { name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, isPublished: true } as const;
+
 export default async function OpakovatPage() {
   const user = await requireUser();
   if (!user.companyId) {
@@ -17,20 +19,27 @@ export default async function OpakovatPage() {
     ? Number((await prisma.priceTier.findUnique({ where: { code: tierCode }, select: { discountPct: true } }))?.discountPct ?? 0)
     : 0;
 
-  const last = await prisma.order.findFirst({
-    where: { companyId: user.companyId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true, number: true, note: true,
-      deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
-      items: {
-        select: {
-          qty: true, nameSnapshot: true,
-          product: { select: { name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, isPublished: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } } },
-        },
+  const priceOf = (p: { basePrice: unknown; vatRate: unknown; isSubsidized: boolean; isPublished: boolean; prices: { unitPriceNet: unknown }[] } | null | undefined) =>
+    p && p.isPublished
+      ? resolveUnitPrice({ basePriceNet: p.basePrice != null ? Number(p.basePrice) : null, vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized, tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null, discountPct })
+      : null;
+  const pricesWhere = { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } as const;
+
+  const [last, cart] = await Promise.all([
+    prisma.order.findFirst({
+      where: { companyId: user.companyId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, number: true, note: true,
+        deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
+        items: { select: { qty: true, nameSnapshot: true, product: { select: { ...PRICE_SELECT, prices: pricesWhere } } } },
       },
-    },
-  });
+    }),
+    prisma.cart.findFirst({
+      where: { companyId: user.companyId },
+      select: { items: { orderBy: { id: "asc" }, select: { id: true, qty: true, product: { select: { ...PRICE_SELECT, prices: pricesWhere } } } } },
+    }),
+  ]);
 
   if (!last) {
     return (
@@ -45,11 +54,12 @@ export default async function OpakovatPage() {
   }
 
   const items = last.items.map((it) => {
-    const p = it.product;
-    const price = p && p.isPublished
-      ? resolveUnitPrice({ basePriceNet: p.basePrice != null ? Number(p.basePrice) : null, vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized, tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null, discountPct })
-      : null;
-    return { name: it.nameSnapshot || p?.nameDisplay || p?.name || "—", qty: Number(it.qty), net: price?.kind === "PRICE" ? price.net : null, usable: price?.kind === "PRICE" };
+    const price = priceOf(it.product);
+    return { name: it.nameSnapshot || it.product?.nameDisplay || it.product?.name || "—", qty: Number(it.qty), net: price?.kind === "PRICE" ? price.net : null, usable: price?.kind === "PRICE" };
+  });
+  const cartLines = (cart?.items ?? []).map((ci) => {
+    const price = priceOf(ci.product);
+    return { id: ci.id, name: ci.product?.nameDisplay || ci.product?.name || "—", qty: Number(ci.qty), net: price?.kind === "PRICE" ? price.net : null, usable: price?.kind === "PRICE" };
   });
   const loc = last.deliveryLocation;
   const deliveryText = loc ? `${loc.label ? loc.label + " · " : ""}${loc.street}, ${loc.zip} ${loc.city}` : null;
@@ -59,7 +69,7 @@ export default async function OpakovatPage() {
       <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
       <h1 className="mt-3 text-[22px] font-normal tracking-[-0.01em] text-ink">Zopakovať objednávku <span className="font-mono text-[18px] text-muted-2">{last.number}</span></h1>
       <p className="mt-1.5 text-[14.5px] text-muted">Skontrolujte položky a adresu — nič nemusíte vypĺňať. Môžete aj doobjednať ďalší tovar. Ceny a dostupnosť sú prepočítané k dnešku.</p>
-      <RepeatOrderConfirm sourceOrderId={last.id} items={items} deliveryText={deliveryText} note={last.note} />
+      <RepeatOrderConfirm sourceOrderId={last.id} items={items} cartLines={cartLines} deliveryText={deliveryText} note={last.note} />
     </div>
   );
 }

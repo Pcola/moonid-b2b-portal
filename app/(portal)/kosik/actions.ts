@@ -320,36 +320,10 @@ export async function reorderFromOrder(orderId: string): Promise<{ ok: boolean; 
   return { ok: true, added, skipped };
 }
 
-/** Ocení extra položky podľa SKU (live náhľad pri doobjednaní) — bez košíka/objednávky. */
-export async function priceBySku(raw: string): Promise<{ ok: boolean; lines: { sku: string; name: string; qty: number; net: number; gross: number }[]; notFound: string[]; onRequest: string[] }> {
-  const user = await requireUser();
-  const empty = { lines: [], notFound: [], onRequest: [] };
-  if (!user.companyId) return { ok: false, ...empty };
-  const bySku = parseSkuQty(raw);
-  if (!bySku.size) return { ok: false, ...empty };
-  const tierCode = user.company?.priceTier?.code ?? null;
-  const discountPct = await tierDiscount(tierCode);
-  const products = await prisma.product.findMany({
-    where: { sku: { in: [...bySku.keys()] }, isPublished: true },
-    select: { sku: true, name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } },
-  });
-  const map = new Map(products.map((p) => [p.sku, p]));
-  const lines: { sku: string; name: string; qty: number; net: number; gross: number }[] = [];
-  const notFound: string[] = [], onRequest: string[] = [];
-  for (const [sku, qty] of bySku) {
-    const p = map.get(sku);
-    if (!p) { notFound.push(sku); continue; }
-    const price = resolveUnitPrice({ basePriceNet: p.basePrice != null ? Number(p.basePrice) : null, vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized, tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null, discountPct });
-    if (price.kind !== "PRICE") { onRequest.push(sku); continue; }
-    lines.push({ sku, name: p.nameDisplay || p.name, qty, net: price.net, gross: price.gross });
-  }
-  return { ok: true, lines, notFound, onRequest };
-}
-
-/** Zopakuje objednávku jedným potvrdením: zoberie položky + dodaciu adresu z predošlej
- *  objednávky, prepočíta aktuálne ceny/sklad a vytvorí novú objednávku (bez košíka, bez
- *  vypĺňania). Voliteľné `extras` (doobjednané podľa SKU) sa pripočítajú. Nedostupné vynechá. */
-export async function placeRepeatOrder(sourceOrderId: string, extras: { sku: string; qty: number }[] = []): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
+/** Zopakuje objednávku jedným potvrdením: zoberie položky z predošlej objednávky + doobjednané
+ *  položky z košíka (SKU aj výber z katalógu), prepočíta aktuálne ceny/sklad a vytvorí novú
+ *  objednávku (a vyprázdni košík). Dodaciu adresu prevezme z predošlej. Nedostupné vynechá. */
+export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
   if (!ID.safeParse(sourceOrderId).success) return { ok: false, error: "Neplatný vstup." };
@@ -362,15 +336,11 @@ export async function placeRepeatOrder(sourceOrderId: string, extras: { sku: str
 
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
-  // qty po productId: zdrojová objednávka + doobjednané extra položky (podľa SKU)
+  // qty po productId: zdrojová objednávka + doobjednané položky z košíka (SKU aj výber z katalógu)
   const qtyByPid = new Map<string, number>();
   for (const it of src.items) if (it.productId) qtyByPid.set(it.productId, (qtyByPid.get(it.productId) ?? 0) + Math.floor(Number(it.qty)));
-  const exMap = new Map<string, number>();
-  for (const e of extras) { const sku = String(e?.sku ?? "").trim().slice(0, 60); const q = Math.max(1, Math.min(9999, Math.floor(Number(e?.qty)) || 1)); if (sku) exMap.set(sku, (exMap.get(sku) ?? 0) + q); }
-  if (exMap.size) {
-    const exProds = await prisma.product.findMany({ where: { sku: { in: [...exMap.keys()] }, isPublished: true }, select: { id: true, sku: true } });
-    for (const ep of exProds) qtyByPid.set(ep.id, (qtyByPid.get(ep.id) ?? 0) + (exMap.get(ep.sku) ?? 0));
-  }
+  const cart = await prisma.cart.findFirst({ where: { companyId: user.companyId }, select: { id: true, items: { select: { productId: true, qty: true } } } });
+  if (cart) for (const ci of cart.items) if (ci.productId) qtyByPid.set(ci.productId, (qtyByPid.get(ci.productId) ?? 0) + Math.floor(Number(ci.qty)));
 
   const products = await prisma.product.findMany({
     where: { id: { in: [...qtyByPid.keys()] }, isPublished: true },
@@ -423,6 +393,7 @@ export async function placeRepeatOrder(sourceOrderId: string, extras: { sku: str
   }
 
   const order = await prisma.$transaction(async (tx) => {
+    if (cart) await tx.cartItem.deleteMany({ where: { cartId: cart.id } }); // doobjednané z košíka sa premietli do objednávky → vyprázdni
     const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
     const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
     return tx.order.create({
@@ -443,5 +414,6 @@ export async function placeRepeatOrder(sourceOrderId: string, extras: { sku: str
     emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
   ]);
   revalidatePath("/objednavky");
+  revalidatePath("/kosik");
   return { ok: true, number: order.number, id: order.id };
 }

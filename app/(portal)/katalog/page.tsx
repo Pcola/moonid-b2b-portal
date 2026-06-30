@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice } from "@/lib/pricing";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Katalóg — Moonid portál", robots: { index: false, follow: false } };
 
 const PAGE = 24;
-type SP = { q?: string; cat?: string; sub?: string; brand?: string; stock?: string; sort?: string; page?: string };
+type SP = { q?: string; cat?: string; sub?: string; brand?: string; stock?: string; sort?: string; page?: string; from?: string };
 type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
 
 // where so VŠETKÝMI aktívnymi filtrami OKREM `exclude` (pre faceted counts)
@@ -91,11 +92,22 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
   });
 
   return (
-    <PortalCatalog
-      items={items} tierCode={tierCode}
-      total={total} page={page} pageSize={PAGE}
-      facets={{ categories, subcategories, brands, stockCount }}
-      active={a}
-    />
+    <>
+      {sp.from === "opakovat" && (
+        <Link href="/objednavky/opakovat" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mint-2 bg-mintbg/40 px-4 py-3 text-[13.5px] text-ink">
+          <span><strong className="font-semibold text-brand">Dopĺňate opakovanú objednávku.</strong> Pridajte tovar do košíka a vráťte sa späť na potvrdenie.</span>
+          <span className="inline-flex flex-none items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-[13px] font-semibold text-white transition hover:bg-brand-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+            Späť na potvrdenie
+          </span>
+        </Link>
+      )}
+      <PortalCatalog
+        items={items} tierCode={tierCode}
+        total={total} page={page} pageSize={PAGE}
+        facets={{ categories, subcategories, brands, stockCount }}
+        active={a}
+      />
+    </>
   );
 }
