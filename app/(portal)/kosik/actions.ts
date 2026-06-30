@@ -87,15 +87,8 @@ export async function removeItem(itemId: string): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-type QuickResult = { ok: boolean; error?: string; added: { sku: string; name: string; qty: number }[]; notFound: string[]; onRequest: string[] };
-
-/** Rýchla objednávka: vloží viacero položiek naraz podľa SKU (paste/CSV: "SKU, množstvo" na riadok). */
-export async function quickAddToCart(raw: string): Promise<QuickResult> {
-  const empty = { added: [], notFound: [], onRequest: [] };
-  const user = await requireUser();
-  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme.", ...empty };
-
-  // parse: každý riadok "SKU[,; \t]množstvo" (množstvo nepovinné = 1); max 500 riadkov
+// parse "SKU[,; tab/medzera]množstvo" na riadok → Map<sku, qty> (množstvo nepovinné = 1)
+function parseSkuQty(raw: string): Map<string, number> {
   const bySku = new Map<string, number>();
   for (const line of String(raw ?? "").split(/\r?\n/).slice(0, 500)) {
     const parts = line.trim().split(/[,;\t]+|\s{2,}|\s+/).filter(Boolean);
@@ -104,6 +97,18 @@ export async function quickAddToCart(raw: string): Promise<QuickResult> {
     const qty = Math.max(1, Math.min(9999, Math.floor(Number(parts[1] ?? "1")) || 1));
     bySku.set(sku, (bySku.get(sku) ?? 0) + qty);
   }
+  return bySku;
+}
+
+type QuickResult = { ok: boolean; error?: string; added: { sku: string; name: string; qty: number }[]; notFound: string[]; onRequest: string[] };
+
+/** Rýchla objednávka: vloží viacero položiek naraz podľa SKU (paste/CSV: "SKU, množstvo" na riadok). */
+export async function quickAddToCart(raw: string): Promise<QuickResult> {
+  const empty = { added: [], notFound: [], onRequest: [] };
+  const user = await requireUser();
+  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme.", ...empty };
+
+  const bySku = parseSkuQty(raw);
   if (bySku.size === 0) return { ok: false, error: "Zadajte aspoň jeden riadok (SKU, množstvo).", ...empty };
 
   const tierCode = user.company?.priceTier?.code ?? null;
@@ -315,10 +320,36 @@ export async function reorderFromOrder(orderId: string): Promise<{ ok: boolean; 
   return { ok: true, added, skipped };
 }
 
+/** Ocení extra položky podľa SKU (live náhľad pri doobjednaní) — bez košíka/objednávky. */
+export async function priceBySku(raw: string): Promise<{ ok: boolean; lines: { sku: string; name: string; qty: number; net: number; gross: number }[]; notFound: string[]; onRequest: string[] }> {
+  const user = await requireUser();
+  const empty = { lines: [], notFound: [], onRequest: [] };
+  if (!user.companyId) return { ok: false, ...empty };
+  const bySku = parseSkuQty(raw);
+  if (!bySku.size) return { ok: false, ...empty };
+  const tierCode = user.company?.priceTier?.code ?? null;
+  const discountPct = await tierDiscount(tierCode);
+  const products = await prisma.product.findMany({
+    where: { sku: { in: [...bySku.keys()] }, isPublished: true },
+    select: { sku: true, name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } } },
+  });
+  const map = new Map(products.map((p) => [p.sku, p]));
+  const lines: { sku: string; name: string; qty: number; net: number; gross: number }[] = [];
+  const notFound: string[] = [], onRequest: string[] = [];
+  for (const [sku, qty] of bySku) {
+    const p = map.get(sku);
+    if (!p) { notFound.push(sku); continue; }
+    const price = resolveUnitPrice({ basePriceNet: p.basePrice != null ? Number(p.basePrice) : null, vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized, tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null, discountPct });
+    if (price.kind !== "PRICE") { onRequest.push(sku); continue; }
+    lines.push({ sku, name: p.nameDisplay || p.name, qty, net: price.net, gross: price.gross });
+  }
+  return { ok: true, lines, notFound, onRequest };
+}
+
 /** Zopakuje objednávku jedným potvrdením: zoberie položky + dodaciu adresu z predošlej
  *  objednávky, prepočíta aktuálne ceny/sklad a vytvorí novú objednávku (bez košíka, bez
- *  vypĺňania). Nedostupné/„na vyžiadanie" položky vynechá. */
-export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
+ *  vypĺňania). Voliteľné `extras` (doobjednané podľa SKU) sa pripočítajú. Nedostupné vynechá. */
+export async function placeRepeatOrder(sourceOrderId: string, extras: { sku: string; qty: number }[] = []): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
   if (!ID.safeParse(sourceOrderId).success) return { ok: false, error: "Neplatný vstup." };
@@ -331,9 +362,18 @@ export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boo
 
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
-  const productIds = src.items.map((i) => i.productId).filter((x): x is string => !!x);
+  // qty po productId: zdrojová objednávka + doobjednané extra položky (podľa SKU)
+  const qtyByPid = new Map<string, number>();
+  for (const it of src.items) if (it.productId) qtyByPid.set(it.productId, (qtyByPid.get(it.productId) ?? 0) + Math.floor(Number(it.qty)));
+  const exMap = new Map<string, number>();
+  for (const e of extras) { const sku = String(e?.sku ?? "").trim().slice(0, 60); const q = Math.max(1, Math.min(9999, Math.floor(Number(e?.qty)) || 1)); if (sku) exMap.set(sku, (exMap.get(sku) ?? 0) + q); }
+  if (exMap.size) {
+    const exProds = await prisma.product.findMany({ where: { sku: { in: [...exMap.keys()] }, isPublished: true }, select: { id: true, sku: true } });
+    for (const ep of exProds) qtyByPid.set(ep.id, (qtyByPid.get(ep.id) ?? 0) + (exMap.get(ep.sku) ?? 0));
+  }
+
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, isPublished: true },
+    where: { id: { in: [...qtyByPid.keys()] }, isPublished: true },
     select: {
       id: true, sku: true, name: true, nameDisplay: true,
       basePrice: true, costPrice: true, vatRate: true, isSubsidized: true,
@@ -351,10 +391,10 @@ export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boo
   const items: Snap[] = [];
   let subtotal = 0, vat = 0, hasBackorder = false;
 
-  for (const it of src.items) {
-    const p = it.productId ? byId.get(it.productId) : undefined;
+  for (const [productId, qtyRaw] of qtyByPid) {
+    const p = byId.get(productId);
     if (!p) continue; // nepublikovaný/zmazaný → vynechá
-    const qty = Math.floor(Number(it.qty));
+    const qty = Math.floor(Number(qtyRaw));
     const price = resolveUnitPrice({
       basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
       vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized,

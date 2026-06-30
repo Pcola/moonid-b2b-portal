@@ -78,10 +78,18 @@ export default async function DashboardPage() {
           <span className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-brand-2">{today}</span>
           <h1 className="text-[clamp(26px,3.4vw,38px)] font-normal tracking-[-0.015em] text-ink">Dobrý deň, {user.company?.name ?? "vitajte"}</h1>
         </div>
-        <Link href="/katalog" className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-[18px] py-3 text-[14.5px] font-semibold text-brand transition hover:border-mint-2">
-          Nová objednávka
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {recent.length > 0 && (
+            <Link href="/objednavky/opakovat" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[18px] py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
+              Opakovať poslednú objednávku
+            </Link>
+          )}
+          <Link href="/katalog" className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-[18px] py-3 text-[14.5px] font-semibold text-brand transition hover:border-mint-2">
+            Nová objednávka
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+          </Link>
+        </div>
       </div>
 
       {/* štatistiky */}
