@@ -314,3 +314,94 @@ export async function reorderFromOrder(orderId: string): Promise<{ ok: boolean; 
   revalidatePath("/katalog");
   return { ok: true, added, skipped };
 }
+
+/** Zopakuje objednávku jedným potvrdením: zoberie položky + dodaciu adresu z predošlej
+ *  objednávky, prepočíta aktuálne ceny/sklad a vytvorí novú objednávku (bez košíka, bez
+ *  vypĺňania). Nedostupné/„na vyžiadanie" položky vynechá. */
+export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
+  const user = await requireUser();
+  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  if (!ID.safeParse(sourceOrderId).success) return { ok: false, error: "Neplatný vstup." };
+
+  const src = await prisma.order.findFirst({
+    where: { id: sourceOrderId, companyId: user.companyId }, // IDOR: musí patriť firme
+    select: { id: true, note: true, deliveryLocationId: true, items: { select: { productId: true, qty: true } } },
+  });
+  if (!src) return { ok: false, error: "Objednávka neexistuje." };
+
+  const tierCode = user.company?.priceTier?.code ?? null;
+  const discountPct = await tierDiscount(tierCode);
+  const productIds = src.items.map((i) => i.productId).filter((x): x is string => !!x);
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds }, isPublished: true },
+    select: {
+      id: true, sku: true, name: true, nameDisplay: true,
+      basePrice: true, costPrice: true, vatRate: true, isSubsidized: true,
+      isStocked: true, stockCache: true, stockSyncedAt: true,
+      prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
+      pohodaLink: { select: { pohodaSku: true, linkStatus: true } },
+    },
+  });
+  const byId = new Map(products.map((p) => [p.id, p]));
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const FRESH_MS = 48 * 3600 * 1000;
+  type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
+  const items: Snap[] = [];
+  let subtotal = 0, vat = 0, hasBackorder = false;
+
+  for (const it of src.items) {
+    const p = it.productId ? byId.get(it.productId) : undefined;
+    if (!p) continue; // nepublikovaný/zmazaný → vynechá
+    const qty = Math.floor(Number(it.qty));
+    const price = resolveUnitPrice({
+      basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
+      vatRate: Number(p.vatRate), isSubsidized: p.isSubsidized,
+      tierUnitNet: p.prices[0]?.unitPriceNet != null ? Number(p.prices[0].unitPriceNet) : null,
+      discountPct,
+    });
+    if (price.kind !== "PRICE") continue; // na vyžiadanie → vynechá
+    const fresh = !!p.stockSyncedAt && now.getTime() - p.stockSyncedAt.getTime() < FRESH_MS;
+    const inStock = p.isStocked && p.stockCache != null && Number(p.stockCache) >= qty && fresh;
+    if (!inStock) hasBackorder = true;
+    const lineTotal = r2(price.net * qty);
+    subtotal += lineTotal;
+    vat += r2((price.gross - price.net) * qty);
+    const pohodaSku = p.pohodaLink && p.pohodaLink.linkStatus === "ACTIVE" ? p.pohodaLink.pohodaSku : null;
+    items.push({ productId: p.id, skuSnapshot: p.sku, pohodaSkuSnapshot: pohodaSku, nameSnapshot: p.nameDisplay || p.name, unitPriceSnapshot: price.net, costSnapshot: p.costPrice != null ? Number(p.costPrice) : null, qty, lineTotal, fulfillment: inStock ? "SKLADOM" : "NA_OBJEDNAVKU" });
+  }
+  if (items.length === 0) return { ok: false, error: "Žiadna z položiek už nie je dostupná na objednanie." };
+  subtotal = r2(subtotal); vat = r2(vat);
+  const total = r2(subtotal + vat);
+
+  // dodacia adresa z predošlej objednávky (ak ešte existuje pre firmu)
+  let deliveryLocationId: string | null = null;
+  if (src.deliveryLocationId) {
+    const loc = await prisma.deliveryLocation.findFirst({ where: { id: src.deliveryLocationId, companyId: user.companyId }, select: { id: true } });
+    deliveryLocationId = loc?.id ?? null;
+  }
+
+  const order = await prisma.$transaction(async (tx) => {
+    const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
+    const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
+    return tx.order.create({
+      data: {
+        number, companyId: user.companyId!, createdById: user.id,
+        status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
+        hasBackorder, subtotal, vat, total, note: src.note?.trim().slice(0, 2000) || null, deliveryLocationId,
+        items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
+        events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
+      },
+      select: { id: true, number: true },
+    });
+  });
+
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total, repeatOf: src.id } });
+  await Promise.allSettled([
+    emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
+    emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
+  ]);
+  revalidatePath("/objednavky");
+  return { ok: true, number: order.number, id: order.id };
+}

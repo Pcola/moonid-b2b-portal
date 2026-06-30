@@ -33,7 +33,15 @@ export default async function ObjednavkyPage() {
           Zatiaľ žiadne objednávky. <Link href="/katalog" className="font-semibold text-brand hover:text-brand-2">Prejsť do katalógu</Link>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-line bg-white">
+        <>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[14px] text-muted">Vaše objednávky</span>
+            <Link href="/objednavky/opakovat" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
+              Opakovať poslednú objednávku
+            </Link>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-line bg-white">
           {orders.map((o, i) => {
             const s = STATUS[o.status] ?? { label: o.status, cls: "bg-cream text-muted" };
             return (
@@ -47,7 +55,8 @@ export default async function ObjednavkyPage() {
               </Link>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
