@@ -70,8 +70,8 @@
 ## 3. Testovacia pyramída — 5 vrstiev
 
 ### Vrstva 0 — Availability + keep-alive *(najvyššie ROI, urob hneď)*
-- **Artefakt:** `.github/workflows/keep-alive.yml` — pinguje `/api/health` každých 10 min (drží DB živú, bráni pauseu).
-- **Doplň:** externý monitor (UptimeRobot/BetterStack na `/api/health`) — GitHub cron môže drift­núť/uspať.
+- **Artefakt:** `.github/workflows/keep-alive.yml` — pinguje `/api/health` á 6 h (drží DB živú, bráni pauseu; ~120 Actions min/mes — bezpečné aj na private repo).
+- **Doplň:** externý monitor (UptimeRobot/BetterStack na `/api/health`, 5-min interval) na jemný uptime/latency — GitHub cron nie je monitor.
 - **SLO:** dostupnosť 99,9 %; alert pri 2 zlyhaniach za sebou.
 
 ### Vrstva 1 — Frontend / Core Web Vitals *(set-and-forget)*

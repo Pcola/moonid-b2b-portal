@@ -1,13 +1,17 @@
 name: keep-alive
 
-# Bráni 7-dňovému auto-pauseu Supabase Free a zároveň slúži ako základný
-# uptime/latency monitor. Pinguje /api/health (robí SELECT 1 do Postgresu),
-# takže drží DB "živú". Pre produkciu doplň aj externý monitor (UptimeRobot/
-# BetterStack) — GitHub občas oneskorí/uspí cron na neaktívnych repo.
+# Bráni 7-dňovému auto-pauseu Supabase Free. Pinguje /api/health (robí SELECT 1
+# do Postgresu), takže drží DB "živú". Á 6 h = obrovská rezerva voči 7-dňovému
+# limitu a minimum GitHub Actions minút (4 behy/deň ≈ 120 min/mes — bezpečné aj
+# na private repo, kde je free limit 2000 min/mes).
+#
+# Toto NIE je jemný uptime/latency monitor — na to použi externý UptimeRobot/
+# BetterStack (5-min interval, nemíňa GitHub minúty). GitHub navyše občas oneskorí
+# cron pod záťažou, čo pre prevenciu pauseu nevadí, ale pre monitoring áno.
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # každých 10 min (<< 7-dňový limit)
+    - cron: "0 */6 * * *" # á 6 h (00/06/12/18 UTC) — << 7-dňový limit
   workflow_dispatch: {}
 
 permissions:
