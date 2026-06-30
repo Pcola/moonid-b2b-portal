@@ -22,12 +22,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping /api/health
+        env:
+          # Voliteľné. Ak má projekt zapnutý Vercel Firewall / Attack Challenge
+          # alebo Deployment Protection, surový curl dostane "Security Checkpoint"
+          # (nie JSON) a ping zlyhá. Vtedy nastav GitHub secret
+          # VERCEL_PROTECTION_BYPASS (+ povoľ bypass vo Verceli). Prázdny = ide bez neho.
+          BYPASS: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
         run: |
           url="https://moonid-b2b-portal.vercel.app/api/health"
-          out=$(curl -sS -m 30 -w '\n%{http_code} %{time_total}s' "$url")
-          body=$(printf '%s' "$out" | head -n1)
-          meta=$(printf '%s' "$out" | tail -n1)
-          code=${meta%% *}
-          echo "health=$body  (HTTP $meta)"
-          test "$code" = "200" || { echo "::error::health check failed (HTTP $code)"; exit 1; }
-          echo "$body" | grep -q '"db":"up"' || { echo "::error::DB not up"; exit 1; }
+          ua="moonid-keepalive (+https://github.com/Pcola/moonid-b2b-portal)"
+          for attempt in 1 2 3; do
+            out=$(curl -sS -m 30 -A "$ua" \
+              ${BYPASS:+-H "x-vercel-protection-bypass: $BYPASS"} \
+              -w '\n%{http_code}' "$url") || true
+            code=$(printf '%s' "$out" | tail -n1)
+            body=$(printf '%s' "$out" | head -n1)
+            echo "attempt $attempt: HTTP $code -> $body"
+            if [ "$code" = "200" ] && printf '%s' "$body" | grep -q '"db":"up"'; then
+              echo "OK — DB živá"; exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::keep-alive zlyhal (HTTP/JSON nesedí — výpadok alebo bot-challenge). Skontroluj Vercel Firewall alebo nastav VERCEL_PROTECTION_BYPASS."
+          exit 1

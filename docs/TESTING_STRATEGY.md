@@ -105,6 +105,7 @@
 - **Artefakt:** `tests/load/read-path.js` (k6) — verejná read-path + health; smoke (1 VU) → peak (~10 VU). `npm run load`.
 - **Rozsah:** write-path (košík/objednávka) sa v k6 nedá spoľahlivo (cookie + Next-Action) → rieši Playwright. k6 = súbežnosť na čítaní.
 - **⚠️ Free tier:** zdieľaný compute — veľký stress meria šum susedov a môže ťa rate-limitnúť. Drž jednotky–desiatky VU, nehľadaj strop.
+- **⚠️ OVERENÉ: Vercel bot-mitigácia.** Náraz requestov z jednej IP (presne to robí k6) vráti HTML *„Vercel Security Checkpoint"* namiesto appky — meral by si challenge stránku a riskuješ dočasný block. **Load-testuj preview/staging deployment, nie surovú produkciu**, alebo nastav Vercel *Protection Bypass for Automation* a spusti `k6 run -e BYPASS_TOKEN=… …`. Skript túto challenge zachytí (check `not bot-challenge`). To isté riziko platí pre curl-monitor → keep-alive má retry + voliteľný bypass header.
 
 ---
 

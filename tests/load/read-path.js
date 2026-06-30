@@ -8,12 +8,21 @@
 // POZOR (free tier): Supabase/Vercel free beží na ZDIEĽANOM compute. Veľký
 // stress test meria aj šum susedov a môže ťa rate-limitnúť. Drž sa reálnej
 // B2B mierky (jednotky–desiatky VU), nie hľadania stropu.
+//
+// !! OVERENÉ NA TOMTO WEBE: Vercel má bot-mitigáciu — pri náraze requestov
+// z jednej IP vráti HTML "Vercel Security Checkpoint" namiesto appky (a meral
+// by si challenge stránku, nie portál + môže ťa dočasne zablokovať). Preto:
+//   - testuj radšej PREVIEW/staging deployment, NIE surovú produkciu, alebo
+//   - nastav Vercel "Protection Bypass for Automation" a spusti s tokenom:
+//       k6 run -e BYPASS_TOKEN=xxxxx tests/load/read-path.js
+//   - skript dolu kontroluje, či odpoveď nie je checkpoint (fail fast).
 
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { Trend } from "k6/metrics";
 
 const BASE = __ENV.BASE_URL || "https://moonid-b2b-portal.vercel.app";
+const BYPASS = __ENV.BYPASS_TOKEN || ""; // Vercel protection-bypass (voliteľné)
 const ttfb = new Trend("ttfb_ms", true);
 
 export const options = {
@@ -39,12 +48,17 @@ export const options = {
 };
 
 const PATHS = ["/", "/produkty", "/api/health"];
+const headers = BYPASS ? { "x-vercel-protection-bypass": BYPASS } : {};
 
 export default function () {
   for (const p of PATHS) {
-    const res = http.get(`${BASE}${p}`, { tags: { path: p } });
+    const res = http.get(`${BASE}${p}`, { tags: { path: p }, headers });
     ttfb.add(res.timings.waiting);
-    check(res, { "status 200": (r) => r.status === 200 });
+    check(res, {
+      "status 200": (r) => r.status === 200,
+      // ak meriame challenge stránku, výsledky sú bezcenné — zachyť to
+      "not bot-challenge": (r) => !String(r.body).includes("Vercel Security Checkpoint"),
+    });
     sleep(1);
   }
 }
