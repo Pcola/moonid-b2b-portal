@@ -71,6 +71,10 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
   const subcategories = subRows.filter((r) => r.subcategory).map((r) => ({ name: r.subcategory!, count: r._count._all }));
   const brands = brandRows.filter((r) => r.brand).map((r) => ({ name: r.brand!, count: r._count._all }));
 
+  const favSet = user.companyId
+    ? new Set((await prisma.favorite.findMany({ where: { companyId: user.companyId }, select: { productId: true } })).map((f) => f.productId))
+    : new Set<string>();
+
   const items = rows.map((p) => {
     const price = resolveUnitPrice({
       basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
@@ -82,7 +86,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     return {
       id: p.id, slug: p.slug ?? p.id, n: p.nameDisplay || p.name,
       i: p.media[0]?.storagePath ?? "", c: p.category?.name ?? "Ostatné", unit: p.unit,
-      stocked: p.isStocked && p.stockCache != null && Number(p.stockCache) > 0, price,
+      stocked: p.isStocked && p.stockCache != null && Number(p.stockCache) > 0, fav: favSet.has(p.id), price,
     };
   });
 

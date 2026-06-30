@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import type { PricedLine } from "@/lib/pricing";
 import { addToCart } from "../kosik/actions";
+import { FavoriteButton } from "@/components/portal/favorite-button";
 
-type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; price: PricedLine };
+type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; fav: boolean; price: PricedLine };
 type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
 type Facets = {
   categories: { name: string; count: number }[];
@@ -176,7 +177,8 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
 
           <div className="mt-7 grid gap-[clamp(14px,1.6vw,22px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(208px,1fr))" }}>
             {items.map((p) => (
-              <div key={p.id} className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
+              <div key={p.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
+                <FavoriteButton productId={p.id} initial={p.fav} className="absolute right-2 top-2 z-10 bg-white/80 backdrop-blur-sm" />
                 <Link prefetch={false} href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
                   <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
                   {p.i ? (

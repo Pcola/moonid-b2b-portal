@@ -174,10 +174,25 @@ model Company {
   orders        Order[]
   invoices      Invoice[]
   dispensers    CompanyDispenser[]
+  favorites     Favorite[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
   @@index([priceTierId])
+}
+
+// Obľúbené produkty firmy (zdieľané medzi používateľmi firmy) [P]
+model Favorite {
+  id          String   @id @default(cuid())
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  createdById String? // User.id kto pridal (bez FK — len stopa)
+  createdAt   DateTime @default(now())
+
+  @@unique([companyId, productId])
+  @@index([companyId])
 }
 
 model DeliveryLocation {
@@ -305,6 +320,7 @@ model Product {
   pohodaLink         ProductLink? // most na Pohoda kartu (1:1; null = nenamapované)
   cartItems          CartItem[]
   orderItems         OrderItem[]
+  favorites          Favorite[]
   syncedAt           DateTime?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
