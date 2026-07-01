@@ -53,7 +53,7 @@ export default async function NastaveniaPage() {
       <section className="rounded-2xl border border-line bg-white">
         <div className="flex items-center justify-between border-b border-line px-6 py-4">
           <h2 className="text-[18px] font-normal text-ink">Používatelia</h2>
-          <span className="text-[12.5px] text-muted-2">{users.length} {users.length === 1 ? "konto" : "kont"}</span>
+          <span className="text-[12.5px] text-muted-2">{users.length} {users.length === 1 ? "konto" : users.length >= 2 && users.length <= 4 ? "kontá" : "kont"}</span>
         </div>
         <div className="divide-y divide-line">
           {users.map((u) => (
@@ -69,7 +69,7 @@ export default async function NastaveniaPage() {
           ))}
         </div>
         <div className="border-t border-line px-6 py-3.5 text-[12.5px] text-muted-2">
-          Správu používateľov (pozvánky, deaktivácia) pripravujeme. Zatiaľ nás kontaktujte.
+          Potrebujete pridať alebo deaktivovať kolegu? Napíšte nám na <a href="mailto:obchod@moonid.sk" className="font-medium text-brand hover:text-brand-2">obchod@moonid.sk</a> — radi to vybavíme.
         </div>
       </section>
 

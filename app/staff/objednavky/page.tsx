@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { StaffOrders } from "./orders-list";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Staff · Objednávky", robots: { index: false, follow: false } };
 
 // Ohraničenie dotazu — pri raste nad CAP príde na rad server-side stránkovanie/filtrovanie.
 // Pre súčasný objem (malý veľkoobchod) pokrýva mesiace; cap je viditeľný (nie tiché orezanie).

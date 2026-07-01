@@ -19,7 +19,7 @@ const SECTIONS: Section[] = [
     items: [
       { q: "Ako získam prístup do portálu?", a: <>Vyplňte <Link href="/registracia" className="font-semibold text-brand underline underline-offset-2">žiadosť o prístup</Link>. Po overení vás sprístupníme a pošleme e-mail s pozvánkou na nastavenie hesla.</> },
       { q: "Zabudol som heslo.", a: <>Na <Link href="/login" className="font-semibold text-brand underline underline-offset-2">prihlasovacej stránke</Link> kliknite na „Zabudli ste heslo?" a pošleme vám odkaz na obnovu.</> },
-      { q: "Ako pridám ďalšieho kolegu z firmy?", a: <>Zatiaľ nás kontaktujte na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand underline underline-offset-2">moonid@moonid.sk</a> — pridáme ďalšie konto k vašej firme.</> },
+      { q: "Ako pridám ďalšieho kolegu z firmy?", a: <>Kontaktujte nás na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand underline underline-offset-2">moonid@moonid.sk</a> — pridáme ďalšie konto k vašej firme.</> },
     ],
   },
   {

@@ -2,6 +2,7 @@ import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Staff · Faktúry", robots: { index: false, follow: false } };
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 const STATUS: Record<string, { label: string; fg: string; bg: string }> = {
@@ -39,7 +40,7 @@ export default async function StaffInvoices() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 9h6M9 13h4" /></svg>
           </div>
           <p className="text-[15px] font-medium text-ink">Zatiaľ žiadne faktúry</p>
-          <p className="mt-1 text-[13.5px] text-muted">Faktúry sa zobrazia po napojení synchronizácie s Pohodou (ďalšia fáza).</p>
+          <p className="mt-1 text-[13.5px] text-muted">Faktúry sa zobrazia po synchronizácii z Pohody.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-line bg-white">

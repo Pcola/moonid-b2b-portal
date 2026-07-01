@@ -67,7 +67,7 @@ export default async function FakturyPage() {
                 <span className="text-[13.5px] text-muted-2">{f.order?.number ?? "—"}</span>
                 <span className="text-[13.5px] text-muted-2">{new Date(f.dueAt).toLocaleDateString("sk")}</span>
                 <span className={`justify-self-start rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
-                {/* PDF na stiahnutie príde s Pohoda sync faktúr cez podpísaný auth-gated route (Fáza 2) */}
+                {/* PDF sťahovanie sa doplní po importe faktúr z Pohody */}
                 <span className="text-right text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(f.total))}</span>
               </div>
             );

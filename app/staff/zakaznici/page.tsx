@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Staff · Zákazníci", robots: { index: false, follow: false } };
 
 function eur(n: number) { return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €"; }
 const AV = ["#163F38", "#EAF1EE"];

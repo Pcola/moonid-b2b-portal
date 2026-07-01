@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { TierEditor } from "./tier-editor";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Staff · Cenníky", robots: { index: false, follow: false } };
 
 const DESC: Record<string, string> = {
   A: "Základná zľava pre menšie prevádzky a inštitúcie.",
