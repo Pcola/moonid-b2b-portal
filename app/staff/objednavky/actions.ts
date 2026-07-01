@@ -6,6 +6,7 @@ import { requireStaff } from "@/lib/auth";
 import { nextStatus, canCancel, type OrderStatus } from "@/lib/orders/transition";
 import { emailOrderStatus } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
+import { SHIPPING_VAT_RATE } from "@/lib/store-config";
 import { z } from "zod";
 
 const ID = z.string().min(1).max(100);
@@ -90,6 +91,7 @@ export async function updateOrder(orderId: string, input: z.input<typeof editSch
     where: { id: orderId },
     select: {
       id: true, status: true, companyId: true, note: true, deliveryLocationId: true, number: true,
+      shippingFee: true, paymentSurcharge: true,
       items: { select: { id: true, unitPriceSnapshot: true, qty: true, product: { select: { vatRate: true } } } },
     },
   });
@@ -124,7 +126,12 @@ export async function updateOrder(orderId: string, input: z.input<typeof editSch
     return { id: it.id, qty: q, lineTotal: line };
   });
   subtotal = r2(subtotal); vat = r2(vat);
-  const total = r2(subtotal + vat);
+  // doprava + príplatok platby ostávajú (dohodnuté pri objednaní) — len doplníme ich DPH do súm,
+  // aby staff úprava množstiev nezahodila poplatky z objednávky.
+  const shippingFee = Number(order.shippingFee);
+  const paymentSurcharge = Number(order.paymentSurcharge);
+  vat = r2(vat + r2((shippingFee + paymentSurcharge) * (SHIPPING_VAT_RATE / 100)));
+  const total = r2(subtotal + shippingFee + paymentSurcharge + vat);
 
   await prisma.$transaction(async (tx) => {
     if (removeIds.length) await tx.orderItem.deleteMany({ where: { id: { in: removeIds }, orderId } });

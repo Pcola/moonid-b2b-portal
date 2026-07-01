@@ -21,6 +21,7 @@ const NAV = [
   { href: "/staff/produkty", exact: false, label: "Produkty", badge: null, icon: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
   { href: "/staff/katalog", exact: false, label: "Párovanie", badge: null, icon: <><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M20 4 9 15M15 20h5v-5" /></> },
   { href: "/staff/cenniky", exact: false, label: "Cenníky", badge: null, icon: <><path d="M20 12l-8 8-9-9V4h7z" /><circle cx="7.5" cy="7.5" r="1.3" /></> },
+  { href: "/staff/doprava-platba", exact: false, label: "Doprava a platba", badge: null, icon: <><rect x="1" y="4" width="14" height="12" rx="1.5" /><path d="M15 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="1.7" /><circle cx="18" cy="18.5" r="1.7" /></> },
   { href: "/staff/faktury", exact: false, label: "Faktúry", badge: null, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
 ];
 
@@ -34,6 +35,7 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => p.startsWith("/staff/produkty"), crumb: "Katalóg", title: "Produkty" },
   { test: (p) => p.startsWith("/staff/katalog"), crumb: "Katalóg", title: "Párovanie zdrojov" },
   { test: (p) => p.startsWith("/staff/cenniky"), crumb: "Nastavenia", title: "Cenníky a úrovne" },
+  { test: (p) => p.startsWith("/staff/doprava-platba"), crumb: "Nastavenia", title: "Doprava a platba" },
   { test: (p) => p.startsWith("/staff/faktury"), crumb: "Účtovníctvo", title: "Faktúry" },
 ];
 

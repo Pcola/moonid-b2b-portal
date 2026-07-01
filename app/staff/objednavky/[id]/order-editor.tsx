@@ -10,8 +10,9 @@ type Loc = { id: string; label: string | null; street: string | null; city: stri
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 function r2(n: number) { return Math.round(n * 100) / 100; }
 
-export function OrderEditor({ orderId, editable, items, locations, note, deliveryLocationId }: {
+export function OrderEditor({ orderId, editable, items, locations, note, deliveryLocationId, shippingFee, paymentSurcharge, vatRate }: {
   orderId: string; editable: boolean; items: Item[]; locations: Loc[]; note: string | null; deliveryLocationId: string | null;
+  shippingFee: number; paymentSurcharge: number; vatRate: number;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -26,8 +27,9 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
   const set = (id: string, v: number) => setQty((p) => ({ ...p, [id]: Math.max(0, Math.min(9999, Math.floor(v || 0))) }));
   const usable = items.filter((i) => (qty[i.id] ?? 0) > 0);
   const subtotal = r2(usable.reduce((s, i) => s + r2(i.unitPriceSnapshot * qty[i.id]), 0));
-  const vat = r2(usable.reduce((s, i) => { const g = r2(i.unitPriceSnapshot * (1 + i.vatRate / 100)); return s + r2((g - i.unitPriceSnapshot) * qty[i.id]); }, 0));
-  const total = r2(subtotal + vat);
+  const itemsVat = r2(usable.reduce((s, i) => { const g = r2(i.unitPriceSnapshot * (1 + i.vatRate / 100)); return s + r2((g - i.unitPriceSnapshot) * qty[i.id]); }, 0));
+  const vat = r2(itemsVat + r2((shippingFee + paymentSurcharge) * (vatRate / 100)));
+  const total = r2(subtotal + shippingFee + paymentSurcharge + vat); // doprava/príplatok ostávajú
 
   function reset() {
     setQty(Object.fromEntries(items.map((i) => [i.id, i.qty])));

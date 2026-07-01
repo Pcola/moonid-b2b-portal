@@ -53,7 +53,8 @@ afterAll(async () => { await cleanup(); await prisma.$disconnect(); });
 
 describe("createOrder — objednávka z košíka", () => {
   it("vytvorí objednávku: číslo WEB-RRRR-NNNNN, správne sumy, snapshoty, vyprázdni košík", async () => {
-    const res = await createOrder({ note: "test poznámka" });
+    // osobný odber + faktúra → bez poplatku a bez adresy: sumy ostávajú položkové
+    const res = await createOrder({ note: "test poznámka", deliveryCode: "odber", paymentCode: "faktura" });
     expect(res.ok).toBe(true);
     expect(res.number).toMatch(/^WEB-\d{4}-\d{5}$/);
 

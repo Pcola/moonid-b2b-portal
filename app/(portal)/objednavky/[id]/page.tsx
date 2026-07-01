@@ -20,6 +20,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     where: { id, companyId: user.companyId ?? "__none__" },
     select: {
       number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true, createdAt: true,
+      deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true,
       items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, qty: true, lineTotal: true, fulfillment: true } },
       events: { where: { source: "PORTAL" }, orderBy: { occurredAt: "asc" }, select: { status: true, occurredAt: true } },
     },
@@ -61,10 +62,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="mt-4 flex flex-col items-end gap-1 text-[14px]">
-        <div className="flex w-[260px] justify-between text-muted"><span>Medzisúčet (bez DPH)</span><span className="tabular-nums text-ink">{eur(Number(order.subtotal))}</span></div>
+        <div className="flex w-[260px] justify-between text-muted"><span>Medzisúčet (tovar, bez DPH)</span><span className="tabular-nums text-ink">{eur(Number(order.subtotal))}</span></div>
+        {order.deliveryMethodLabel && <div className="flex w-[260px] justify-between text-muted"><span>Doprava</span><span className="tabular-nums text-ink">{Number(order.shippingFee) === 0 ? "Zdarma" : eur(Number(order.shippingFee))}</span></div>}
+        {Number(order.paymentSurcharge) > 0 && <div className="flex w-[260px] justify-between text-muted"><span>{order.paymentMethodLabel ?? "Príplatok platby"}</span><span className="tabular-nums text-ink">{eur(Number(order.paymentSurcharge))}</span></div>}
         <div className="flex w-[260px] justify-between text-muted"><span>DPH</span><span className="tabular-nums text-ink">{eur(Number(order.vat))}</span></div>
         <div className="flex w-[260px] justify-between border-t border-line pt-2 text-[16px] font-semibold text-ink"><span>Spolu s DPH</span><span className="tabular-nums">{eur(Number(order.total))}</span></div>
       </div>
+
+      {(order.deliveryMethodLabel || order.paymentMethodLabel) && (
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {order.deliveryMethodLabel && <div className="rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Doprava</div><p className="mt-1 text-[14px] text-ink">{order.deliveryMethodLabel}</p></div>}
+          {order.paymentMethodLabel && <div className="rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Platba</div><p className="mt-1 text-[14px] text-ink">{order.paymentMethodLabel}</p></div>}
+        </div>
+      )}
 
       {order.note && <div className="mt-6 rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka</div><p className="mt-1 text-[14px] text-muted-3">{order.note}</p></div>}
 

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { STATUS_META, STEP_TITLES, stepIndex, type OrderStatus } from "@/lib/orders/transition";
 import { OrderActions } from "./order-actions";
 import { OrderEditor } from "./order-editor";
+import { SHIPPING_VAT_RATE } from "@/lib/store-config";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
     select: {
       id: true, number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true,
       createdAt: true, confirmedAt: true, priceTierCode: true, pohodaSync: true, companyId: true, deliveryLocationId: true,
+      deliveryMethodLabel: true, shippingFee: true, paymentMethodCode: true, paymentMethodLabel: true, paymentSurcharge: true,
       company: { select: { name: true, address: true, city: true, ico: true, splatDays: true, priceTier: { select: { code: true, name: true } }, locations: { orderBy: [{ isDefault: "desc" }, { label: "asc" }], select: { id: true, label: true, street: true, city: true, zip: true } } } },
       deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
       createdBy: { select: { name: true, email: true } },
@@ -111,14 +113,16 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
             </div>
           ))}
         </div>
-        <OrderEditor orderId={order.id} editable={editable} items={editorItems} locations={order.company.locations} note={order.note} deliveryLocationId={order.deliveryLocationId} />
+        <OrderEditor orderId={order.id} editable={editable} items={editorItems} locations={order.company.locations} note={order.note} deliveryLocationId={order.deliveryLocationId} shippingFee={Number(order.shippingFee)} paymentSurcharge={Number(order.paymentSurcharge)} vatRate={SHIPPING_VAT_RATE} />
         </div>
 
         {/* bočný panel */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-[22px]">
             <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Súhrn</h3>
-            <div className="flex justify-between text-[14.5px] text-muted"><span>Medzisúčet</span><span className="tabular-nums text-ink">{eur(Number(order.subtotal))}</span></div>
+            <div className="flex justify-between text-[14.5px] text-muted"><span>Medzisúčet (tovar)</span><span className="tabular-nums text-ink">{eur(Number(order.subtotal))}</span></div>
+            {order.deliveryMethodLabel && <div className="flex justify-between text-[14.5px] text-muted"><span>Doprava</span><span className="tabular-nums text-ink">{Number(order.shippingFee) === 0 ? "Zdarma" : eur(Number(order.shippingFee))}</span></div>}
+            {Number(order.paymentSurcharge) > 0 && <div className="flex justify-between text-[14.5px] text-muted"><span>{order.paymentMethodLabel ?? "Príplatok platby"}</span><span className="tabular-nums text-ink">{eur(Number(order.paymentSurcharge))}</span></div>}
             <div className="flex justify-between text-[14.5px] text-muted"><span>DPH</span><span className="tabular-nums text-ink">{eur(Number(order.vat))}</span></div>
             <div className="my-1 h-px bg-line" />
             <div className="flex items-baseline justify-between"><span className="text-[15px] font-semibold text-ink">Spolu s DPH</span><span className="text-[22px] font-semibold text-brand tabular-nums">{eur(Number(order.total))}</span></div>
@@ -148,8 +152,12 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
               )}
             </div>
             <div className="flex flex-col gap-0.5 border-t border-line pt-3">
-              <span className="text-[12px] text-muted-2">Úroveň · platba</span>
-              <span className="text-[13.5px] text-muted">{order.company.priceTier ? `${order.company.priceTier.code} — ${order.company.priceTier.name}` : "—"} · faktúra {order.company.splatDays} dní</span>
+              <span className="text-[12px] text-muted-2">Cenová úroveň</span>
+              <span className="text-[13.5px] text-muted">{order.company.priceTier ? `${order.company.priceTier.code} — ${order.company.priceTier.name}` : "—"}</span>
+            </div>
+            <div className="flex flex-col gap-0.5 border-t border-line pt-3">
+              <span className="text-[12px] text-muted-2">Doprava · platba</span>
+              <span className="text-[13.5px] text-muted">{[order.deliveryMethodLabel, order.paymentMethodLabel].filter(Boolean).join(" · ") || "—"}{order.paymentMethodCode === "faktura" ? ` (${order.company.splatDays} dní)` : ""}</span>
             </div>
             <div className="flex flex-col gap-0.5 border-t border-line pt-3">
               <span className="text-[12px] text-muted-2">Objednal</span>

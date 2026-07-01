@@ -487,6 +487,34 @@ model CartItem {
   @@index([productId])
 }
 
+// ---------- Doprava & platba (plne editovateľné v back-office /staff/doprava-platba) ----------
+
+model DeliveryMethod {
+  id              String   @id @default(cuid())
+  code            String   @unique // "rozvoz" | "odber" | "kurier"
+  label           String
+  description     String? // pod-text pre zákazníka; pri „odbere" = adresa odberného miesta
+  enabled         Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  requiresAddress Boolean  @default(true) // osobný odber = false (adresa netreba)
+  flatFee         Decimal  @default(0) @db.Decimal(10, 2) // paušál netto (0 = zdarma)
+  freeThreshold   Decimal? @db.Decimal(10, 2) // zdarma nad túto sumu (netto); null = paušál vždy
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PaymentMethod {
+  id          String   @id @default(cuid())
+  code        String   @unique // "faktura" | "dobierka" | "vopred"
+  label       String
+  description String?
+  enabled     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  surcharge   Decimal  @default(0) @db.Decimal(10, 2) // príplatok netto (napr. dobierka)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // Doobjednané položky pri opakovaní objednávky — staging ODDELENÝ od košíka (per-user).
 // Čistí sa pri každom čerstvom štarte opakovania (startRepeat), takže sa do opakovanej
 // objednávky nikdy nedostane nič, čo má zákazník rozrobené v bežnom košíku.
@@ -534,6 +562,14 @@ model Order {
   // unique indexe → vráti pôvodnú objednávku (enterprise anti-duplicita, hlavne pri „Opakovať").
   // Nullable: košíková cesta (createOrder) je chránená delete-first guardom; viac NULL je v PG OK.
   idempotencyKey        String?            @unique
+  // spôsob dopravy a platby: snapshot kódu + názvu (história prežije zmenu/zmazanie metódy)
+  // + poplatky netto (doprava podľa prahu, príplatok platby napr. dobierka). DPH sa doráta.
+  deliveryMethodCode    String?
+  deliveryMethodLabel   String?
+  shippingFee           Decimal            @default(0) @db.Decimal(12, 4)
+  paymentMethodCode     String?
+  paymentMethodLabel    String?
+  paymentSurcharge      Decimal            @default(0) @db.Decimal(12, 4)
   items                 OrderItem[]
   events                OrderStatusEvent[]
   invoice               Invoice?
