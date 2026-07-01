@@ -162,10 +162,11 @@ const newAddressSchema = z.object({
   zip: z.string().trim().min(3, "Zadajte PSČ").max(12),
 });
 
-export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok: boolean; error?: string; number?: string }> {
+export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok: boolean; error?: string; number?: string; pendingApproval?: boolean }> {
   const o: CreateOrderOpts = typeof opts === "string" ? { note: opts } : (opts ?? {});
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  const needsApproval = !user.canOrderDirectly; // reštrikčný user → objednávka ide na schválenie
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
 
@@ -246,8 +247,8 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   subtotal = r2(subtotal); vat = r2(vat);
   // poplatky: doprava (podľa prahu) + príplatok platby — server-side autorita (jediný zdroj pravdy)
   const charges = await resolveOrderCharges({ deliveryCode: o.deliveryCode, paymentCode: o.paymentCode, itemsNet: subtotal });
-  if (charges.delivery?.requiresAddress && !deliveryLocationId) return { ok: false, error: "Vyberte alebo zadajte dodaciu adresu." };
-  if (charges.delivery && !charges.delivery.requiresAddress) deliveryLocationId = null; // osobný odber → bez adresy
+  // deliveryLocationId null = doručiť na fakturačnú adresu (platná voľba); osobný odber → bez adresy
+  if (charges.delivery && !charges.delivery.requiresAddress) deliveryLocationId = null;
   vat = r2(vat + charges.extrasVat);
   const total = r2(subtotal + charges.shippingFee + charges.paymentSurcharge + vat);
 
@@ -261,28 +262,30 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
     return tx.order.create({
       data: {
         number, companyId: user.companyId!, createdById: user.id,
-        status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
+        status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
         hasBackorder, subtotal, vat, total, note: o.note?.trim().slice(0, 2000) || null,
         deliveryLocationId, requestedDeliveryDate,
         deliveryMethodCode: charges.delivery?.code ?? null, deliveryMethodLabel: charges.delivery?.label ?? null, shippingFee: charges.shippingFee,
         paymentMethodCode: charges.payment?.code ?? null, paymentMethodLabel: charges.payment?.label ?? null, paymentSurcharge: charges.paymentSurcharge,
         items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
-        events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
+        events: { create: { status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", source: "PORTAL", changedById: user.id } },
       },
       select: { id: true, number: true },
     });
   });
   if (!order) return { ok: false, error: "Košík bol medzičasom spracovaný — skontrolujte sekciu Objednávky." };
 
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } });
-  // e-maily — best-effort, nikdy nezhodia objednávku (sendEmail nehádže)
-  await Promise.allSettled([
-    emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
-    emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
-  ]);
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } });
+  // Pri priamej objednávke ide staffu hneď; pri schvaľovaní až po schválení (approveOrder → email).
+  if (!needsApproval) {
+    await Promise.allSettled([
+      emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
+      emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
+    ]);
+  }
   revalidatePath("/objednavky");
   revalidatePath("/kosik");
-  return { ok: true, number: order.number };
+  return { ok: true, number: order.number, pendingApproval: needsApproval };
 }
 
 /** Skopíruje položky predošlej objednávky do košíka (opakovať objednávku). Preskočí
@@ -397,10 +400,11 @@ export async function removeRepeatDraftItem(itemId: string): Promise<{ ok: boole
 /** Zopakuje objednávku jedným potvrdením: zoberie položky z predošlej objednávky + doobjednané
  *  položky z draftu (SKU aj výber z katalógu), prepočíta aktuálne ceny/sklad a vytvorí novú
  *  objednávku (a vyčistí draft). Dodaciu adresu prevezme z predošlej. Nedostupné vynechá. */
-export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
+export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string; pendingApproval?: boolean }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
   if (!ID.safeParse(sourceOrderId).success) return { ok: false, error: "Neplatný vstup." };
+  const needsApproval = !user.canOrderDirectly; // reštrikčný user → objednávka ide na schválenie
   // Idempotencia odoslania: kľúč z potvrdzovacej obrazovky (stabilný pre daný render), takže
   // dvojklik / dva taby / retry posielajú ten istý kľúč → 2. insert koliduje na unique indexe a
   // vrátime pôvodnú objednávku. Chýbajúci/neplatný kľúč (anomálny priamy call) → náhradný UUID:
@@ -484,12 +488,12 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
       return tx.order.create({
         data: {
           number, companyId: user.companyId!, createdById: user.id, idempotencyKey: idemKey,
-          status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
+          status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
           hasBackorder, subtotal, vat, total, note: src.note?.trim().slice(0, 2000) || null, deliveryLocationId,
           deliveryMethodCode: charges.delivery?.code ?? null, deliveryMethodLabel: charges.delivery?.label ?? null, shippingFee: charges.shippingFee,
           paymentMethodCode: charges.payment?.code ?? null, paymentMethodLabel: charges.payment?.label ?? null, paymentSurcharge: charges.paymentSurcharge,
           items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
-          events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
+          events: { create: { status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", source: "PORTAL", changedById: user.id } },
         },
         select: { id: true, number: true },
       });
@@ -509,12 +513,14 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
     return { ok: false, error: "Objednávku sa nepodarilo vytvoriť. Skúste to znova." };
   }
 
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total, repeatOf: src.id } });
-  await Promise.allSettled([
-    emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
-    emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
-  ]);
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total, repeatOf: src.id } });
+  if (!needsApproval) {
+    await Promise.allSettled([
+      emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
+      emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
+    ]);
+  }
   revalidatePath("/objednavky");
   revalidatePath("/objednavky/opakovat");
-  return { ok: true, number: order.number, id: order.id };
+  return { ok: true, number: order.number, id: order.id, pendingApproval: needsApproval };
 }

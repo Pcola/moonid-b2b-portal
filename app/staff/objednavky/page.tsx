@@ -13,6 +13,7 @@ export default async function StaffOrdersPage({ searchParams }: { searchParams: 
   const { q } = await searchParams;
   await requireStaff();
   const orders = await prisma.order.findMany({
+    where: { status: { not: "CAKA_SCHVALENIE" } }, // neschválené objednávky staffu nepatria
     orderBy: { createdAt: "desc" },
     take: CAP,
     select: {

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { startRepeat, startRepeatOrder } from "../kosik/actions";
+import { ApprovalQueue } from "./approval-queue";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávky — Moonid portál", robots: { index: false, follow: false } };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
+  CAKA_SCHVALENIE: { label: "Čaká na schválenie", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
   PRIJATA: { label: "Prijatá", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
   POTVRDENA: { label: "Potvrdená", cls: "bg-[#eef2ff] text-[#3730a3]" },
   PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-[#eef2ff] text-[#3730a3]" },
@@ -26,9 +28,18 @@ export default async function ObjednavkyPage() {
     orderBy: { createdAt: "desc" },
     select: { id: true, number: true, status: true, total: true, hasBackorder: true, createdAt: true, _count: { select: { items: true } } },
   });
+  // objednávky čakajúce na MOJE schválenie (som určený schvaľovateľ ich tvorcu; správca firmy vidí všetky)
+  const isAdmin = user.role === "CUSTOMER_ADMIN";
+  const queueRows = await prisma.order.findMany({
+    where: { companyId: user.companyId, status: "CAKA_SCHVALENIE", ...(isAdmin ? {} : { createdBy: { approverId: user.id } }) },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, number: true, total: true, createdAt: true, _count: { select: { items: true } }, createdBy: { select: { name: true, email: true } } },
+  });
+  const queue = queueRows.map((o) => ({ id: o.id, number: o.number, total: Number(o.total), date: o.createdAt.toISOString(), itemCount: o._count.items, createdByName: o.createdBy.name ?? o.createdBy.email }));
 
   return (
     <div className="max-w-[980px]">
+      <ApprovalQueue orders={queue} />
       {orders.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white p-10 text-center text-muted">
           Zatiaľ žiadne objednávky. <Link href="/katalog" className="font-semibold text-brand hover:text-brand-2">Prejsť do katalógu</Link>

@@ -1,7 +1,7 @@
 // Stavový automat objednávky — zdieľaný server (akcie) aj klient (badge/stepper).
 // Zámerne BEZ "server-only": labely/farby potrebujú aj klientske komponenty.
 
-export type OrderStatus = "PRIJATA" | "POTVRDENA" | "PRIPRAVUJE" | "NA_CESTE" | "DORUCENA" | "STORNO";
+export type OrderStatus = "CAKA_SCHVALENIE" | "PRIJATA" | "POTVRDENA" | "PRIPRAVUJE" | "NA_CESTE" | "DORUCENA" | "STORNO";
 
 // Dopredný tok (STORNO je vetva mimo toku).
 export const ORDER_FLOW: OrderStatus[] = ["PRIJATA", "POTVRDENA", "PRIPRAVUJE", "NA_CESTE", "DORUCENA"];
@@ -10,6 +10,7 @@ export const STEP_TITLES = ["Prijatá", "Potvrdená", "Pripravuje sa", "Na ceste
 
 // Farby zladené s prototypom (Moonid Admin). PRIJATA = oranžová = „čaká na akciu".
 export const STATUS_META: Record<OrderStatus, { label: string; fg: string; bg: string }> = {
+  CAKA_SCHVALENIE: { label: "Čaká na schválenie", fg: "#8A5A00", bg: "#FDF6E7" },
   PRIJATA: { label: "Prijatá", fg: "#9A6B0E", bg: "#FBF1DC" },
   POTVRDENA: { label: "Potvrdená", fg: "#1E5249", bg: "#EAF1EE" },
   PRIPRAVUJE: { label: "Pripravuje sa", fg: "#9A6B0E", bg: "#FBF1DC" },

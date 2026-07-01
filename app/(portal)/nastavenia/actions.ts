@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
+import { inviteUser } from "@/lib/invite";
 
 // ---------- Správa adries (fakturačná + dodacie) — len správca firmy (CUSTOMER_ADMIN) ----------
 
@@ -158,5 +159,66 @@ export async function requestErasure(reason?: string): Promise<{ ok: boolean; er
       "Vybaviť do 30 dní (GDPR čl. 17). POZOR: vystavené faktúry a účtovné doklady podliehajú zákonnej archivácii (10 r.) — tie sa nemažú, ostatné osobné údaje anonymizovať/zmazať podľa rozsahu žiadosti.",
     ].join("\n"),
   });
+  return { ok: true };
+}
+
+// ---------- Správa členov firmy (pozvať, práva, aktivácia) — len správca firmy ----------
+
+/** Pozve nového člena firmy (CUSTOMER_USER) — e-mailový odkaz na nastavenie hesla. */
+export async function inviteMember(input: { email: string; name?: string }): Promise<{ ok: boolean; error?: string; inviteLink?: string | null }> {
+  const { user, err } = await requireCompanyAdmin();
+  if (err) return { ok: false, error: err };
+  const ev = z.string().trim().email("Neplatný e-mail").max(160).safeParse(String(input.email ?? "").trim());
+  if (!ev.success) return { ok: false, error: "Neplatný e-mail." };
+  const existing = await prisma.user.findUnique({ where: { email: ev.data }, select: { companyId: true } });
+  if (existing?.companyId && existing.companyId !== user.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
+  const company = await prisma.company.findUnique({ where: { id: user.companyId! }, select: { name: true } });
+  const res = await inviteUser(ev.data, String(input.name ?? "").trim() || null, "CUSTOMER_USER", user.companyId!, company?.name ?? "Moonid");
+  if (!res.ok) return { ok: false, error: res.error };
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_INVITE", entity: "User", meta: { email: ev.data } });
+  revalidatePath("/nastavenia");
+  return { ok: true, inviteLink: res.inviteLink ?? null };
+}
+
+const permSchema = z.object({ canOrderDirectly: z.boolean(), approverId: z.string().max(100).nullable() });
+
+/** Nastaví právo člena: objednáva priamo, alebo objednávka ide na schválenie určenému schvaľovateľovi. */
+export async function setMemberPermissions(userId: string, input: z.input<typeof permSchema>): Promise<{ ok: boolean; error?: string }> {
+  const { user, err } = await requireCompanyAdmin();
+  if (err) return { ok: false, error: err };
+  if (!ID.safeParse(userId).success) return { ok: false, error: "Neplatný vstup." };
+  const p = permSchema.safeParse(input);
+  if (!p.success) return { ok: false, error: "Neplatný vstup." };
+  const member = await prisma.user.findFirst({ where: { id: userId, companyId: user.companyId! }, select: { id: true, role: true } });
+  if (!member) return { ok: false, error: "Člen neexistuje." };
+  if (member.role === "CUSTOMER_ADMIN" && !p.data.canOrderDirectly) return { ok: false, error: "Správca firmy objednáva vždy priamo." };
+  const approverId = p.data.canOrderDirectly ? null : p.data.approverId;
+  if (!p.data.canOrderDirectly) {
+    if (!approverId) return { ok: false, error: "Vyberte schvaľovateľa." };
+    if (approverId === userId) return { ok: false, error: "Schvaľovateľ nemôže byť ten istý používateľ." };
+    const appr = await prisma.user.findFirst({ where: { id: approverId, companyId: user.companyId!, active: true }, select: { id: true } });
+    if (!appr) return { ok: false, error: "Neplatný schvaľovateľ." };
+  }
+  await prisma.user.update({ where: { id: userId }, data: { canOrderDirectly: p.data.canOrderDirectly, approverId } });
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_PERMISSIONS", entity: "User", entityId: userId, meta: { canOrderDirectly: p.data.canOrderDirectly, approverId } });
+  revalidatePath("/nastavenia");
+  return { ok: true };
+}
+
+/** Deaktivuje/reaktivuje člena. Nedovolí deaktivovať seba ani posledného aktívneho správcu. */
+export async function setMemberActive(userId: string, active: boolean): Promise<{ ok: boolean; error?: string }> {
+  const { user, err } = await requireCompanyAdmin();
+  if (err) return { ok: false, error: err };
+  if (!ID.safeParse(userId).success) return { ok: false, error: "Neplatný vstup." };
+  if (userId === user.id) return { ok: false, error: "Nemôžete deaktivovať vlastné konto." };
+  const member = await prisma.user.findFirst({ where: { id: userId, companyId: user.companyId! }, select: { id: true, role: true } });
+  if (!member) return { ok: false, error: "Člen neexistuje." };
+  if (!active && member.role === "CUSTOMER_ADMIN") {
+    const admins = await prisma.user.count({ where: { companyId: user.companyId!, role: "CUSTOMER_ADMIN", active: true, id: { not: userId } } });
+    if (admins === 0) return { ok: false, error: "Musí ostať aspoň jeden aktívny správca firmy." };
+  }
+  await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_ACTIVE", entity: "User", entityId: userId, meta: { active: Boolean(active) } });
+  revalidatePath("/nastavenia");
   return { ok: true };
 }

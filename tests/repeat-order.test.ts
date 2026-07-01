@@ -39,7 +39,7 @@ async function cleanup() {
 
 function asUserA() {
   vi.mocked(requireUser).mockResolvedValue({
-    id: userAId, email: "zzrep-a@test.invalid", role: "CUSTOMER_ADMIN", companyId, active: true,
+    id: userAId, email: "zzrep-a@test.invalid", role: "CUSTOMER_ADMIN", companyId, active: true, canOrderDirectly: true,
     company: { name: "Rep Test sro", priceTier: { code: TIER } },
   } as never);
 }

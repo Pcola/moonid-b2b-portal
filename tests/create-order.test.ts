@@ -44,7 +44,7 @@ beforeAll(async () => {
   await prisma.cartItem.create({ data: { cartId: cart.id, productId: product.id, qty: 2 } });
 
   vi.mocked(requireUser).mockResolvedValue({
-    id: user.id, email: user.email, role: "CUSTOMER_ADMIN", companyId: company.id, active: true,
+    id: user.id, email: user.email, role: "CUSTOMER_ADMIN", companyId: company.id, active: true, canOrderDirectly: true,
     company: { name: company.name, priceTier: { code: TIER } },
   } as never);
 });

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávka — Moonid portál", robots: { index: false, follow: false } };
 
 const STATUS: Record<string, string> = {
-  PRIJATA: "Prijatá", POTVRDENA: "Potvrdená", PRIPRAVUJE: "Pripravuje sa", NA_CESTE: "Na ceste", DORUCENA: "Doručená", STORNO: "Stornovaná",
+  CAKA_SCHVALENIE: "Čaká na schválenie", PRIJATA: "Prijatá", POTVRDENA: "Potvrdená", PRIPRAVUJE: "Pripravuje sa", NA_CESTE: "Na ceste", DORUCENA: "Doručená", STORNO: "Stornovaná",
 };
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 

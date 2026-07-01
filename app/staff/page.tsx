@@ -31,13 +31,13 @@ export default async function StaffDashboard() {
   const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
 
   const [monthAgg, newOrders, activeCustomers, lowStock, weekOrders, pending, topRows] = await Promise.all([
-    prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: monthStart }, status: { not: "STORNO" } } }),
+    prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: monthStart }, status: { notIn: ["STORNO", "CAKA_SCHVALENIE"] } } }),
     prisma.order.count({ where: { status: "PRIJATA" } }),
     prisma.company.count({ where: { active: true } }),
     prisma.product.count({ where: { isPublished: true, isStocked: true, stockCache: { lte: 10 } } }),
-    prisma.order.findMany({ where: { createdAt: { gte: weekAgo }, status: { not: "STORNO" } }, select: { total: true, createdAt: true } }),
+    prisma.order.findMany({ where: { createdAt: { gte: weekAgo }, status: { notIn: ["STORNO", "CAKA_SCHVALENIE"] } }, select: { total: true, createdAt: true } }),
     prisma.order.findMany({
-      where: { status: { notIn: ["DORUCENA", "STORNO"] } },
+      where: { status: { notIn: ["DORUCENA", "STORNO", "CAKA_SCHVALENIE"] } },
       orderBy: { createdAt: "desc" }, take: 6,
       select: { id: true, number: true, status: true, total: true, createdAt: true, company: { select: { name: true, priceTier: { select: { code: true } } } }, _count: { select: { items: true } } },
     }),

@@ -34,6 +34,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
   const [selDel, setSelDel] = useState<string>(delivery[0]?.code ?? "");
   const [selPay, setSelPay] = useState<string>(payment[0]?.code ?? "");
   const [done, setDone] = useState<string | null>(null);
+  const [donePending, setDonePending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const selDelObj = delivery.find((d) => d.code === selDel);
@@ -57,8 +58,8 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-mintbg text-brand">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </div>
-        <h2 className="text-[20px] font-semibold text-ink">Objednávka {done} prijatá</h2>
-        <p className="mt-2 text-[14.5px] text-muted">Ozveme sa s potvrdením. Stav nájdete v sekcii Objednávky.</p>
+        <h2 className="text-[20px] font-semibold text-ink">{donePending ? `Objednávka ${done} odoslaná na schválenie` : `Objednávka ${done} prijatá`}</h2>
+        <p className="mt-2 text-[14.5px] text-muted">{donePending ? "Objednávku musí schváliť poverený kolega. Po schválení ju spracujeme." : "Ozveme sa s potvrdením. Stav nájdete v sekcii Objednávky."}</p>
         <div className="mt-5 flex justify-center gap-3">
           <Link href="/objednavky" className="rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">Moje objednávky</Link>
           <Link href="/katalog" className="rounded-[10px] border border-line px-5 py-2.5 text-[14px] font-medium text-ink transition hover:border-brand/40">Pokračovať v nákupe</Link>
@@ -90,6 +91,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
             : { deliveryLocationId: deliveryLocationId || null });
       const res = await createOrder({ note, deliveryCode: selDel, paymentCode: selPay, ...addr });
       if (!res.ok) { setErr(res.error ?? "Objednávku sa nepodarilo odoslať."); return; }
+      setDonePending(!!res.pendingApproval);
       setDone(res.number ?? "");
     });
   }

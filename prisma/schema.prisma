@@ -79,6 +79,7 @@ enum PriceSource {
 }
 
 enum OrderStatus {
+  CAKA_SCHVALENIE // interné: objednávka reštrikčného usera čaká na schválenie, NEjde ešte staffu
   PRIJATA
   POTVRDENA
   PRIPRAVUJE
@@ -226,6 +227,11 @@ model User {
   companyId     String?
   mfaEnabled    Boolean            @default(false)
   active        Boolean            @default(true)
+  // objednávkové právo: true = objednáva priamo; false = objednávka ide na schválenie approverovi
+  canOrderDirectly Boolean         @default(true)
+  approver      User?              @relation("UserApprover", fields: [approverId], references: [id])
+  approverId    String?
+  approvees     User[]             @relation("UserApprover")
   lastLoginAt   DateTime?
   ordersCreated Order[]            @relation("OrderCreatedBy")
   cartsCreated  Cart[]             @relation("CartCreatedBy")
@@ -237,6 +243,7 @@ model User {
 
   @@index([companyId])
   @@index([role])
+  @@index([approverId])
 }
 
 // ---------- Žiadosti o prístup (onboarding) ---------- [P]

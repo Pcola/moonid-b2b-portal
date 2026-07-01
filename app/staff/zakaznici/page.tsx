@@ -19,7 +19,7 @@ export default async function StaffCustomers() {
       take: CAP,
       select: { id: true, name: true, city: true, active: true, priceTier: { select: { code: true, discountPct: true } }, users: { take: 1, orderBy: { createdAt: "asc" }, select: { email: true } }, _count: { select: { orders: true } } },
     }),
-    prisma.order.groupBy({ by: ["companyId"], where: { status: { not: "STORNO" }, createdAt: { gte: new Date(year, 0, 1) } }, _sum: { total: true } }),
+    prisma.order.groupBy({ by: ["companyId"], where: { status: { notIn: ["STORNO", "CAKA_SCHVALENIE"] }, createdAt: { gte: new Date(year, 0, 1) } }, _sum: { total: true } }),
     prisma.priceTier.count(),
   ]);
   const rev = new Map(revRows.map((r) => [r.companyId, Number(r._sum.total ?? 0)]));
