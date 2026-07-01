@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { GdprSection } from "./gdpr-section";
+import { AddressManager } from "./address-manager";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nastavenia — Moonid portál", robots: { index: false, follow: false } };
@@ -23,12 +24,16 @@ export default async function NastaveniaPage() {
   const company = user.companyId
     ? await prisma.company.findUnique({
         where: { id: user.companyId },
-        select: { name: true, ico: true, dic: true, icDph: true, city: true, address: true, splatDays: true, priceTier: { select: { code: true, name: true } } },
+        select: { name: true, ico: true, dic: true, icDph: true, city: true, address: true, zip: true, splatDays: true, priceTier: { select: { code: true, name: true } } },
       })
     : null;
   const users = user.companyId
     ? await prisma.user.findMany({ where: { companyId: user.companyId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, email: true, role: true, active: true } })
     : [];
+  const locations = user.companyId
+    ? await prisma.deliveryLocation.findMany({ where: { companyId: user.companyId }, orderBy: [{ isDefault: "desc" }, { label: "asc" }], select: { id: true, label: true, street: true, zip: true, city: true, isDefault: true } })
+    : [];
+  const isAdmin = user.role === "CUSTOMER_ADMIN";
 
   return (
     <div className="flex max-w-[820px] flex-col gap-6">
@@ -40,14 +45,16 @@ export default async function NastaveniaPage() {
           <Row label="IČO" value={company?.ico} />
           <Row label="DIČ" value={company?.dic} />
           <Row label="IČ DPH" value={company?.icDph} />
-          <Row label="Adresa" value={[company?.address, company?.city].filter(Boolean).join(", ")} />
           <Row label="Cenová úroveň" value={company?.priceTier ? `${company.priceTier.code} — ${company.priceTier.name}` : "—"} />
           <Row label="Splatnosť faktúr" value={company ? `${company.splatDays} dní` : "—"} />
         </div>
         <div className="border-t border-line px-6 py-3.5 text-[12.5px] text-muted-2">
-          Potrebujete zmeniť údaje? Napíšte nám na <a href="mailto:obchod@moonid.sk" className="font-medium text-brand hover:text-brand-2">obchod@moonid.sk</a>.
+          Názov, IČO alebo DIČ treba zmeniť? Napíšte nám na <a href="mailto:obchod@moonid.sk" className="font-medium text-brand hover:text-brand-2">obchod@moonid.sk</a>.
         </div>
       </section>
+
+      {/* adresy */}
+      {company && <AddressManager isAdmin={isAdmin} billing={{ street: company.address ?? null, zip: company.zip ?? null, city: company.city ?? null }} locations={locations} />}
 
       {/* používatelia */}
       <section className="rounded-2xl border border-line bg-white">

@@ -160,7 +160,8 @@ model Company {
   icDph         String?
   name          String
   city          String?
-  address       String?
+  address       String? // fakturačná adresa (ulica a číslo)
+  zip           String?
   priceTier     PriceTier          @relation(fields: [priceTierId], references: [id])
   priceTierId   String
   splatDays     Int                @default(14)

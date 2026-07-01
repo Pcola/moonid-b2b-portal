@@ -28,6 +28,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
   const [note, setNote] = useState("");
   const hasLocations = locations.length > 0;
   const [addrMode, setAddrMode] = useState<"saved" | "new">(hasLocations ? "saved" : "new");
+  const [otherAddr, setOtherAddr] = useState(false); // false = doručiť na fakturačnú adresu
   const [deliveryLocationId, setDeliveryLocationId] = useState<string>(locations[0]?.id ?? "");
   const [na, setNa] = useState({ label: "", street: "", city: "", zip: "" });
   const [selDel, setSelDel] = useState<string>(delivery[0]?.code ?? "");
@@ -76,16 +77,17 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
   function order() {
     setErr(null);
-    if (needsAddress && addrMode === "new" && (!na.street.trim() || !na.city.trim() || !na.zip.trim())) {
+    if (needsAddress && otherAddr && addrMode === "new" && (!na.street.trim() || !na.city.trim() || !na.zip.trim())) {
       setErr("Vyplňte dodaciu adresu — ulica, mesto a PSČ.");
       return;
     }
     start(async () => {
-      const addr = needsAddress
-        ? (addrMode === "new"
+      // odber → bez adresy; fakturačná (otherAddr=false) → deliveryLocationId null; inak saved/new
+      const addr = !needsAddress || !otherAddr
+        ? {}
+        : (addrMode === "new"
             ? { newAddress: { label: na.label.trim() || undefined, street: na.street.trim(), city: na.city.trim(), zip: na.zip.trim() } }
-            : { deliveryLocationId: deliveryLocationId || null })
-        : {};
+            : { deliveryLocationId: deliveryLocationId || null });
       const res = await createOrder({ note, deliveryCode: selDel, paymentCode: selPay, ...addr });
       if (!res.ok) { setErr(res.error ?? "Objednávku sa nepodarilo odoslať."); return; }
       setDone(res.number ?? "");
@@ -154,33 +156,50 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
             </div>
           </section>
 
-          {/* Dodanie — adresa alebo odberné miesto */}
+          {/* Dodanie — fakturačná / iná dodacia adresa alebo odberné miesto */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[13px] font-semibold uppercase tracking-wide text-muted-2">{needsAddress ? "Dodacia adresa" : "Odberné miesto"}</h3>
-              {needsAddress && hasLocations && (
-                <button type="button" onClick={() => setAddrMode(addrMode === "saved" ? "new" : "saved")} className="text-[12px] font-semibold text-brand transition hover:text-brand-2">
-                  {addrMode === "saved" ? "+ Nová adresa" : "Použiť uloženú"}
-                </button>
-              )}
-            </div>
+            <h3 className={sectionH}>{needsAddress ? "Dodanie" : "Odberné miesto"}</h3>
             {!needsAddress ? (
               <p className="text-[14px] leading-relaxed text-muted-3">{selDelObj?.description || "Tovar si vyzdvihnete u nás. Detaily potvrdíme."}</p>
-            ) : addrMode === "saved" && hasLocations ? (
-              <select value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className={`${inp} w-full`}>
-                {locations.map((l) => <option key={l.id} value={l.id}>{l.label}{[l.street, l.city].filter(Boolean).length ? ` — ${[l.street, l.city].filter(Boolean).join(", ")}` : ""}</option>)}
-              </select>
             ) : (
-              <div className="flex flex-col gap-2">
-                <input value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" className={inp} />
-                <div className="flex gap-2">
-                  <input value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" className={`${inp} flex-1`} />
-                  <input value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" className={`${inp} w-24`} />
-                </div>
-                <input value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Prevádzka centrum) — nepovinné" className={inp} />
+              <div className="flex flex-col gap-3">
+                <label className="flex items-start gap-2.5 text-[14px] text-ink">
+                  <input type="checkbox" checked={otherAddr} onChange={(e) => setOtherAddr(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+                  <span>Doručiť na inú adresu <span className="text-muted-2">(nie fakturačnú)</span></span>
+                </label>
+                {!otherAddr ? (
+                  <div className="rounded-lg border border-line bg-[#fafbfa] px-3 py-2.5 text-[13.5px] text-muted-3">
+                    Doručíme na fakturačnú adresu: <span className="font-medium text-ink">{billing ? ([billing.address, billing.city].filter(Boolean).join(", ") || "—") : "—"}</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {hasLocations && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[12.5px] font-semibold text-muted-3">{addrMode === "saved" ? "Uložená adresa" : "Nová adresa"}</span>
+                        <button type="button" onClick={() => setAddrMode(addrMode === "saved" ? "new" : "saved")} className="text-[12px] font-semibold text-brand transition hover:text-brand-2">
+                          {addrMode === "saved" ? "+ Zadať novú" : "Použiť uloženú"}
+                        </button>
+                      </div>
+                    )}
+                    {addrMode === "saved" && hasLocations ? (
+                      <select value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className={`${inp} w-full`}>
+                        {locations.map((l) => <option key={l.id} value={l.id}>{l.label}{[l.street, l.city].filter(Boolean).length ? ` — ${[l.street, l.city].filter(Boolean).join(", ")}` : ""}</option>)}
+                      </select>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <input value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" className={inp} />
+                        <div className="flex gap-2">
+                          <input value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" className={`${inp} flex-1`} />
+                          <input value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" className={`${inp} w-24`} />
+                        </div>
+                        <input value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Prevádzka centrum) — nepovinné" className={inp} />
+                      </div>
+                    )}
+                  </div>
+                )}
+                <p className="text-[11.5px] text-muted-2">Termín doručíme podľa nášho rozvozového plánu — potvrdíme ho.</p>
               </div>
             )}
-            {needsAddress && <p className="mt-2 text-[11.5px] text-muted-2">Termín doručíme podľa nášho rozvozového plánu — potvrdíme ho.</p>}
           </section>
 
           {/* Platba */}
