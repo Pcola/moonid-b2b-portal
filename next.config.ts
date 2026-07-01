@@ -64,7 +64,11 @@ const nextConfig: NextConfig = {
 // obíde ad-blockery). Source mapy sa nahrávajú len ak je nastavený SENTRY_AUTH_TOKEN;
 // bez DSN/tokenu je build aj runtime bez Sentry réžie.
 export default withSentryConfig(nextConfig, {
+  org: "moonid",
+  project: "javascript-nextjs",
   silent: true,
   disableLogger: true,
   tunnelRoute: "/monitoring",
+  // source mapy (čitateľné stack traces + prepojenie na GitHub) sa nahrajú len ak je
+  // pri builde nastavený SENTRY_AUTH_TOKEN. Bez tokenu/DSN žiadna réžia.
 });
