@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { startRepeat } from "../kosik/actions";
+import { startRepeat, startRepeatOrder } from "../kosik/actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávky — Moonid portál", robots: { index: false, follow: false } };
@@ -48,14 +48,21 @@ export default async function ObjednavkyPage() {
           {orders.map((o, i) => {
             const s = STATUS[o.status] ?? { label: o.status, cls: "bg-cream text-muted" };
             return (
-              <Link key={o.id} href={`/objednavky/${o.id}`} className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-4 transition hover:bg-cream ${i ? "border-t border-line" : ""}`}>
-                <span className="font-mono text-[14px] font-semibold text-ink">{o.number}</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
-                {o.hasBackorder && <span className="rounded-full bg-[#fdf6e7] px-2.5 py-0.5 text-[11px] font-medium text-[#8a5a00]">čiastočne na objednávku</span>}
-                <span className="text-[13px] text-muted-2">{new Date(o.createdAt).toLocaleDateString("sk")} · {o._count.items} pol.</span>
-                <span className="ml-auto text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(o.total))}</span>
-                <svg className="text-muted-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-              </Link>
+              <div key={o.id} className={`flex items-center ${i ? "border-t border-line" : ""}`}>
+                <Link href={`/objednavky/${o.id}`} className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-4 transition hover:bg-cream">
+                  <span className="font-mono text-[14px] font-semibold text-ink">{o.number}</span>
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
+                  {o.hasBackorder && <span className="rounded-full bg-[#fdf6e7] px-2.5 py-0.5 text-[11px] font-medium text-[#8a5a00]">čiastočne na objednávku</span>}
+                  <span className="text-[13px] text-muted-2">{new Date(o.createdAt).toLocaleDateString("sk")} · {o._count.items} pol.</span>
+                  <span className="ml-auto text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(o.total))}</span>
+                </Link>
+                <form action={startRepeatOrder.bind(null, o.id)} className="flex-none py-2 pl-1 pr-3.5">
+                  <button type="submit" title="Zopakovať túto objednávku" className="inline-flex items-center gap-1.5 rounded-[9px] border border-line bg-white px-3 py-2 text-[13px] font-semibold text-brand transition hover:border-mint-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
+                    <span className="hidden sm:inline">Opakovať</span>
+                  </button>
+                </form>
+              </div>
             );
           })}
           </div>

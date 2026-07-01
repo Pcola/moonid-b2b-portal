@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import type { PricedLine } from "@/lib/pricing";
 import { addToCart, addToRepeatDraft } from "../kosik/actions";
 import { FavoriteButton } from "@/components/portal/favorite-button";
+import { useToast } from "@/components/portal/toast";
 
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; fav: boolean; price: PricedLine };
 type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
@@ -22,9 +23,10 @@ function plural(n: number) { return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "pr
 function AddBtn({ productId, repeat }: { productId: string; repeat?: boolean }) {
   const [pending, start] = useTransition();
   const [added, setAdded] = useState(false);
+  const toast = useToast();
   return (
     <button
-      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); setTimeout(() => setAdded(false), 1500); } })}
+      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); toast(repeat ? "Pridané k doobjednaniu" : "Pridané do košíka"); setTimeout(() => setAdded(false), 1500); } })}
       disabled={pending}
       className="mt-2.5 w-full rounded-[9px] border border-brand/30 bg-mintbg/40 px-3 py-2 text-[13px] font-semibold text-brand transition hover:bg-mintbg disabled:opacity-60"
     >

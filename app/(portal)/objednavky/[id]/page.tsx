@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ReorderButton } from "@/components/portal/reorder-button";
+import { startRepeatOrder } from "@/app/(portal)/kosik/actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávka — Moonid portál", robots: { index: false, follow: false } };
@@ -35,7 +35,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <span className="rounded-full bg-cream px-2.5 py-1 text-[12.5px] font-semibold text-brand">{STATUS[order.status] ?? order.status}</span>
           <span className="text-[13px] text-muted-2">{new Date(order.createdAt).toLocaleString("sk")}</span>
         </div>
-        <ReorderButton orderId={id} />
+        <form action={startRepeatOrder.bind(null, id)}>
+          <button type="submit" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
+            Opakovať objednávku
+          </button>
+        </form>
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-white">

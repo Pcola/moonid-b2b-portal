@@ -10,8 +10,9 @@ export const metadata = { title: "Zopakovať objednávku — Moonid portál", ro
 
 const PRICE_SELECT = { name: true, nameDisplay: true, basePrice: true, vatRate: true, isSubsidized: true, isPublished: true } as const;
 
-export default async function OpakovatPage() {
+export default async function OpakovatPage({ searchParams }: { searchParams: Promise<{ source?: string }> }) {
   const user = await requireUser();
+  const { source } = await searchParams;
   if (!user.companyId) {
     return <div className="rounded-2xl border border-line bg-white p-10 text-center text-muted">Objednávky sú dostupné pre firemné kontá.</div>;
   }
@@ -28,7 +29,9 @@ export default async function OpakovatPage() {
 
   const [last, draftItems] = await Promise.all([
     prisma.order.findFirst({
-      where: { companyId: user.companyId },
+      // ?source=<id> → zopakovať KONKRÉTNU objednávku (z detailu/zoznamu); inak posledná.
+      // companyId filter = IDOR ochrana (cudzia objednávka sa nenájde → fallback nižšie).
+      where: source ? { id: source, companyId: user.companyId } : { companyId: user.companyId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true, number: true, note: true,

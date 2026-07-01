@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getCartCount } from "@/lib/cart";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { ToastProvider } from "@/components/portal/toast";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -15,7 +16,7 @@ export default async function PortalLayout({ children }: { children: React.React
       tierCode={user.company?.priceTier?.code ?? null}
       cartCount={cartCount}
     >
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </PortalShell>
   );
 }

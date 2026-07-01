@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { addToCart } from "../../kosik/actions";
+import { useToast } from "@/components/portal/toast";
 
 type V = { id: string; label: string; img: string; unit: string; net: number | null; gross: number | null; stocked: boolean };
 
@@ -16,6 +17,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
   const [qty, setQty] = useState(1);
   const [pending, start] = useTransition();
   const [added, setAdded] = useState(false);
+  const toast = useToast();
 
   const v = variants.find((x) => x.id === sel) ?? variants[0];
   const multi = variants.length > 1;
@@ -23,7 +25,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
 
   const add = () => start(async () => {
     const r = await addToCart(v.id, qty);
-    if (r.ok) { setAdded(true); setTimeout(() => setAdded(false), 1600); }
+    if (r.ok) { setAdded(true); toast("Pridané do košíka"); setTimeout(() => setAdded(false), 1600); }
   });
 
   return (
