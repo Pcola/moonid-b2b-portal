@@ -50,15 +50,15 @@ export function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-[22px]">
       {err && (
-        <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>
+        <div id="login-error" role="alert" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>
       )}
       <label className={labelCls}>
         Firemný e-mail
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="objednavky@firma.sk" className={inputCls} />
+        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="objednavky@firma.sk" className={inputCls} aria-invalid={!!err} aria-describedby={err ? "login-error" : undefined} />
       </label>
       <label className={labelCls}>
         Heslo
-        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" className={inputCls} />
+        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" className={inputCls} aria-invalid={!!err} aria-describedby={err ? "login-error" : undefined} />
       </label>
       <div className="flex items-center justify-between">
         <label className="flex cursor-pointer items-center gap-2.5 text-[14px] text-muted-3">

@@ -16,6 +16,17 @@ export async function loginGate(): Promise<{ ok: boolean }> {
   return { ok: rl.ok };
 }
 
+/** Brzda proti zneužitiu resetu hesla (spam do schránky / enumerácia e-mailov). Limituje
+ *  per-IP (distribuovane) aj per-email (cielene). Volá sa PRED resetPasswordForEmail; pri
+ *  prekročení sa reset neodošle, ale UI ukáže rovnakú hlášku (žiadny info-leak). */
+export async function resetGate(email: string): Promise<{ ok: boolean }> {
+  const ip = clientIp(await headers());
+  const em = String(email ?? "").trim().toLowerCase().slice(0, 160);
+  const byIp = await rateLimit(`reset-ip:${ip}`, { limit: 10, windowSec: 3600 });     // 10/h/IP
+  const byEmail = em ? await rateLimit(`reset-email:${em}`, { limit: 3, windowSec: 3600 }) : { ok: true }; // 3/h/email
+  return { ok: byIp.ok && byEmail.ok };
+}
+
 /** Po úspešnom (klientskom) prihlásení — zapíše lastLoginAt + audit LOGIN_SUCCESS. */
 export async function recordLoginSuccess(): Promise<void> {
   const user = await getCurrentUser();

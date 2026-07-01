@@ -49,7 +49,7 @@ export function RegistraciaForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <input type="text" name="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
-      {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
+      {err && <div role="alert" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={labelCls}>Názov firmy<input name="companyName" required className={inputCls} /></label>
         <label className={labelCls}>IČO<input name="ico" required inputMode="numeric" className={inputCls} /></label>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import type { PricedLine } from "@/lib/pricing";
@@ -41,6 +41,15 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   const [q, setQ] = useState(active.q);
   const [brandQ, setBrandQ] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const drawerCloseRef = useRef<HTMLButtonElement>(null);
+  // WCAG 2.1.1 (klávesnica) + 2.4.3 (focus): Escape zavrie drawer, focus ide na tlačidlo zavrieť
+  useEffect(() => {
+    if (!filtersOpen) return;
+    drawerCloseRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFiltersOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [filtersOpen]);
   const brandsShown = facets.brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
 
   const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -223,10 +232,10 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       {filtersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-brand-deep/40" onClick={() => setFiltersOpen(false)} />
-          <div className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
+          <div role="dialog" aria-modal="true" aria-label="Filtre" className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <span className="text-[16px] font-semibold text-ink">Filtre</span>
-              <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
+              <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>
