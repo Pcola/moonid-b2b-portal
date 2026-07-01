@@ -67,8 +67,10 @@ export default withSentryConfig(nextConfig, {
   org: "moonid",
   project: "javascript-nextjs",
   silent: true,
-  disableLogger: true,
   tunnelRoute: "/monitoring",
+  // tree-shake debug logy Sentry SDK z produkčného bundla (menší bundle).
+  // Nahradilo zastarané `disableLogger: true` (deprecation vo v9+).
+  webpack: { treeshake: { removeDebugLogging: true } },
   // source mapy (čitateľné stack traces + prepojenie na GitHub) sa nahrajú len ak je
   // pri builde nastavený SENTRY_AUTH_TOKEN. Bez tokenu/DSN žiadna réžia.
 });
