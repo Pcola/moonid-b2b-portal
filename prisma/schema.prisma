@@ -530,6 +530,10 @@ model Order {
   pohodaFaNumber        String?
   pohodaPushedAt        DateTime?
   pohodaCancelRequested Boolean            @default(false) // storno vyžiadané kým OBJ in-flight → kompenzačné CANCEL
+  // idempotencia odoslania (double-submit/retry/súbeh): 2. submit s rovnakým kľúčom koliduje na
+  // unique indexe → vráti pôvodnú objednávku (enterprise anti-duplicita, hlavne pri „Opakovať").
+  // Nullable: košíková cesta (createOrder) je chránená delete-first guardom; viac NULL je v PG OK.
+  idempotencyKey        String?            @unique
   items                 OrderItem[]
   events                OrderStatusEvent[]
   invoice               Invoice?

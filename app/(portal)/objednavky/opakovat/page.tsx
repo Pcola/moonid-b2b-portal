@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -71,7 +72,7 @@ export default async function OpakovatPage() {
       <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
       <h1 className="mt-3 text-[22px] font-normal tracking-[-0.01em] text-ink">Zopakovať objednávku <span className="font-mono text-[18px] text-muted-2">{last.number}</span></h1>
       <p className="mt-1.5 text-[14.5px] text-muted">Skontrolujte položky a adresu — nič nemusíte vypĺňať. Môžete aj doobjednať ďalší tovar. Ceny a dostupnosť sú prepočítané k dnešku.</p>
-      <RepeatOrderConfirm sourceOrderId={last.id} items={items} extraLines={extraLines} deliveryText={deliveryText} note={last.note} />
+      <RepeatOrderConfirm sourceOrderId={last.id} idempotencyKey={randomUUID()} items={items} extraLines={extraLines} deliveryText={deliveryText} note={last.note} />
     </div>
   );
 }

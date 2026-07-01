@@ -14,8 +14,8 @@ function sumNet(lines: { net: number | null; qty: number; usable: boolean }[]) {
   return lines.reduce((s, l) => (l.usable ? s + r2((l.net ?? 0) * l.qty) : s), 0);
 }
 
-export function RepeatOrderConfirm({ sourceOrderId, items, extraLines, deliveryText, note }: {
-  sourceOrderId: string; items: Line[]; extraLines: ExtraLine[]; deliveryText: string | null; note: string | null;
+export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extraLines, deliveryText, note }: {
+  sourceOrderId: string; idempotencyKey: string; items: Line[]; extraLines: ExtraLine[]; deliveryText: string | null; note: string | null;
 }) {
   const router = useRouter();
   const [skuInput, setSkuInput] = useState("");
@@ -51,7 +51,7 @@ export function RepeatOrderConfirm({ sourceOrderId, items, extraLines, deliveryT
   function confirm() {
     setErr(null);
     startPlace(async () => {
-      const res = await placeRepeatOrder(sourceOrderId);
+      const res = await placeRepeatOrder(sourceOrderId, idempotencyKey);
       if (!res.ok) { setErr(res.error ?? "Nepodarilo sa objednať."); return; }
       router.push(`/objednavky/${res.id}`);
       router.refresh();

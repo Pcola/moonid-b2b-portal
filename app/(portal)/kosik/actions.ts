@@ -8,7 +8,10 @@ import { getOrCreateCart } from "@/lib/cart";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { emailNewOrderToStaff, emailOrderConfirmation } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
+import { reportError } from "@/lib/observability";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
+import { randomUUID } from "node:crypto";
 
 function r2(n: number) { return Math.round(n * 100) / 100; }
 
@@ -420,10 +423,15 @@ export async function removeRepeatDraftItem(itemId: string): Promise<{ ok: boole
 /** Zopakuje objednávku jedným potvrdením: zoberie položky z predošlej objednávky + doobjednané
  *  položky z draftu (SKU aj výber z katalógu), prepočíta aktuálne ceny/sklad a vytvorí novú
  *  objednávku (a vyčistí draft). Dodaciu adresu prevezme z predošlej. Nedostupné vynechá. */
-export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
+export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
   if (!ID.safeParse(sourceOrderId).success) return { ok: false, error: "Neplatný vstup." };
+  // Idempotencia odoslania: kľúč z potvrdzovacej obrazovky (stabilný pre daný render), takže
+  // dvojklik / dva taby / retry posielajú ten istý kľúč → 2. insert koliduje na unique indexe a
+  // vrátime pôvodnú objednávku. Chýbajúci/neplatný kľúč (anomálny priamy call) → náhradný UUID:
+  // flow funguje, len bez cross-request dedupu pre tento prípad.
+  const idemKey = z.string().uuid().safeParse(idempotencyKey).success ? idempotencyKey! : randomUUID();
 
   const src = await prisma.order.findFirst({
     where: { id: sourceOrderId, companyId: user.companyId }, // IDOR: musí patriť firme
@@ -489,21 +497,37 @@ export async function placeRepeatOrder(sourceOrderId: string): Promise<{ ok: boo
     deliveryLocationId = loc?.id ?? null;
   }
 
-  const order = await prisma.$transaction(async (tx) => {
-    await tx.repeatDraftItem.deleteMany({ where: { userId: user.id } }); // bezpodmienečne (idempotentné, ošetrí súbežný add) → doobjednané sa premietli, draft vyčistený
-    const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
-    const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
-    return tx.order.create({
-      data: {
-        number, companyId: user.companyId!, createdById: user.id,
-        status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
-        hasBackorder, subtotal, vat, total, note: src.note?.trim().slice(0, 2000) || null, deliveryLocationId,
-        items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
-        events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
-      },
-      select: { id: true, number: true },
+  let order: { id: string; number: string };
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      await tx.repeatDraftItem.deleteMany({ where: { userId: user.id } }); // doobjednané sa premietli, draft vyčistený
+      const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
+      const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
+      return tx.order.create({
+        data: {
+          number, companyId: user.companyId!, createdById: user.id, idempotencyKey: idemKey,
+          status: "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
+          hasBackorder, subtotal, vat, total, note: src.note?.trim().slice(0, 2000) || null, deliveryLocationId,
+          items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
+          events: { create: { status: "PRIJATA", source: "PORTAL", changedById: user.id } },
+        },
+        select: { id: true, number: true },
+      });
     });
-  });
+  } catch (e) {
+    // Súbežný/duplicitný submit (dvojklik, dva taby, retry) s rovnakým idempotencyKey → unique index
+    // odmietne 2. insert (transakcia sa vráti vrátane counter incrementu). Vrátime PÔVODNÚ objednávku
+    // idempotentne — bez druhého e-mailu/auditu, takže nikdy nevzniknú dve identické objednávky.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const existing = await prisma.order.findUnique({ where: { idempotencyKey: idemKey }, select: { id: true, number: true } });
+      if (existing) {
+        revalidatePath("/objednavky");
+        return { ok: true, number: existing.number, id: existing.id };
+      }
+    }
+    reportError("order.repeat", e, { sourceOrderId, companyId: user.companyId });
+    return { ok: false, error: "Objednávku sa nepodarilo vytvoriť. Skúste to znova." };
+  }
 
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total, repeatOf: src.id } });
   await Promise.allSettled([

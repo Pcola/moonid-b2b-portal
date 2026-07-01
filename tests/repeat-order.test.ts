@@ -4,6 +4,7 @@
 // Auth/audit/email/next-cache/next-navigation mockujeme; pricing + DB bežia reálne.
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "node:crypto";
 
 vi.mock("@/lib/auth", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ writeAudit: vi.fn().mockResolvedValue(undefined) }));
@@ -125,5 +126,27 @@ describe("placeRepeatOrder — opakovanie s doobjednaním", () => {
     expect(await prisma.repeatDraftItem.count({ where: { userId: userAId } })).toBe(0); // A vyčistený
     expect(await prisma.repeatDraftItem.count({ where: { userId: userBId } })).toBe(1); // B nedotknutý
     await prisma.repeatDraftItem.deleteMany({ where: { userId: userBId } });
+  });
+
+  it("IDEMPOTENCIA: dvojklik/súbeh — dve súčasné placeRepeatOrder s rovnakým kľúčom → LEN JEDNA objednávka", async () => {
+    await prisma.repeatDraftItem.deleteMany({ where: { userId: userAId } }); // čistý štart
+    const key = randomUUID();
+    const [r1, r2] = await Promise.all([
+      placeRepeatOrder(sourceOrderId, key),
+      placeRepeatOrder(sourceOrderId, key),
+    ]);
+    expect(r1.ok).toBe(true);
+    expect(r2.ok).toBe(true);
+    expect(r1.id).toBe(r2.id); // obe volania vrátia tú istú objednávku (idempotentne)
+    expect(r1.number).toBe(r2.number);
+    expect(await prisma.order.count({ where: { idempotencyKey: key } })).toBe(1); // v DB len jedna
+  });
+
+  it("IDEMPOTENCIA: rôzne kľúče (nový render obrazovky) → legitímne dve samostatné objednávky", async () => {
+    await prisma.repeatDraftItem.deleteMany({ where: { userId: userAId } });
+    const r1 = await placeRepeatOrder(sourceOrderId, randomUUID());
+    const r2 = await placeRepeatOrder(sourceOrderId, randomUUID());
+    expect(r1.ok && r2.ok).toBe(true);
+    expect(r1.id).not.toBe(r2.id); // zopakovať tú istú objednávku 2× je povolené (iný kľúč)
   });
 });
