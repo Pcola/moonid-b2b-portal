@@ -471,7 +471,7 @@ model Cart {
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
 
-  @@index([companyId])
+  @@unique([companyId]) // 1 košík na firmu — getOrCreateCart je atomický upsert; bráni súbežnej duplicite (tichá strata položiek)
   @@index([createdById])
 }
 

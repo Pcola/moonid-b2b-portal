@@ -1,13 +1,28 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice, type PricedLine } from "@/lib/pricing";
+import { Prisma } from "@prisma/client";
 
 function r2(n: number) { return Math.round(n * 100) / 100; }
 
+// Atomický get-or-create: 1 košík na firmu (Cart @@unique([companyId])). Nahrádza pôvodný
+// findFirst+create, ktorý pri súbehu (dva taby/dvojklik) vytvoril 2 košíky → tichá strata položiek.
+// Pri súbežnom create prehrá druhý na unique indexe (P2002) → jednoducho dočítame existujúci košík.
 export async function getOrCreateCart(companyId: string, userId: string) {
-  const existing = await prisma.cart.findFirst({ where: { companyId }, select: { id: true } });
-  if (existing) return existing;
-  return prisma.cart.create({ data: { companyId, createdById: userId }, select: { id: true } });
+  try {
+    return await prisma.cart.upsert({
+      where: { companyId },
+      update: {},
+      create: { companyId, createdById: userId },
+      select: { id: true },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const existing = await prisma.cart.findUnique({ where: { companyId }, select: { id: true } });
+      if (existing) return existing;
+    }
+    throw e;
+  }
 }
 
 export async function getCartCount(companyId: string): Promise<number> {
