@@ -7,14 +7,11 @@ Legenda: **[TY]** = dashboard/konzola (nemám tam prístup) · **[JA]** = viem s
 
 ---
 
-## 1. Sprístupniť portál otcovi  **[TY]**
-Produkcia je teraz za **Vercel Deployment Protection** (všetko presmeruje na Vercel login).
-Vyber jedno:
-- **A (najjednoduchšie na test):** Vercel → Project → *Settings → Deployment Protection* → dočasne
-  **vypni** ochranu produkcie. Portál bude na `moonid-b2b-portal-...vercel.app` verejne dostupný.
-- **B:** nechaj ochranu a pridaj otca do Vercel tímu (aby sa vedel prihlásiť cez Vercel).
-
-> Po jeho schválení a pred ostrým pilotom sa ochrana/rozsah nastaví poriadne (viď DEPLOYMENT_READINESS).
+## 1. Sprístupniť portál otcovi  **[HOTOVÉ]**
+Kanonická produkčná doména **`https://moonid-b2b-portal.vercel.app`** je **verejne dostupná**
+(overené: `/login` 200, `/api/health` 200, prihlásenie funguje). Otec ju otvorí a testuje priamo.
+Vercel Deployment Protection chráni len **branch/deployment aliasy** (`...-git-main-...vercel.app`) —
+to je v poriadku, tie sú interné. Otcovi pošli **kanonickú** doménu.
 
 ## 2. Env premenné vo Vercel (Production)  **[TY]**
 Skoro isto už máš nastavené DB/Supabase/Resend (appka beží). **Over** a doplň:
@@ -24,12 +21,11 @@ Skoro isto už máš nastavené DB/Supabase/Resend (appka beží). **Over** a do
   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, `STAFF_NOTIFY_EMAIL`,
   `NEXT_PUBLIC_SITE_URL`) — len over, že sú vyplnené.
 
-## 3. Supabase Auth URL  **[TY]**
-Supabase → *Authentication → URL Configuration*:
-- **Site URL** = URL, na ktorej otec testuje (napr. ten `...vercel.app`).
-- **Redirect URLs** obsahujú `<URL>/auth/callback`.
-> Bez toho zlyhajú invite/reset odkazy. **Pozn.:** aj tak sa dá testovať — pri založení účtu
-> staff **vidí pozvánkový odkaz priamo v portáli** (netreba čakať na e-mail).
+## 3. Supabase Auth URL  **[HOTOVÉ / len over]**
+Prihlásenie na produkčnej doméne funguje → Auth je nakonfigurovaný. Len **over**, že
+Supabase → *Authentication → URL Configuration* má **Site URL** = `https://moonid-b2b-portal.vercel.app`
+a **Redirect URLs** obsahujú `.../auth/callback` (aby invite/reset odkazy mierili na správnu doménu).
+**Pozn.:** aj tak — pri založení účtu staff **vidí pozvánkový odkaz priamo v portáli** (netreba e-mail).
 
 ## 4. Reálne ceny  **[TY, 5 min]**
 `/staff/cenniky` → nastav **reálne %** pre A/B1/B2/B3 (teraz sú odhad). Ak má niekto vlastnú
