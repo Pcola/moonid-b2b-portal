@@ -117,26 +117,36 @@ export async function exportMyData(): Promise<{ ok: boolean; data?: string; erro
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
   const cid = user.companyId;
 
-  const [company, users, orders, invoices, locations] = await Promise.all([
-    prisma.company.findUnique({ where: { id: cid }, select: { name: true, ico: true, dic: true, icDph: true, address: true, city: true, splatDays: true, createdAt: true, priceTier: { select: { code: true, name: true } } } }),
-    prisma.user.findMany({ where: { companyId: cid }, select: { email: true, name: true, role: true, lastLoginAt: true, createdAt: true } }),
-    prisma.order.findMany({ where: { companyId: cid }, orderBy: { createdAt: "desc" }, select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, items: { select: { nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } } }),
-    prisma.invoice.findMany({ where: { companyId: cid }, orderBy: { issuedAt: "desc" }, select: { pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true } }),
-    prisma.deliveryLocation.findMany({ where: { companyId: cid }, select: { label: true, street: true, city: true, zip: true } }),
-  ]);
+  const company = await prisma.company.findUnique({ where: { id: cid }, select: { name: true, ico: true, dic: true, icDph: true, address: true, city: true, splatDays: true, createdAt: true, priceTier: { select: { code: true, name: true } } } });
 
+  if (user.role === "CUSTOMER_ADMIN") {
+    // Správca — export firemných údajov (všetci členovia, všetky objednávky/faktúry).
+    const [users, orders, invoices, locations] = await Promise.all([
+      prisma.user.findMany({ where: { companyId: cid }, select: { email: true, name: true, role: true, lastLoginAt: true, createdAt: true } }),
+      prisma.order.findMany({ where: { companyId: cid }, orderBy: { createdAt: "desc" }, select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, items: { select: { nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } } }),
+      prisma.invoice.findMany({ where: { companyId: cid }, orderBy: { issuedAt: "desc" }, select: { pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true } }),
+      prisma.deliveryLocation.findMany({ where: { companyId: cid }, select: { label: true, street: true, city: true, zip: true } }),
+    ]);
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      poznamka: "Export firemných údajov vedených v B2B portáli Moonid (GDPR čl. 15/20).",
+      konto: { email: user.email, meno: user.name, rola: user.role },
+      firma: company, pouzivatelia: users, objednavky: orders, faktury: invoices, dodacieAdresy: locations,
+    };
+    await writeAudit({ userId: user.id, companyId: cid, action: "GDPR_ACCESS", entity: "Company", entityId: cid });
+    return { ok: true, data: JSON.stringify(payload, null, 2) };
+  }
+
+  // Bežný člen — LEN vlastné osobné údaje (konto + objednávky, ktoré vytvoril). Nie kolegovia/faktúry.
+  const myOrders = await prisma.order.findMany({ where: { companyId: cid, createdById: user.id }, orderBy: { createdAt: "desc" }, select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, items: { select: { nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } } });
   const payload = {
     exportedAt: new Date().toISOString(),
-    poznamka: "Export osobných a firemných údajov vedených v B2B portáli Moonid (GDPR čl. 15/20).",
+    poznamka: "Export vašich osobných údajov v B2B portáli Moonid (GDPR čl. 15/20).",
     konto: { email: user.email, meno: user.name, rola: user.role },
-    firma: company,
-    pouzivatelia: users,
-    objednavky: orders,
-    faktury: invoices,
-    dodacieAdresy: locations,
+    firma: { nazov: company?.name ?? null, ico: company?.ico ?? null },
+    mojeObjednavky: myOrders,
   };
-
-  await writeAudit({ userId: user.id, companyId: cid, action: "GDPR_ACCESS", entity: "Company", entityId: cid });
+  await writeAudit({ userId: user.id, companyId: cid, action: "GDPR_ACCESS", entity: "User", entityId: user.id });
   return { ok: true, data: JSON.stringify(payload, null, 2) };
 }
 
