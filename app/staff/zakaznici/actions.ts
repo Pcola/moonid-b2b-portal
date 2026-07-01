@@ -72,3 +72,66 @@ export async function addUserToCompany(companyId: string, email: string, name: s
   revalidatePath(`/staff/zakaznici/${companyId}`);
   return { ok: true, inviteLink: res.inviteLink ?? null };
 }
+
+const CUST_ROLE = z.enum(["CUSTOMER_ADMIN", "CUSTOMER_USER"]);
+
+/** Deaktivuje/reaktivuje používateľa firmy (staff). Deaktivovaný sa neprihlási (requireUser
+ *  kontroluje `active`). Nedovolí deaktivovať posledného aktívneho správcu firmy. */
+export async function setCompanyUserActive(userId: string, active: boolean): Promise<{ ok: boolean; error?: string }> {
+  const staff = await requireStaff();
+  if (!ID.safeParse(userId).success) return { ok: false, error: "Neplatný vstup." };
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, companyId: true } });
+  if (!u || !u.companyId) return { ok: false, error: "Používateľ neexistuje." };
+  if (u.role === "STAFF" || u.role === "ADMIN") return { ok: false, error: "Interné kontá sa takto nespravujú." };
+  if (!active && u.role === "CUSTOMER_ADMIN") {
+    const admins = await prisma.user.count({ where: { companyId: u.companyId, role: "CUSTOMER_ADMIN", active: true, id: { not: userId } } });
+    if (admins === 0) return { ok: false, error: "Firme musí ostať aspoň jeden aktívny správca." };
+  }
+  await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  if (!active) {
+    // uvoľni ho ako schvaľovateľa — jeho approvees spadnú na správcu firmy (a treba im prideliť nového)
+    await prisma.user.updateMany({ where: { companyId: u.companyId, approverId: userId }, data: { approverId: null } });
+  }
+  await writeAudit({ userId: staff.id, companyId: u.companyId, action: "USER_ACTIVE", entity: "User", entityId: userId, meta: { active: Boolean(active) } });
+  revalidatePath(`/staff/zakaznici/${u.companyId}`);
+  return { ok: true };
+}
+
+/** Zmení rolu používateľa firmy medzi správcom a bežným používateľom (staff).
+ *  Nedovolí odobrať poslednému aktívnemu správcovi. Správca objednáva vždy priamo. */
+export async function setCompanyUserRole(userId: string, role: string): Promise<{ ok: boolean; error?: string }> {
+  const staff = await requireStaff();
+  if (!ID.safeParse(userId).success) return { ok: false, error: "Neplatný vstup." };
+  const rp = CUST_ROLE.safeParse(role);
+  if (!rp.success) return { ok: false, error: "Neplatná rola." };
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, active: true, companyId: true } });
+  if (!u || !u.companyId) return { ok: false, error: "Používateľ neexistuje." };
+  if (u.role === "STAFF" || u.role === "ADMIN") return { ok: false, error: "Interné kontá sa takto nemenia." };
+  if (u.role === rp.data) return { ok: true };
+  if (u.role === "CUSTOMER_ADMIN" && rp.data === "CUSTOMER_USER") {
+    const admins = await prisma.user.count({ where: { companyId: u.companyId, role: "CUSTOMER_ADMIN", active: true, id: { not: userId } } });
+    if (admins === 0) return { ok: false, error: "Firme musí ostať aspoň jeden správca." };
+  }
+  // povýšenie na správcu → objednáva priamo, bez schvaľovateľa
+  const data = rp.data === "CUSTOMER_ADMIN" ? { role: rp.data, canOrderDirectly: true, approverId: null } : { role: rp.data };
+  await prisma.user.update({ where: { id: userId }, data });
+  await writeAudit({ userId: staff.id, companyId: u.companyId, action: "USER_ROLE", entity: "User", entityId: userId, meta: { role: rp.data } });
+  revalidatePath(`/staff/zakaznici/${u.companyId}`);
+  return { ok: true };
+}
+
+/** Znovu vygeneruje prístupový odkaz (pozvánka/reset hesla) pre používateľa firmy (staff).
+ *  Len pre aktívne kontá — deaktivované sa najprv aktivujú. */
+export async function resendCompanyUserInvite(userId: string): Promise<{ ok: boolean; error?: string; inviteLink?: string | null }> {
+  const staff = await requireStaff();
+  if (!ID.safeParse(userId).success) return { ok: false, error: "Neplatný vstup." };
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, role: true, active: true, companyId: true, company: { select: { name: true } } } });
+  if (!u || !u.companyId) return { ok: false, error: "Používateľ neexistuje." };
+  if (u.role === "STAFF" || u.role === "ADMIN") return { ok: false, error: "Interné kontá sa takto nepozývajú." };
+  if (!u.active) return { ok: false, error: "Používateľ je deaktivovaný — najprv ho aktivujte." };
+  const res = await inviteUser(u.email, u.name, u.role === "CUSTOMER_ADMIN" ? "CUSTOMER_ADMIN" : "CUSTOMER_USER", u.companyId, u.company?.name ?? "Moonid");
+  if (!res.ok) return { ok: false, error: res.error };
+  await writeAudit({ userId: staff.id, companyId: u.companyId, action: "USER_INVITE_RESEND", entity: "User", entityId: userId, meta: { email: u.email } });
+  revalidatePath(`/staff/zakaznici/${u.companyId}`);
+  return { ok: true, inviteLink: res.inviteLink ?? null };
+}

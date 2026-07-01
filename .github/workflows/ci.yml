@@ -39,6 +39,13 @@ jobs:
       - run: npx tsc --noEmit
       # ESLint — errors blokujú build (warnings nie)
       - run: npm run lint
+      # produkčný build — zachytí RSC/route/statické chyby, ktoré tsc --noEmit nevidí.
+      # Placeholder NEXT_PUBLIC_* stačia (build nič nevolá na živý Supabase); DB je efemérna vyššie.
+      - run: npx next build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder-anon-key
+          NEXT_TELEMETRY_DISABLED: "1"
       # tenant-izolačné testy (firma A → dáta firmy B = 404)
       - run: npm test
       # bezpečnosť závislostí — build padne pri high/critical zraniteľnosti

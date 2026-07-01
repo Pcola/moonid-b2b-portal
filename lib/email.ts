@@ -1,4 +1,5 @@
 import "server-only";
+import { headers } from "next/headers";
 import { reportError } from "@/lib/observability";
 
 // Centrálne odosielanie e-mailov cez Resend. Best-effort: NIKDY nehádže výnimku
@@ -24,6 +25,17 @@ function maskEmail(e: string): string {
   const [u, d] = String(e).split("@");
   if (!d) return "***";
   return `${u.slice(0, 1)}**@${d}`;
+}
+
+/** Absolútny pôvod appky pre odkazy v e-mailoch (NEXT_PUBLIC_SITE_URL, inak origin z requestu). */
+async function appOrigin(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    const h = await headers();
+    return h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
+  } catch {
+    return "";
+  }
 }
 
 type SendArgs = { to: string | string[]; subject: string; text: string; html?: string; replyTo?: string };
@@ -131,4 +143,49 @@ export async function emailOrderStatus(o: { to: string; number: string; status: 
     `<p style="font-size:14px">Stav vašej objednávky <strong>${esc(o.number)}</strong> sa zmenil na <strong>${esc(label)}</strong>.</p>
      ${o.note ? `<p style="font-size:14px;color:#374151">${esc(o.note)}</p>` : ""}`);
   return sendEmail({ to: o.to, subject: `Objednávka ${o.number}: ${label} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
+}
+
+/** Notifikácia SCHVAĽOVATEĽOVI (alebo správcom firmy): objednávka kolegu čaká na schválenie. */
+export async function emailApprovalRequest(o: {
+  to: string | string[]; number: string; requesterName: string; companyName?: string | null; total: number; itemCount: number;
+}) {
+  const origin = await appOrigin();
+  const url = origin ? `${origin}/objednavky` : "";
+  const text = [
+    `Objednávka ${o.number} čaká na vaše schválenie.`,
+    `Zadal: ${o.requesterName}`,
+    `Firma: ${o.companyName ?? "—"}`,
+    `Položiek: ${o.itemCount}`,
+    `Spolu s DPH: ${eur(o.total)}`,
+    "",
+    url ? `Schváliť alebo zamietnuť: ${url}` : "Objednávku schválite v portáli v sekcii Objednávky.",
+  ].join("\n");
+  const cta = url
+    ? `<p style="margin-top:16px"><a href="${esc(url)}" style="display:inline-block;background:#0ea5a4;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px">Otvoriť na schválenie</a></p>`
+    : "";
+  const html = wrapHtml(`Objednávka ${esc(o.number)} čaká na schválenie`, `
+    <p style="font-size:14px"><strong>${esc(o.requesterName)}</strong> vytvoril objednávku, ktorá potrebuje vaše schválenie.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px">
+      <tr><td style="padding:3px 0;color:#6b7280">Objednávka</td><td style="padding:3px 0;text-align:right">${esc(o.number)}</td></tr>
+      <tr><td style="padding:3px 0;color:#6b7280">Položiek</td><td style="padding:3px 0;text-align:right">${o.itemCount}</td></tr>
+      <tr><td style="padding:3px 0;color:#6b7280">Spolu s DPH</td><td style="padding:3px 0;text-align:right;font-weight:700">${eur(o.total)}</td></tr>
+    </table>${cta}`);
+  return sendEmail({ to: o.to, subject: `Objednávka ${o.number} čaká na schválenie — Moonid`, text, html });
+}
+
+/** Notifikácia ZADÁVATEĽOVI: jeho objednávka bola schválená alebo zamietnutá. */
+export async function emailOrderDecision(o: { to: string; number: string; approved: boolean; note?: string | null }) {
+  const origin = await appOrigin();
+  const url = origin ? `${origin}/objednavky` : "";
+  const word = o.approved ? "schválená" : "zamietnutá";
+  const text = [
+    `Vaša objednávka ${o.number} bola ${word}.`,
+    o.approved ? "Odoslali sme ju na spracovanie." : "",
+    o.note ? `Poznámka: ${o.note}` : "",
+    url ? `\nDetail: ${url}` : "",
+  ].filter(Boolean).join("\n");
+  const html = wrapHtml(`Objednávka ${esc(o.number)} bola ${word}`,
+    `<p style="font-size:14px">Vaša objednávka <strong>${esc(o.number)}</strong> bola <strong>${esc(word)}</strong>.${o.approved ? " Odoslali sme ju na spracovanie." : ""}</p>
+     ${o.note ? `<p style="font-size:14px;color:#374151">Poznámka: ${esc(o.note)}</p>` : ""}`);
+  return sendEmail({ to: o.to, subject: `Objednávka ${o.number} ${word} — Moonid`, text, html });
 }
