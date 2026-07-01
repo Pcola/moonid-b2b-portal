@@ -13,19 +13,24 @@ Kanonická produkčná doména **`https://moonid-b2b-portal.vercel.app`** je **v
 Vercel Deployment Protection chráni len **branch/deployment aliasy** (`...-git-main-...vercel.app`) —
 to je v poriadku, tie sú interné. Otcovi pošli **kanonickú** doménu.
 
-## 2. Env premenné vo Vercel (Production)  **[TY]**
-Skoro isto už máš nastavené DB/Supabase/Resend (appka beží). **Over** a doplň:
-- `NEXT_PUBLIC_SENTRY_DSN` — pravdepodobne chýba (pridané do `.env.example` nedávno). Nastav
-  z Sentry → Project → Client Keys (DSN). *(Na test nie je blokujúce, ale nech chyby vidíš.)*
+## 2. Env premenné vo Vercel (Production)  **[HOTOVÉ]**
+- `NEXT_PUBLIC_SENTRY_DSN` — **nastavené**, monitoring overený naživo (chyby chodia do Sentry).
+- `SENTRY_AUTH_TOKEN` — **nastavené**, source mapy sa nahrávajú (čitateľné stack traces).
 - Ostatné (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL/ANON_KEY`,
   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, `STAFF_NOTIFY_EMAIL`,
-  `NEXT_PUBLIC_SITE_URL`) — len over, že sú vyplnené.
+  `NEXT_PUBLIC_SITE_URL`) — vyplnené (appka beží).
 
-## 3. Supabase Auth URL  **[HOTOVÉ / len over]**
-Prihlásenie na produkčnej doméne funguje → Auth je nakonfigurovaný. Len **over**, že
-Supabase → *Authentication → URL Configuration* má **Site URL** = `https://moonid-b2b-portal.vercel.app`
-a **Redirect URLs** obsahujú `.../auth/callback` (aby invite/reset odkazy mierili na správnu doménu).
+## 3. Supabase Auth URL  **[HOTOVÉ — opravené 1.7.2026]**
+POZOR bola tu reálna chyba: Site URL bola `http://localhost:3000` a Redirect URLs **prázdne** →
+invite/reset odkazy z e-mailu by mierili na localhost. **Opravené** na:
+- **Site URL** = `https://moonid-b2b-portal.vercel.app`
+- **Redirect URLs** = `https://moonid-b2b-portal.vercel.app/**`
+Tým fungujú pozvánkové aj reset-hesla odkazy na produkcii. Pri vlastnej doméne doplniť `https://moonid.sk/**`.
 **Pozn.:** aj tak — pri založení účtu staff **vidí pozvánkový odkaz priamo v portáli** (netreba e-mail).
+
+## 3b. Politika hesiel  **[HOTOVÉ]**
+Supabase Free: leaked-password (HaveIBeenPwned) je **Pro-only, nedá sa** — vedome preskočené (WARN v
+advisore je OK). Namiesto toho vynútené: **min. dĺžka 8** + **Password requirements: malé/veľké/číslica/symbol**.
 
 ## 4. Reálne ceny  **[TY, 5 min]**
 `/staff/cenniky` → nastav **reálne %** pre A/B1/B2/B3 (teraz sú odhad). Ak má niekto vlastnú
