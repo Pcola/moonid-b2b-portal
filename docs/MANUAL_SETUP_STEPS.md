@@ -33,14 +33,21 @@ Bez tohto je monitoring slepý — `reportError()` (audit/email/rate-limit zlyha
 
 ---
 
-## 2) Supabase — Leaked Password Protection *(~5 min)*
-Kontroluje heslá voči databáze úniku (HaveIBeenPwned). Teraz **vypnuté** (potvrdené advisorom).
+## 2) Supabase — politika hesiel *(~5 min)*
+**POZOR:** „Leaked password protection" (HaveIBeenPwned) je **len na Pro pláne** — na Free sa
+NEDÁ zapnúť (pri pokuse: *„Failed to update auth configuration … available on Pro Plans and up"*).
+Advisor to bude ďalej hlásiť ako WARN — **vedome to akceptujeme ako Pro-only reziduál**, nie je to
+launch-bloker. Namiesto toho zapneme to, čo na Free funguje (a pokrýva väčšinu rizika):
 
-1. Supabase → projekt `moonid-b2b-portal` → **Authentication** → v ľavom menu **Policies** *(alebo
-   „Sign In / Providers" → sekcia Password / „Attack Protection")*.
-2. Nájdi **Leaked password protection** (Prevent use of compromised passwords) → **zapni**.
-3. Pri tom nastav aj **Minimum password length** na **8** (alebo viac) — server-side hranica.
-4. **Save**.
+1. Supabase → **Authentication** → **Attack Protection** → pri „Prevent use of leaked passwords"
+   klikni **Configure in email provider** (otvorí Email provider).
+2. **Prevent use of leaked passwords** nechaj **OFF** (Free ho neuloží a blokuje uloženie ostatného).
+3. **Minimum password length** = **8** (funguje na Free, server-side hranica).
+4. **Password requirements** = **„Lowercase, uppercase letters, digits and symbols (recommended)"**.
+5. **Save**.
+
+Výsledok: vynútené heslo min. 8 znakov + veľké/malé/číslica/symbol. Leaked-password check zapnúť
+až po prípadnom prechode na Pro (napr. kvôli pauzovaniu DB / väčšiemu trafficu).
 
 ---
 
