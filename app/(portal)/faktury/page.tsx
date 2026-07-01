@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -23,6 +24,7 @@ function SummaryCard({ label, value, accent }: { label: string; value: string; a
 
 export default async function FakturyPage() {
   const user = await requireUser();
+  if (user.role !== "CUSTOMER_ADMIN") redirect("/dashboard"); // financie vidí len správca firmy
   if (!user.companyId) {
     return <div className="rounded-2xl border border-line bg-white p-10 text-center text-muted">Faktúry sú dostupné pre firemné kontá.</div>;
   }

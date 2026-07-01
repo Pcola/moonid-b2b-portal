@@ -412,7 +412,8 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
   const idemKey = z.string().uuid().safeParse(idempotencyKey).success ? idempotencyKey! : randomUUID();
 
   const src = await prisma.order.findFirst({
-    where: { id: sourceOrderId, companyId: user.companyId }, // IDOR: musí patriť firme
+    // IDOR: musí patriť firme; bežný člen naviac len vlastnú objednávku (nie kolegovu)
+    where: { id: sourceOrderId, companyId: user.companyId, ...(user.role === "CUSTOMER_ADMIN" ? {} : { createdById: user.id }) },
     select: { id: true, note: true, deliveryLocationId: true, deliveryMethodCode: true, paymentMethodCode: true, items: { select: { productId: true, qty: true } } },
   });
   if (!src) return { ok: false, error: "Objednávka neexistuje." };

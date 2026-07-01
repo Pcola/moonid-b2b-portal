@@ -23,13 +23,14 @@ export default async function ObjednavkyPage() {
   if (!user.companyId) {
     return <div className="rounded-2xl border border-line bg-white p-10 text-center text-muted">Objednávky sú dostupné pre firemné kontá.</div>;
   }
+  // správca firmy vidí všetky firemné objednávky; bežný člen len svoje (ktoré sám vytvoril)
+  const isAdmin = user.role === "CUSTOMER_ADMIN";
   const orders = await prisma.order.findMany({
-    where: { companyId: user.companyId },
+    where: isAdmin ? { companyId: user.companyId } : { companyId: user.companyId, createdById: user.id },
     orderBy: { createdAt: "desc" },
     select: { id: true, number: true, status: true, total: true, hasBackorder: true, createdAt: true, _count: { select: { items: true } } },
   });
   // objednávky čakajúce na MOJE schválenie (som určený schvaľovateľ ich tvorcu; správca firmy vidí všetky)
-  const isAdmin = user.role === "CUSTOMER_ADMIN";
   const queueRows = await prisma.order.findMany({
     where: { companyId: user.companyId, status: "CAKA_SCHVALENIE", ...(isAdmin ? {} : { createdBy: { approverId: user.id } }) },
     orderBy: { createdAt: "asc" },

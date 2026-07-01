@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-type Props = { companyName: string; email: string; tierCode: string | null; cartCount: number; children: React.ReactNode };
+type Props = { companyName: string; email: string; tierCode: string | null; cartCount: number; isAdmin: boolean; children: React.ReactNode };
+
+// href-y viditeľné len pre správcu firmy (bežný člen ich v navigácii nemá)
+const ADMIN_ONLY = new Set(["/faktury"]);
 
 const NAV = [
   { href: "/dashboard", label: "Prehľad", icon: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></> },
@@ -25,7 +28,8 @@ function Icon({ children }: { children: React.ReactNode }) {
   return <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
 }
 
-export function PortalShell({ companyName, email, tierCode, cartCount, children }: Props) {
+export function PortalShell({ companyName, email, tierCode, cartCount, isAdmin, children }: Props) {
+  const nav = NAV.filter((n) => isAdmin || !ADMIN_ONLY.has(n.href));
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -42,7 +46,7 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">B2B</span>
       </div>
       <nav className="flex flex-col gap-1">
-        {NAV.map((n) => {
+        {nav.map((n) => {
           const active = isActive(n.href);
           return (
             <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false}
@@ -54,7 +58,7 @@ export function PortalShell({ companyName, email, tierCode, cartCount, children 
       </nav>
 
       <div className="mt-auto flex flex-col gap-3 pt-4">
-        {tierCode && (
+        {isAdmin && tierCode && (
           <div className="rounded-xl border border-[#8fc3b9]/20 bg-[#8fc3b9]/10 p-3.5">
             <div className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-mint">Cenová úroveň</div>
             <div className="mt-1 text-[14px] font-semibold text-[#e7efec]">Úroveň {tierCode}</div>

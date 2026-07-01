@@ -15,6 +15,7 @@ export default async function PortalLayout({ children }: { children: React.React
       email={user.email}
       tierCode={user.company?.priceTier?.code ?? null}
       cartCount={cartCount}
+      isAdmin={user.role === "CUSTOMER_ADMIN"}
     >
       <ToastProvider>{children}</ToastProvider>
     </PortalShell>

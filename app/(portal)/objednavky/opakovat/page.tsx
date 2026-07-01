@@ -13,6 +13,7 @@ const PRICE_SELECT = { name: true, nameDisplay: true, basePrice: true, vatRate: 
 export default async function OpakovatPage({ searchParams }: { searchParams: Promise<{ source?: string }> }) {
   const user = await requireUser();
   const { source } = await searchParams;
+  const isAdmin = user.role === "CUSTOMER_ADMIN";
   if (!user.companyId) {
     return <div className="rounded-2xl border border-line bg-white p-10 text-center text-muted">Objednávky sú dostupné pre firemné kontá.</div>;
   }
@@ -31,7 +32,9 @@ export default async function OpakovatPage({ searchParams }: { searchParams: Pro
     prisma.order.findFirst({
       // ?source=<id> → zopakovať KONKRÉTNU objednávku (z detailu/zoznamu); inak posledná.
       // companyId filter = IDOR ochrana (cudzia objednávka sa nenájde → fallback nižšie).
-      where: source ? { id: source, companyId: user.companyId } : { companyId: user.companyId },
+      where: source
+        ? { id: source, companyId: user.companyId, ...(isAdmin ? {} : { createdById: user.id }) }
+        : { companyId: user.companyId, ...(isAdmin ? {} : { createdById: user.id }) },
       orderBy: { createdAt: "desc" },
       select: {
         id: true, number: true, note: true,

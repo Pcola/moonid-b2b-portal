@@ -21,11 +21,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     select: {
       number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true, createdAt: true,
       deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true,
+      createdById: true, createdBy: { select: { approverId: true } },
       items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, qty: true, lineTotal: true, fulfillment: true } },
       events: { where: { source: "PORTAL" }, orderBy: { occurredAt: "asc" }, select: { status: true, occurredAt: true } },
     },
   });
   if (!order) notFound();
+  // bežný člen vidí len vlastnú objednávku alebo tú, ktorú má schvaľovať; správca firmy všetky
+  const canView = user.role === "CUSTOMER_ADMIN" || order.createdById === user.id || order.createdBy.approverId === user.id;
+  if (!canView) notFound();
 
   return (
     <div className="mx-auto max-w-[820px]">
