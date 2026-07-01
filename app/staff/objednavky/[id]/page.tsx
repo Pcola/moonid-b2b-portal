@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { STATUS_META, STEP_TITLES, stepIndex, type OrderStatus } from "@/lib/orders/transition";
 import { OrderActions } from "./order-actions";
+import { OrderEditor } from "./order-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,11 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
     where: { id },
     select: {
       id: true, number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true,
-      createdAt: true, confirmedAt: true, priceTierCode: true, pohodaSync: true,
-      company: { select: { name: true, address: true, city: true, ico: true, splatDays: true, priceTier: { select: { code: true, name: true } } } },
+      createdAt: true, confirmedAt: true, priceTierCode: true, pohodaSync: true, companyId: true, deliveryLocationId: true,
+      company: { select: { name: true, address: true, city: true, ico: true, splatDays: true, priceTier: { select: { code: true, name: true } }, locations: { orderBy: [{ isDefault: "desc" }, { label: "asc" }], select: { id: true, label: true, street: true, city: true, zip: true } } } },
       deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
       createdBy: { select: { name: true, email: true } },
-      items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, costSnapshot: true, qty: true, lineTotal: true, fulfillment: true, product: { select: { unit: true, media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } } } } } },
+      items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, costSnapshot: true, qty: true, lineTotal: true, fulfillment: true, product: { select: { unit: true, vatRate: true, media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } } } } } },
       events: { orderBy: { occurredAt: "asc" }, select: { id: true, status: true, occurredAt: true, note: true, source: true, changedBy: { select: { name: true, email: true } } } },
     },
   });
@@ -30,6 +31,11 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
   const meta = STATUS_META[status];
   const curIdx = stepIndex(status);
   const cancelled = status === "STORNO";
+  const editable = status === "PRIJATA" || status === "POTVRDENA";
+  const editorItems = order.items.map((it) => ({
+    id: it.id, name: it.nameSnapshot, sku: it.skuSnapshot, unit: it.product?.unit ?? "ks",
+    unitPriceSnapshot: Number(it.unitPriceSnapshot), vatRate: Number(it.product?.vatRate ?? 23), qty: Math.round(Number(it.qty)),
+  }));
 
   // staff-only marža
   const costTotal = order.items.reduce((s, it) => s + (it.costSnapshot != null ? Number(it.costSnapshot) * Number(it.qty) : 0), 0);
@@ -85,6 +91,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
 
       <div className="grid gap-[clamp(16px,2vw,24px)] lg:grid-cols-[1.7fr_1fr] lg:items-start">
         {/* položky */}
+        <div className="flex flex-col gap-4">
         <div className="overflow-hidden rounded-2xl border border-line bg-white">
           <div className="border-b border-line px-[22px] py-4"><h2 className="text-[19px] font-normal text-ink">Položky</h2></div>
           {order.items.map((it) => (
@@ -103,6 +110,8 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
               <span className="min-w-[80px] text-right text-[15px] font-semibold tabular-nums text-ink">{eur(Number(it.lineTotal))}</span>
             </div>
           ))}
+        </div>
+        <OrderEditor orderId={order.id} editable={editable} items={editorItems} locations={order.company.locations} note={order.note} deliveryLocationId={order.deliveryLocationId} />
         </div>
 
         {/* bočný panel */}

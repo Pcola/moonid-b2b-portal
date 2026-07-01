@@ -67,3 +67,75 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ o
   revalidate(order.id);
   return { ok: true };
 }
+
+function r2(n: number) { return Math.round(n * 100) / 100; }
+function canEditOrder(s: OrderStatus) { return s === "PRIJATA" || s === "POTVRDENA"; }
+
+const editSchema = z.object({
+  items: z.array(z.object({ itemId: z.string().min(1).max(100), qty: z.coerce.number().int().min(0).max(9999) })).max(500),
+  note: z.string().trim().max(2000).nullable().optional(),
+  deliveryLocationId: z.string().max(100).nullable().optional(),
+});
+
+/** Úprava objednávky staffom (korekcia po prijatí): množstvá, odobratie položiek, dodacia adresa,
+ *  poznámka. Iba v raných stavoch (PRIJATA/POTVRDENA). Ceny ostávajú zo snapshotu (dohodnutá cena);
+ *  prepočítajú sa len sumy. Aspoň 1 položka musí ostať. */
+export async function updateOrder(orderId: string, input: z.input<typeof editSchema>): Promise<{ ok: boolean; error?: string }> {
+  const staff = await requireStaff();
+  if (!ID.safeParse(orderId).success) return { ok: false, error: "Neplatný vstup." };
+  const parsed = editSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Neplatný vstup." };
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true, status: true, companyId: true, note: true, deliveryLocationId: true, number: true,
+      items: { select: { id: true, unitPriceSnapshot: true, qty: true, product: { select: { vatRate: true } } } },
+    },
+  });
+  if (!order) return { ok: false, error: "Objednávka neexistuje." };
+  if (!canEditOrder(order.status as OrderStatus)) return { ok: false, error: "Objednávku v tomto stave už nemožno upraviť." };
+
+  const qtyMap = new Map(parsed.data.items.map((i) => [i.itemId, i.qty]));
+  const effQty = (it: { id: string; qty: unknown }) => (qtyMap.has(it.id) ? qtyMap.get(it.id)! : Math.floor(Number(it.qty)));
+  const keep = order.items.filter((it) => effQty(it) > 0);
+  if (keep.length === 0) return { ok: false, error: "Objednávka musí mať aspoň jednu položku." };
+  const removeIds = order.items.filter((it) => effQty(it) <= 0).map((it) => it.id);
+
+  // dodacia adresa (IDOR: musí patriť firme objednávky)
+  let deliveryLocationId = order.deliveryLocationId;
+  if (parsed.data.deliveryLocationId !== undefined) {
+    if (parsed.data.deliveryLocationId) {
+      const loc = await prisma.deliveryLocation.findFirst({ where: { id: parsed.data.deliveryLocationId, companyId: order.companyId }, select: { id: true } });
+      if (!loc) return { ok: false, error: "Neplatná dodacia adresa." };
+      deliveryLocationId = loc.id;
+    } else deliveryLocationId = null;
+  }
+
+  let subtotal = 0, vat = 0;
+  const updates = keep.map((it) => {
+    const q = effQty(it);
+    const net = Number(it.unitPriceSnapshot);
+    const line = r2(net * q);
+    const vr = Number(it.product?.vatRate ?? 23);
+    const grossUnit = r2(net * (1 + vr / 100)); // rovnaká metóda ako createOrder (zaokr. gross/kus)
+    subtotal += line;
+    vat += r2((grossUnit - net) * q);
+    return { id: it.id, qty: q, lineTotal: line };
+  });
+  subtotal = r2(subtotal); vat = r2(vat);
+  const total = r2(subtotal + vat);
+
+  await prisma.$transaction(async (tx) => {
+    if (removeIds.length) await tx.orderItem.deleteMany({ where: { id: { in: removeIds }, orderId } });
+    for (const u of updates) await tx.orderItem.update({ where: { id: u.id }, data: { qty: u.qty, lineTotal: u.lineTotal } });
+    await tx.order.update({
+      where: { id: orderId },
+      data: { subtotal, vat, total, deliveryLocationId, note: parsed.data.note !== undefined ? (parsed.data.note?.trim().slice(0, 2000) || null) : order.note },
+    });
+  });
+
+  await writeAudit({ userId: staff.id, action: "ORDER_EDIT", entity: "Order", entityId: orderId, meta: { number: order.number, total, items: updates.length, removed: removeIds.length } });
+  revalidate(order.id);
+  return { ok: true };
+}
