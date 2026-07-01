@@ -18,7 +18,8 @@ const NAV = [
   { href: "/staff/objednavky", exact: false, label: "Objednávky", badge: "orders" as const, icon: <><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /><path d="M9 11v5M15 11v5" /></> },
   { href: "/staff/ziadosti", exact: false, label: "Žiadosti", badge: "requests" as const, icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></> },
   { href: "/staff/zakaznici", exact: false, label: "Zákazníci", badge: null, icon: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5a3 3 0 0 1 0 6M22 20a6 6 0 0 0-5-5.9" /></> },
-  { href: "/staff/katalog", exact: false, label: "Produkty", badge: null, icon: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
+  { href: "/staff/produkty", exact: false, label: "Produkty", badge: null, icon: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
+  { href: "/staff/katalog", exact: false, label: "Párovanie", badge: null, icon: <><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M20 4 9 15M15 20h5v-5" /></> },
   { href: "/staff/cenniky", exact: false, label: "Cenníky", badge: null, icon: <><path d="M20 12l-8 8-9-9V4h7z" /><circle cx="7.5" cy="7.5" r="1.3" /></> },
   { href: "/staff/faktury", exact: false, label: "Faktúry", badge: null, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
 ];
@@ -29,7 +30,9 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => p.startsWith("/staff/objednavky"), crumb: "Spracovanie", title: "Objednávky" },
   { test: (p) => p.startsWith("/staff/ziadosti"), crumb: "Onboarding", title: "Žiadosti o prístup" },
   { test: (p) => p.startsWith("/staff/zakaznici"), crumb: "CRM", title: "Zákazníci" },
-  { test: (p) => p.startsWith("/staff/katalog"), crumb: "Katalóg", title: "Produkty a párovanie" },
+  { test: (p) => /^\/staff\/produkty\/[^/]+$/.test(p), crumb: "Produkty", title: "Úprava produktu" },
+  { test: (p) => p.startsWith("/staff/produkty"), crumb: "Katalóg", title: "Produkty" },
+  { test: (p) => p.startsWith("/staff/katalog"), crumb: "Katalóg", title: "Párovanie zdrojov" },
   { test: (p) => p.startsWith("/staff/cenniky"), crumb: "Nastavenia", title: "Cenníky a úrovne" },
   { test: (p) => p.startsWith("/staff/faktury"), crumb: "Účtovníctvo", title: "Faktúry" },
 ];

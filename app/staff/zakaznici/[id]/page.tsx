@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CompanyEditForm } from "./company-edit-form";
 import { LocationsManager } from "./locations-manager";
+import { AddUserForm } from "./add-user-form";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
                 <span className="ml-2 whitespace-nowrap text-[12px] text-muted-2">{ROLE[u.role] ?? u.role}{!u.active && " · neakt."}</span>
               </div>
             ))}
+            <AddUserForm companyId={company.id} />
           </div>
 
           <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-[22px]">
