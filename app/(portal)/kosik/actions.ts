@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
+import { requireUser, type SessionUser } from "@/lib/auth";
 import { getOrCreateCart } from "@/lib/cart";
 import { resolveUnitPrice } from "@/lib/pricing";
-import { emailNewOrderToStaff, emailOrderConfirmation } from "@/lib/email";
+import { emailNewOrderToStaff, emailOrderConfirmation, emailApprovalRequest } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
 import { reportError } from "@/lib/observability";
 import { resolveOrderCharges } from "@/lib/store-config";
@@ -24,6 +24,30 @@ async function tierDiscount(tierCode: string | null): Promise<number> {
   if (!tierCode) return 0;
   const t = await prisma.priceTier.findUnique({ where: { code: tierCode }, select: { discountPct: true } });
   return Number(t?.discountPct ?? 0);
+}
+
+/** Komu poslať notifikáciu o objednávke na schválenie: určený schvaľovateľ (ak aktívny),
+ *  inak všetci aktívni správcovia firmy (fallback, keď approver nie je nastavený). */
+async function approverEmailsFor(approverId: string | null, companyId: string): Promise<string[]> {
+  if (approverId) {
+    const a = await prisma.user.findFirst({ where: { id: approverId, active: true }, select: { email: true } });
+    if (a) return [a.email];
+  }
+  const admins = await prisma.user.findMany({ where: { companyId, role: "CUSTOMER_ADMIN", active: true }, select: { email: true } });
+  return admins.map((x) => x.email);
+}
+
+/** Notifikuje schvaľovateľa o objednávke čakajúcej na schválenie (best-effort). Ak firma nemá
+ *  žiadneho aktívneho schvaľovateľa/správcu, objednávka by inak „zamrzla" ticho → zalogujeme. */
+async function notifyApprovalRequest(user: SessionUser, order: { id: string; number: string }, total: number, itemCount: number) {
+  const to = await approverEmailsFor(user.approverId, user.companyId!);
+  if (to.length) {
+    await Promise.allSettled([
+      emailApprovalRequest({ to, number: order.number, requesterName: user.name ?? user.email, companyName: user.company?.name, total, itemCount }),
+    ]);
+  } else {
+    reportError("order.approval.no_approver", new Error("Objednávka čaká na schválenie, ale firma nemá aktívneho schvaľovateľa"), { orderId: order.id, companyId: user.companyId ?? undefined });
+  }
 }
 
 // overí, že CartItem patrí košíku firmy aktuálneho usera (IDOR ochrana)
@@ -282,6 +306,9 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
       emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
       emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
     ]);
+  } else {
+    // objednávka ide na schválenie — notifikuj schvaľovateľa (staff dostane e-mail až po schválení)
+    await notifyApprovalRequest(user, order, total, items.length);
   }
   revalidatePath("/objednavky");
   revalidatePath("/kosik");
@@ -520,6 +547,9 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
       emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),
       emailOrderConfirmation({ to: user.email, number: order.number, items: items.map((it) => ({ name: it.nameSnapshot, qty: it.qty, lineTotal: it.lineTotal })), subtotal, vat, total }),
     ]);
+  } else {
+    // objednávka ide na schválenie — notifikuj schvaľovateľa (staff dostane e-mail až po schválení)
+    await notifyApprovalRequest(user, order, total, items.length);
   }
   revalidatePath("/objednavky");
   revalidatePath("/objednavky/opakovat");

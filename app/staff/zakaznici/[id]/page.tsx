@@ -5,11 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { CompanyEditForm } from "./company-edit-form";
 import { LocationsManager } from "./locations-manager";
 import { AddUserForm } from "./add-user-form";
+import { UsersManager } from "./users-manager";
 
 export const dynamic = "force-dynamic";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
-const ROLE: Record<string, string> = { CUSTOMER_ADMIN: "Správca firmy", CUSTOMER_USER: "Používateľ", STAFF: "Staff", ADMIN: "Admin" };
 
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -62,15 +62,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-[22px]">
             <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Používatelia ({company.users.length})</h3>
-            {company.users.length === 0 ? <p className="text-[13.5px] text-muted-2">Žiadni používatelia.</p> : company.users.map((u) => (
-              <div key={u.id} className="flex items-center justify-between border-b border-line pb-2.5 last:border-0 last:pb-0">
-                <div className="min-w-0">
-                  <div className="truncate text-[14px] font-medium text-ink">{u.name ?? u.email}</div>
-                  <div className="truncate text-[12.5px] text-muted-2">{u.email}</div>
-                </div>
-                <span className="ml-2 whitespace-nowrap text-[12px] text-muted-2">{ROLE[u.role] ?? u.role}{!u.active && " · neakt."}</span>
-              </div>
-            ))}
+            <UsersManager users={company.users} />
             <AddUserForm companyId={company.id} />
           </div>
 

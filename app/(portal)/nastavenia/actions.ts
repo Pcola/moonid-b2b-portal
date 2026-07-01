@@ -228,6 +228,10 @@ export async function setMemberActive(userId: string, active: boolean): Promise<
     if (admins === 0) return { ok: false, error: "Musí ostať aspoň jeden aktívny správca firmy." };
   }
   await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  if (!active) {
+    // uvoľni ho ako schvaľovateľa iných členov — treba im prideliť nového (dovtedy schvaľuje správca)
+    await prisma.user.updateMany({ where: { companyId: user.companyId!, approverId: userId }, data: { approverId: null } });
+  }
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_ACTIVE", entity: "User", entityId: userId, meta: { active: Boolean(active) } });
   revalidatePath("/nastavenia");
   return { ok: true };

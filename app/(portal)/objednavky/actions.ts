@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
-import { emailNewOrderToStaff } from "@/lib/email";
+import { emailNewOrderToStaff, emailOrderDecision } from "@/lib/email";
 
 const ID = z.string().min(1).max(100);
 
@@ -41,9 +41,10 @@ export async function approveOrder(orderId: string): Promise<{ ok: boolean; erro
   if (res.count === 0) return { ok: false, error: "Objednávka už bola medzičasom spracovaná." };
   await prisma.orderStatusEvent.create({ data: { orderId, status: "PRIJATA", source: "PORTAL", changedById: user.id } });
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_APPROVE", entity: "Order", entityId: orderId, meta: { number: order.number } });
-  // až teraz ide objednávka staffu (pri vytvorení sa e-mail zámerne odložil)
+  // až teraz ide objednávka staffu (pri vytvorení sa e-mail zámerne odložil) + zadávateľovi info o schválení
   await Promise.allSettled([
     emailNewOrderToStaff({ number: order.number, companyName: order.company.name, customerEmail: order.createdBy.email, total: Number(order.total), itemCount: order._count.items }),
+    emailOrderDecision({ to: order.createdBy.email, number: order.number, approved: true }),
   ]);
   revalidatePath("/objednavky");
   revalidatePath(`/objednavky/${orderId}`);
@@ -60,6 +61,10 @@ export async function rejectOrder(orderId: string, reason?: string): Promise<{ o
   const note = (reason ?? "").trim().slice(0, 500) || null;
   await prisma.orderStatusEvent.create({ data: { orderId, status: "STORNO", source: "PORTAL", changedById: user.id, note } });
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_REJECT", entity: "Order", entityId: orderId, meta: { number: order.number, reason: note } });
+  // zadávateľ sa dozvie výsledok e-mailom (predtým to zistil len otvorením detailu)
+  await Promise.allSettled([
+    emailOrderDecision({ to: order.createdBy.email, number: order.number, approved: false, note }),
+  ]);
   revalidatePath("/objednavky");
   revalidatePath(`/objednavky/${orderId}`);
   return { ok: true };
