@@ -39,8 +39,13 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
   };
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const where = buildWhere(a, null);
+  // cena: triedime podľa basePrice (jednotná tier zľava zachováva poradie; ProductPrice overrides
+  // sú prázdne). nulls:"last" → položky „na vyžiadanie" (basePrice null) idú na koniec pri oboch smeroch.
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
-    a.sort === "az" ? [{ name: "asc" }] : [{ shelfStatus: "asc" }, { media: { _count: "desc" } }, { name: "asc" }];
+    a.sort === "az" ? [{ name: "asc" }]
+    : a.sort === "price-asc" ? [{ basePrice: { sort: "asc", nulls: "last" } }, { name: "asc" }]
+    : a.sort === "price-desc" ? [{ basePrice: { sort: "desc", nulls: "last" } }, { name: "asc" }]
+    : [{ shelfStatus: "asc" }, { media: { _count: "desc" } }, { name: "asc" }];
 
   const [rows, total, catRows, subRows, brandRows, stockCount, allCats] = await Promise.all([
     prisma.product.findMany({
