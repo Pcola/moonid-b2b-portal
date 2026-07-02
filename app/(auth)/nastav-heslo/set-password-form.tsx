@@ -18,7 +18,7 @@ async function isPwned(pw: string): Promise<boolean> {
   }
 }
 
-export function SetPasswordForm() {
+export function SetPasswordForm({ email }: { email?: string | null }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -52,6 +52,8 @@ export function SetPasswordForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      {/* skryté používateľské meno pre správcov hesiel (autofill/a11y) */}
+      {email && <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />}
       {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Nové heslo

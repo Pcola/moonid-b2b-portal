@@ -2,7 +2,6 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { GdprSection } from "./gdpr-section";
 import { AddressManager } from "./address-manager";
-import { MemberManager } from "./member-manager";
 import { AccountCard } from "./account-card";
 
 export const dynamic = "force-dynamic";
@@ -26,10 +25,7 @@ export default async function NastaveniaPage() {
         select: { name: true, ico: true, dic: true, icDph: true, city: true, address: true, zip: true, splatDays: true, priceTier: { select: { code: true, name: true } } },
       })
     : null;
-  // zoznam členov a správu adries načítavame LEN pre správcu firmy — bežný člen ich nevidí
-  const users = isAdmin && user.companyId
-    ? await prisma.user.findMany({ where: { companyId: user.companyId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, email: true, role: true, active: true, canOrderDirectly: true, approverId: true } })
-    : [];
+  // správu adries načítavame LEN pre správcu firmy — bežný člen ju nevidí (členov spravuje /pouzivatelia)
   const locations = isAdmin && user.companyId
     ? await prisma.deliveryLocation.findMany({ where: { companyId: user.companyId }, orderBy: [{ isDefault: "desc" }, { label: "asc" }], select: { id: true, label: true, street: true, zip: true, city: true, isDefault: true } })
     : [];
@@ -61,7 +57,6 @@ export default async function NastaveniaPage() {
           </section>
 
           {company && <AddressManager isAdmin={isAdmin} billing={{ street: company.address ?? null, zip: company.zip ?? null, city: company.city ?? null }} locations={locations} />}
-          {company && <MemberManager isAdmin={isAdmin} members={users} currentUserId={user.id} />}
         </>
       ) : (
         /* bežný člen — vidí len svoje zaradenie, nie roster/financie/adresy */

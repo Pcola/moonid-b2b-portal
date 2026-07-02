@@ -4,10 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-type Props = { companyName: string; email: string; tierCode: string | null; cartCount: number; isAdmin: boolean; children: React.ReactNode };
+type Props = { companyName: string; userName: string | null; email: string; tierCode: string | null; cartCount: number; isAdmin: boolean; children: React.ReactNode };
 
 // href-y viditeľné len pre správcu firmy (bežný člen ich v navigácii nemá)
-const ADMIN_ONLY = new Set(["/faktury"]);
+const ADMIN_ONLY = new Set(["/faktury", "/pouzivatelia"]);
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; sub?: boolean };
 const NAV: NavItem[] = [
@@ -16,20 +16,21 @@ const NAV: NavItem[] = [
   { href: "/rychla-objednavka", label: "Rýchla objednávka", icon: <><path d="M13 2 3 14h8l-1 8 10-12h-8z" /></> },
   { href: "/oblubene", label: "Obľúbené", icon: <><path d="m12 17.3-6.18 3.7 1.64-7.03L2 9.24l7.19-.61L12 2l2.81 6.63 7.19.61-5.46 4.73 1.64 7.03z" /></> },
   { href: "/objednavky", label: "História objednávok", icon: <><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /><path d="M9 11v5M15 11v5" /></> },
-  { href: "/faktury", label: "Faktúry", sub: true, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
+  { href: "/faktury", label: "Faktúry", icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
+  { href: "/pouzivatelia", label: "Používatelia", icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></> },
   { href: "/nastavenia", label: "Nastavenia", icon: <><circle cx="12" cy="12" r="3" /><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 0 1-4 0v-.2a1.7 1.7 0 0 0-2.9-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 13H4a2 2 0 0 1 0-4h.2a1.7 1.7 0 0 0 1.1-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.1V2a2 2 0 0 1 4 0v.2a1.7 1.7 0 0 0 2.9 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9z" /></> },
 ];
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Prehľad", "/katalog": "Katalóg", "/kosik": "Košík",
-  "/objednavky": "História objednávok", "/faktury": "Faktúry", "/nastavenia": "Nastavenia",
+  "/objednavky": "História objednávok", "/faktury": "Faktúry", "/pouzivatelia": "Používatelia", "/nastavenia": "Nastavenia",
 };
 
 function Icon({ children }: { children: React.ReactNode }) {
   return <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
 }
 
-export function PortalShell({ companyName, email, tierCode, cartCount, isAdmin, children }: Props) {
+export function PortalShell({ companyName, userName, email, tierCode, cartCount, isAdmin, children }: Props) {
   const nav = NAV.filter((n) => isAdmin || !ADMIN_ONLY.has(n.href));
   const pathname = usePathname();
   const router = useRouter();
@@ -38,7 +39,8 @@ export function PortalShell({ companyName, email, tierCode, cartCount, isAdmin, 
 
   const title = pathname.startsWith("/objednavky/") ? "Objednávka" : (TITLES[pathname] ?? "Portál");
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
-  const initials = (companyName || "M").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const identity = userName?.trim() || companyName || "Moonid";
+  const initials = identity.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   const sidebar = (
     <div className="flex h-full flex-col gap-1.5 bg-brand-foot p-4 text-[#9fbab3]">
@@ -69,8 +71,8 @@ export function PortalShell({ companyName, email, tierCode, cartCount, isAdmin, 
         <div className="flex items-center gap-3 border-t border-white/10 px-1 pt-3">
           <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-mint text-[13px] font-bold text-brand-deep">{initials}</span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-semibold text-white">{companyName || "Moonid"}</div>
-            <div className="truncate text-[11.5px] text-[#7fa199]">{email}</div>
+            <div className="truncate text-[13px] font-semibold text-white">{identity}</div>
+            <div className="truncate text-[11.5px] text-[#7fa199]">{userName?.trim() ? companyName : email}</div>
           </div>
           <form action="/auth/logout" method="post">
             <button type="submit" aria-label="Odhlásiť sa" title="Odhlásiť sa" className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7fa199] transition hover:bg-white/10 hover:text-white">
