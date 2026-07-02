@@ -62,11 +62,10 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
   // strom kategórií — načítame vopred, aby sme názvy filtrov preložili na id (categoryId/subcategoryId)
   const allCats = await prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, parentId: true },
+    select: { id: true, name: true, parentId: true, sortOrder: true },
   });
   const catId = a.cat ? (allCats.find((c) => !c.parentId && c.name === a.cat)?.id ?? null) : null;
   const subId = a.sub && catId ? (allCats.find((c) => c.parentId === catId && c.name === a.sub)?.id ?? null) : null;
-  const catName = new Map(allCats.map((c) => [c.id, c.name]));
 
   const where = buildWhere(a, null, catId, subId, priceMin, priceMax);
   // cena: triedime podľa basePrice (jednotná tier zľava zachováva poradie; ProductPrice overrides
@@ -91,22 +90,30 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     prisma.product.count({ where }),
     // hlavné kategórie (úroveň 1) — počty vrátane podkategórií (produkty držia categoryId aj keď majú subcategoryId)
     prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat", null, null, priceMin, priceMax), _count: { _all: true } }),
-    // podkategórie (deti vybranej kategórie) LEN keď je vybraná hlavná kategória
-    catId
-      ? prisma.product.groupBy({ by: ["subcategoryId"], where: { ...buildWhere(a, "sub", catId, null, priceMin, priceMax), subcategoryId: { not: null } }, _count: { _all: true } })
-      : Promise.resolve([] as { subcategoryId: string | null; _count: { _all: number } }[]),
+    // počty VŠETKÝCH podkategórií (pre rozklikávací strom — nezávisle od vybranej hlavnej kategórie)
+    prisma.product.groupBy({ by: ["subcategoryId"], where: { ...buildWhere(a, "cat", null, null, priceMin, priceMax), subcategoryId: { not: null } }, _count: { _all: true } }),
     prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand", catId, subId, priceMin, priceMax), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
     prisma.product.count({ where: { ...buildWhere(a, "stock", catId, subId, priceMin, priceMax), isStocked: true } }),
   ]);
 
-  const topIds = new Set(allCats.filter((c) => !c.parentId).map((c) => c.id));
-  const categories = catRows
-    .filter((r) => r.categoryId && topIds.has(r.categoryId) && catName.get(r.categoryId))
-    .map((r) => ({ name: catName.get(r.categoryId!)!, count: r._count._all }))
-    .sort((x, y) => y.count - x.count);
-  const subcategories = subRows
-    .filter((r) => r.subcategoryId && catName.get(r.subcategoryId))
-    .map((r) => ({ name: catName.get(r.subcategoryId!)!, count: r._count._all }))
+  // poskladáme strom: hlavné kategórie (s produktmi) + ich rozklikávacie podkategórie
+  const catCount = new Map(catRows.filter((r) => r.categoryId).map((r) => [r.categoryId!, r._count._all] as const));
+  const childCount = new Map(subRows.filter((r) => r.subcategoryId).map((r) => [r.subcategoryId!, r._count._all] as const));
+  const childrenByParent = new Map<string, { name: string; count: number; sort: number }[]>();
+  for (const c of allCats) {
+    if (c.parentId && childCount.has(c.id)) {
+      const arr = childrenByParent.get(c.parentId) ?? [];
+      arr.push({ name: c.name, count: childCount.get(c.id)!, sort: c.sortOrder });
+      childrenByParent.set(c.parentId, arr);
+    }
+  }
+  const categories = allCats
+    .filter((c) => !c.parentId && (catCount.get(c.id) ?? 0) > 0)
+    .map((c) => ({
+      name: c.name,
+      count: catCount.get(c.id) ?? 0,
+      children: (childrenByParent.get(c.id) ?? []).sort((x, y) => x.sort - y.sort || y.count - x.count).map(({ name, count }) => ({ name, count })),
+    }))
     .sort((x, y) => y.count - x.count);
   const brands = brandRows.filter((r) => r.brand).map((r) => ({ name: r.brand!, count: r._count._all }));
 
@@ -143,7 +150,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
       <PortalCatalog
         items={items} tierCode={tierCode}
         total={total} page={page} pageSize={PAGE}
-        facets={{ categories, subcategories, brands, stockCount }}
+        facets={{ categories, brands, stockCount }}
         active={a} repeatMode={sp.from === "opakovat"}
       />
     </>

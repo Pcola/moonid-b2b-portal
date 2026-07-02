@@ -81,7 +81,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <span className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-brand-2">{today}</span>
-          <h1 className="text-[clamp(26px,3.4vw,38px)] font-normal tracking-[-0.015em] text-ink">Dobrý deň, {user.company?.name ?? "vitajte"}</h1>
+          <h1 className="text-[clamp(26px,3.4vw,38px)] font-normal tracking-[-0.015em] text-ink">Dobrý deň, {user.name?.trim().split(/\s+/)[0] || user.company?.name || "vitajte"}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           {recent.length > 0 && (

@@ -11,8 +11,7 @@ import { useToast } from "@/components/portal/toast";
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; fav: boolean; price: PricedLine };
 type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string; pmin: string; pmax: string };
 type Facets = {
-  categories: { name: string; count: number }[];
-  subcategories: { name: string; count: number }[];
+  categories: { name: string; count: number; children: { name: string; count: number }[] }[];
   brands: { name: string; count: number }[];
   stockCount: number;
 };
@@ -44,6 +43,8 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   const [brandQ, setBrandQ] = useState("");
   const [pmin, setPmin] = useState(active.pmin);
   const [pmax, setPmax] = useState(active.pmax);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleCat = (name: string) => setExpanded((prev) => { const n = new Set(prev); if (n.has(name)) n.delete(name); else n.add(name); return n; });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const drawerCloseRef = useRef<HTMLButtonElement>(null);
   // WCAG 2.1.1 (klávesnica) + 2.4.3 (focus): Escape zavrie drawer, focus ide na tlačidlo zavrieť
@@ -112,16 +113,34 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
 
       <Group title="Kategórie">
         {facetRow("Všetko", total, !active.cat && !active.brand && !active.stock, () => router.push(pathname))}
-        {facets.categories.map((c) => facetRow(c.name, c.count, active.cat === c.name, () => go({ cat: active.cat === c.name ? "" : c.name, sub: "" })))}
+        {facets.categories.map((c) => {
+          const hasKids = c.children.length > 0;
+          const catActive = active.cat === c.name;
+          const open = hasKids && (expanded.has(c.name) || catActive);
+          return (
+            <div key={c.name}>
+              <div className={`flex items-center rounded-[10px] ${catActive ? "bg-mintbg" : "hover:bg-cream"}`}>
+                <button type="button" onClick={() => go({ cat: catActive ? "" : c.name, sub: "" })}
+                  className={`flex flex-1 items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[14px] transition ${catActive ? "font-semibold text-brand" : "text-muted hover:text-ink"}`}>
+                  <span className="truncate pr-2">{c.name}</span>
+                  <span className={`text-[12px] tabular-nums ${catActive ? "text-brand/60" : "text-muted-2"}`}>{c.count}</span>
+                </button>
+                {hasKids && (
+                  <button type="button" onClick={() => toggleCat(c.name)} aria-expanded={open} aria-label={open ? `Zbaliť ${c.name}` : `Rozbaliť ${c.name}`}
+                    className="mr-1 flex h-7 w-7 flex-none items-center justify-center rounded-lg text-muted-2 transition hover:bg-white hover:text-ink">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${open ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6" /></svg>
+                  </button>
+                )}
+              </div>
+              {open && (
+                <div className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-line pl-2">
+                  {c.children.map((s) => facetRow(s.name, s.count, active.sub === s.name, () => go({ cat: c.name, sub: active.sub === s.name ? "" : s.name })))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </Group>
-
-      {active.cat && facets.subcategories.length > 0 && (
-        <Group title="Podkategória">
-          <div className="flex max-h-[230px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
-            {facets.subcategories.map((s) => facetRow(s.name, s.count, active.sub === s.name, () => go({ sub: active.sub === s.name ? "" : s.name })))}
-          </div>
-        </Group>
-      )}
 
       <Group title="Dostupnosť">
         {facetRow("Skladom", facets.stockCount, active.stock === "1", () => go({ stock: active.stock === "1" ? "" : "1" }))}
