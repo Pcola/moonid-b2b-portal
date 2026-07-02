@@ -32,12 +32,18 @@ export default async function FakturyPage() {
   const invoices = await prisma.invoice.findMany({
     where: { companyId: user.companyId },
     orderBy: { issuedAt: "desc" },
-    select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true, order: { select: { number: true } } },
+    select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, paidAt: true, total: true, order: { select: { number: true } } },
   });
 
+  // „Po splatnosti" sa odvodzuje k dnešku (stav OVERDUE sa v DB samostatne nenastavuje) —
+  // neuhradená faktúra po dátume splatnosti. Konzistentne pre karty aj štítok riadku.
+  const now = new Date();
+  const isOverdue = (i: (typeof invoices)[number]) => i.status === "PENDING" && !i.paidAt && i.dueAt < now;
+  const effStatus = (i: (typeof invoices)[number]) => (isOverdue(i) ? "OVERDUE" : i.status);
+
   const num = (d: typeof invoices) => d.reduce((s, i) => s + Number(i.total), 0);
-  const overdue = num(invoices.filter((i) => i.status === "OVERDUE"));
-  const pending = num(invoices.filter((i) => i.status === "PENDING"));
+  const overdue = num(invoices.filter(isOverdue));
+  const pending = num(invoices.filter((i) => i.status === "PENDING" && !isOverdue(i)));
   const paidYear = num(invoices.filter((i) => i.status === "PAID" && i.issuedAt.getFullYear() === year));
 
   return (
@@ -62,7 +68,7 @@ export default async function FakturyPage() {
             <span>Faktúra</span><span>Objednávka</span><span>Splatnosť</span><span>Stav</span><span className="text-right">Suma</span>
           </div>
           {invoices.map((f) => {
-            const s = STATUS[f.status] ?? { label: f.status, cls: "bg-cream text-muted" };
+            const s = STATUS[effStatus(f)] ?? { label: f.status, cls: "bg-cream text-muted" };
             return (
               <div key={f.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 last:border-0">
                 <span className="font-mono text-[13.5px] font-semibold text-ink">{f.pohodaNumber}</span>

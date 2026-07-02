@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { GdprSection } from "./gdpr-section";
 import { AddressManager } from "./address-manager";
 import { MemberManager } from "./member-manager";
+import { AccountCard } from "./account-card";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nastavenia — Moonid portál", robots: { index: false, follow: false } };
@@ -38,6 +39,9 @@ export default async function NastaveniaPage() {
 
   return (
     <div className="flex max-w-[820px] flex-col gap-6">
+      {/* osobné konto (meno + zmena hesla) — pre každého používateľa */}
+      <AccountCard name={user.name} email={user.email} />
+
       {isAdmin ? (
         <>
           {/* firemné údaje (len správca firmy) */}
@@ -60,12 +64,10 @@ export default async function NastaveniaPage() {
           {company && <MemberManager isAdmin={isAdmin} members={users} currentUserId={user.id} />}
         </>
       ) : (
-        /* bežný člen — vidí len svoje konto, nie roster/financie/adresy */
+        /* bežný člen — vidí len svoje zaradenie, nie roster/financie/adresy */
         <section className="rounded-2xl border border-line bg-white">
-          <div className="border-b border-line px-6 py-4"><h2 className="text-[18px] font-normal text-ink">Moje konto</h2></div>
+          <div className="border-b border-line px-6 py-4"><h2 className="text-[18px] font-normal text-ink">Vaše zaradenie</h2></div>
           <div className="px-6 py-2">
-            <Row label="Meno" value={user.name} />
-            <Row label="E-mail" value={user.email} />
             <Row label="Firma" value={company?.name} />
             <Row label="Rola" value="Používateľ" />
             <Row label="Objednávanie" value={user.canOrderDirectly ? "Objednávate priamo" : (approver ? `Vaše objednávky schvaľuje ${approver.name ?? approver.email}` : "Vaše objednávky vyžadujú schválenie")} />

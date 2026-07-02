@@ -16,7 +16,13 @@ type Active = { q: string; cat: string; sub: string; brand: string; stock: strin
 function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput {
   // listing zobrazí 1 kartu na skupinu: default variant alebo samostatný produkt
   const and: Prisma.ProductWhereInput[] = [{ OR: [{ variantGroupId: null }, { isDefaultVariant: true }] }];
-  if (a.q && exclude !== "q") and.push({ OR: [{ name: { contains: a.q, mode: "insensitive" } }, { nameDisplay: { contains: a.q, mode: "insensitive" } }] });
+  // hľadá aj podľa kódu (SKU) a EAN — B2B zákazník objednáva podľa kódu z faktúry/etikety
+  if (a.q && exclude !== "q") and.push({ OR: [
+    { name: { contains: a.q, mode: "insensitive" } },
+    { nameDisplay: { contains: a.q, mode: "insensitive" } },
+    { sku: { contains: a.q, mode: "insensitive" } },
+    { ean: { contains: a.q, mode: "insensitive" } },
+  ] });
   const w: Prisma.ProductWhereInput = { isPublished: true, AND: and };
   if (a.cat && exclude !== "cat") w.category = { name: a.cat };
   if (a.sub && exclude !== "sub") w.subcategory = a.sub;
