@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
+import { reportError } from "@/lib/observability";
 import { PRIVACY_VERSION } from "@/lib/consent";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
@@ -79,7 +81,16 @@ export async function POST(req: Request) {
     d.sprava || "—",
   ].join("\n");
 
+  // dopyt uložíme do DB PRED odoslaním e-mailu — aby sa lead nestratil, keď je Resend
+  // neaktívny/nedostupný (e-mail je best-effort). Zlyhanie zápisu neprehltneme ticho.
+  const inquiry = await prisma.inquiry
+    .create({ data: { name: d.meno, company: d.firma, email: d.email, phone: d.telefon || null, location: d.lokalita || null, type: d.typ || null, segment: d.segment || null, message: d.sprava || null } })
+    .catch((e) => { reportError("dopyt.persist", e, {}); return null; });
+
   const res = await sendEmail({ to: STAFF_NOTIFY, subject, text: lines, replyTo: d.email });
-  if (!res.ok && !res.skipped) return NextResponse.json({ ok: false, error: "send_failed" }, { status: 502 });
+  if (inquiry && res.ok) await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailSent: true } }).catch(() => {});
+
+  // úspech, ak sa dopyt aspoň uložil ALEBO odoslal; 502 len keď zlyhalo oboje
+  if (!inquiry && !res.ok && !res.skipped) return NextResponse.json({ ok: false, error: "send_failed" }, { status: 502 });
   return NextResponse.json({ ok: true, note: res.skipped ? "logged" : undefined });
 }

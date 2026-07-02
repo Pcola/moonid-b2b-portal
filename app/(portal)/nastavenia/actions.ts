@@ -236,3 +236,18 @@ export async function setMemberActive(userId: string, active: boolean): Promise<
   revalidatePath("/nastavenia");
   return { ok: true };
 }
+
+// ---------- Osobné konto (každý používateľ svoje) ----------
+
+const profileSchema = z.object({ name: z.string().trim().min(1, "Zadajte meno").max(120) });
+
+/** Upraví vlastné meno prihláseného používateľa (heslo mení klient cez Supabase). */
+export async function updateProfile(input: z.input<typeof profileSchema>): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  const p = profileSchema.safeParse(input);
+  if (!p.success) return { ok: false, error: p.error.issues[0]?.message ?? "Neplatný vstup." };
+  await prisma.user.update({ where: { id: user.id }, data: { name: p.data.name } });
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "PROFILE_UPDATE", entity: "User", entityId: user.id });
+  revalidatePath("/nastavenia");
+  return { ok: true };
+}

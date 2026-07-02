@@ -644,6 +644,24 @@ model RateLimit {
   @@index([windowStart])
 }
 
+// Kontaktné dopyty z verejného formulára (/api/dopyt). Perzistujú sa PRED odoslaním e-mailu,
+// aby sa lead nestratil, keď je Resend nedostupný/neaktívny (best-effort mail).
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  company   String
+  email     String
+  phone     String?
+  location  String?
+  type      String?
+  segment   String?
+  message   String?  @db.Text
+  emailSent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // ---------- Faktúry ---------- [C] cache z Pohody + PDF
 
 model Invoice {
