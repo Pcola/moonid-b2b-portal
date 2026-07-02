@@ -9,11 +9,12 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Katalóg — Moonid portál", robots: { index: false, follow: false } };
 
 const PAGE = 24;
-type SP = { q?: string; cat?: string; sub?: string; brand?: string; stock?: string; sort?: string; page?: string; from?: string };
-type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
+type SP = { q?: string; cat?: string; sub?: string; brand?: string; stock?: string; sort?: string; page?: string; from?: string; pmin?: string; pmax?: string };
+type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string; pmin: string; pmax: string };
 
-// where so VŠETKÝMI aktívnymi filtrami OKREM `exclude` (pre faceted counts)
-function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput {
+// where so VŠETKÝMI aktívnymi filtrami OKREM `exclude` (pre faceted counts).
+// Kategória = strom: categoryId (úroveň 1) + subcategoryId (úroveň 2, dieťa categoryId).
+function buildWhere(a: Active, exclude: string | null, catId: string | null, subId: string | null, priceMin: number | null, priceMax: number | null): Prisma.ProductWhereInput {
   // listing zobrazí 1 kartu na skupinu: default variant alebo samostatný produkt
   const and: Prisma.ProductWhereInput[] = [{ OR: [{ variantGroupId: null }, { isDefaultVariant: true }] }];
   // hľadá aj podľa kódu (SKU) a EAN — B2B zákazník objednáva podľa kódu z faktúry/etikety
@@ -24,10 +25,17 @@ function buildWhere(a: Active, exclude: string | null): Prisma.ProductWhereInput
     { ean: { contains: a.q, mode: "insensitive" } },
   ] });
   const w: Prisma.ProductWhereInput = { isPublished: true, AND: and };
-  if (a.cat && exclude !== "cat") w.category = { name: a.cat };
-  if (a.sub && exclude !== "sub") w.subcategory = a.sub;
+  if (catId && exclude !== "cat") w.categoryId = catId;
+  if (subId && exclude !== "sub") w.subcategoryId = subId;
   if (a.brand && exclude !== "brand") w.brand = a.brand;
   if (a.stock === "1" && exclude !== "stock") w.isStocked = true;
+  // cenový rozsah (priceMin/priceMax sú už prepočítané na basePrice cez tier zľavu)
+  if ((priceMin != null || priceMax != null) && exclude !== "price") {
+    const bp: Prisma.DecimalFilter = {};
+    if (priceMin != null) bp.gte = priceMin;
+    if (priceMax != null) bp.lte = priceMax;
+    w.basePrice = bp;
+  }
   return w;
 }
 
@@ -42,9 +50,25 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
   const a: Active = {
     q: (sp.q ?? "").trim().slice(0, 120), cat: (sp.cat ?? "").slice(0, 80), sub: (sp.sub ?? "").slice(0, 80), brand: (sp.brand ?? "").slice(0, 60),
     stock: sp.stock === "1" ? "1" : "", sort: sp.sort ?? "rec",
+    pmin: (sp.pmin ?? "").replace(/[^\d.,]/g, "").slice(0, 12), pmax: (sp.pmax ?? "").replace(/[^\d.,]/g, "").slice(0, 12),
   };
+  // cena filter: zákazník zadáva svoju (zľavnenú) cenu; prepočítame na basePrice cez tier zľavu
+  const div = 1 - discountPct / 100;
+  const num = (s: string) => { const n = parseFloat(s.replace(",", ".")); return isNaN(n) ? null : n; };
+  const priceMin = div > 0 && num(a.pmin) != null ? num(a.pmin)! / div : null;
+  const priceMax = div > 0 && num(a.pmax) != null ? num(a.pmax)! / div : null;
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
-  const where = buildWhere(a, null);
+
+  // strom kategórií — načítame vopred, aby sme názvy filtrov preložili na id (categoryId/subcategoryId)
+  const allCats = await prisma.category.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, parentId: true },
+  });
+  const catId = a.cat ? (allCats.find((c) => !c.parentId && c.name === a.cat)?.id ?? null) : null;
+  const subId = a.sub && catId ? (allCats.find((c) => c.parentId === catId && c.name === a.sub)?.id ?? null) : null;
+  const catName = new Map(allCats.map((c) => [c.id, c.name]));
+
+  const where = buildWhere(a, null, catId, subId, priceMin, priceMax);
   // cena: triedime podľa basePrice (jednotná tier zľava zachováva poradie; ProductPrice overrides
   // sú prázdne). nulls:"last" → položky „na vyžiadanie" (basePrice null) idú na koniec pri oboch smeroch.
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =
@@ -53,7 +77,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     : a.sort === "price-desc" ? [{ basePrice: { sort: "desc", nulls: "last" } }, { name: "asc" }]
     : [{ shelfStatus: "asc" }, { media: { _count: "desc" } }, { name: "asc" }];
 
-  const [rows, total, catRows, subRows, brandRows, stockCount, allCats] = await Promise.all([
+  const [rows, total, catRows, subRows, brandRows, stockCount] = await Promise.all([
     prisma.product.findMany({
       where, orderBy, take: PAGE, skip: (page - 1) * PAGE,
       select: {
@@ -65,22 +89,25 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
       },
     }),
     prisma.product.count({ where }),
-    prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat"), _count: { _all: true } }),
-    // podkategórie LEN keď je vybraná kategória (kaskáda)
-    a.cat
-      ? prisma.product.groupBy({ by: ["subcategory"], where: { ...buildWhere(a, "sub"), subcategory: { not: null } }, _count: { _all: true }, orderBy: { _count: { subcategory: "desc" } } })
-      : Promise.resolve([] as { subcategory: string | null; _count: { _all: number } }[]),
-    prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand"), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
-    prisma.product.count({ where: { ...buildWhere(a, "stock"), isStocked: true } }),
-    prisma.category.findMany({ select: { id: true, name: true } }),
+    // hlavné kategórie (úroveň 1) — počty vrátane podkategórií (produkty držia categoryId aj keď majú subcategoryId)
+    prisma.product.groupBy({ by: ["categoryId"], where: buildWhere(a, "cat", null, null, priceMin, priceMax), _count: { _all: true } }),
+    // podkategórie (deti vybranej kategórie) LEN keď je vybraná hlavná kategória
+    catId
+      ? prisma.product.groupBy({ by: ["subcategoryId"], where: { ...buildWhere(a, "sub", catId, null, priceMin, priceMax), subcategoryId: { not: null } }, _count: { _all: true } })
+      : Promise.resolve([] as { subcategoryId: string | null; _count: { _all: number } }[]),
+    prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand", catId, subId, priceMin, priceMax), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
+    prisma.product.count({ where: { ...buildWhere(a, "stock", catId, subId, priceMin, priceMax), isStocked: true } }),
   ]);
 
-  const catName = new Map(allCats.map((c) => [c.id, c.name]));
+  const topIds = new Set(allCats.filter((c) => !c.parentId).map((c) => c.id));
   const categories = catRows
-    .filter((r) => r.categoryId && catName.get(r.categoryId))
+    .filter((r) => r.categoryId && topIds.has(r.categoryId) && catName.get(r.categoryId))
     .map((r) => ({ name: catName.get(r.categoryId!)!, count: r._count._all }))
     .sort((x, y) => y.count - x.count);
-  const subcategories = subRows.filter((r) => r.subcategory).map((r) => ({ name: r.subcategory!, count: r._count._all }));
+  const subcategories = subRows
+    .filter((r) => r.subcategoryId && catName.get(r.subcategoryId))
+    .map((r) => ({ name: catName.get(r.subcategoryId!)!, count: r._count._all }))
+    .sort((x, y) => y.count - x.count);
   const brands = brandRows.filter((r) => r.brand).map((r) => ({ name: r.brand!, count: r._count._all }));
 
   const favSet = user.companyId
