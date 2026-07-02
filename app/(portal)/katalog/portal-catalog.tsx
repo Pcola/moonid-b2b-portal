@@ -9,7 +9,7 @@ import { FavoriteButton } from "@/components/portal/favorite-button";
 import { useToast } from "@/components/portal/toast";
 
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; fav: boolean; price: PricedLine };
-type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string };
+type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string; pmin: string; pmax: string };
 type Facets = {
   categories: { name: string; count: number }[];
   subcategories: { name: string; count: number }[];
@@ -42,6 +42,8 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   const pathname = usePathname();
   const [q, setQ] = useState(active.q);
   const [brandQ, setBrandQ] = useState("");
+  const [pmin, setPmin] = useState(active.pmin);
+  const [pmax, setPmax] = useState(active.pmax);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const drawerCloseRef = useRef<HTMLButtonElement>(null);
   // WCAG 2.1.1 (klávesnica) + 2.4.3 (focus): Escape zavrie drawer, focus ide na tlačidlo zavrieť
@@ -68,7 +70,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
     const qs = usp.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }
-  const clearAll = () => { setQ(""); setBrandQ(""); router.push(pathname); };
+  const clearAll = () => { setQ(""); setBrandQ(""); setPmin(""); setPmax(""); router.push(pathname); };
 
   // aktívne filtre ako chips
   const chips: { key: string; label: string }[] = [];
@@ -77,10 +79,12 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   if (active.sub) chips.push({ key: "sub", label: active.sub });
   if (active.brand) chips.push({ key: "brand", label: active.brand });
   if (active.stock === "1") chips.push({ key: "stock", label: "Skladom" });
+  if (active.pmin || active.pmax) chips.push({ key: "price", label: `${active.pmin || "0"}–${active.pmax || "∞"} €` });
   const removeChip = (key: string) => {
-    if (key === "q") setQ("");
-    if (key === "cat") go({ cat: "", sub: "" });
-    else go({ [key]: "" } as Partial<Active>);
+    if (key === "q") { setQ(""); go({ q: "" }); return; }
+    if (key === "cat") { go({ cat: "", sub: "" }); return; }
+    if (key === "price") { setPmin(""); setPmax(""); go({ pmin: "", pmax: "" }); return; }
+    go({ [key]: "" } as Partial<Active>);
   };
 
   const facetRow = (label: string, count: number, on: boolean, onClick: () => void) => (
@@ -121,6 +125,19 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
 
       <Group title="Dostupnosť">
         {facetRow("Skladom", facets.stockCount, active.stock === "1", () => go({ stock: active.stock === "1" ? "" : "1" }))}
+      </Group>
+
+      <Group title="Cena (€)">
+        <div className="flex items-center gap-2 px-1">
+          <input value={pmin} onChange={(e) => setPmin(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="od" aria-label="Cena od"
+            className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
+          <span className="flex-none text-muted-2">–</span>
+          <input value={pmax} onChange={(e) => setPmax(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="do" aria-label="Cena do"
+            className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
+        </div>
+        {(pmin !== active.pmin || pmax !== active.pmax) && (
+          <button type="button" onClick={() => go({ pmin, pmax })} className="mt-2 w-full rounded-[9px] bg-brand/10 py-1.5 text-[12.5px] font-semibold text-brand transition hover:bg-brand/15">Použiť cenu</button>
+        )}
       </Group>
 
       {facets.brands.length > 0 && (

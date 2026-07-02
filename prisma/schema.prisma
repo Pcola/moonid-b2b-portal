@@ -269,13 +269,20 @@ model AccessRequest {
 // ---------- Katalóg ----------
 
 model Category {
-  id              String    @id @default(cuid())
-  name            String    @unique
-  slug            String    @unique
-  sortOrder       Int       @default(0)
+  id              String     @id @default(cuid())
+  name            String     @unique
+  slug            String     @unique
+  sortOrder       Int        @default(0)
   icon            String?
   pohodaGroupCode String?
-  products        Product[]
+  // strom kategórií: parentId = null → hlavná kategória; inak podkategória
+  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  parentId        String?
+  children        Category[] @relation("CategoryTree")
+  products        Product[] // produkty priradené priamo tejto kategórii (hlavná úroveň)
+  subProducts     Product[]  @relation("ProductSubcategory") // produkty s touto podkategóriou
+
+  @@index([parentId])
 }
 
 model Product {
@@ -285,10 +292,12 @@ model Product {
   name               String // [C] názov z Pohody
   nameDisplay        String? // [P] kuratovaný názov pre web
   category           Category?        @relation(fields: [categoryId], references: [id])
-  categoryId         String?
+  categoryId         String? // hlavná kategória (strom, úroveň 1)
+  subcategoryRef     Category?        @relation("ProductSubcategory", fields: [subcategoryId], references: [id])
+  subcategoryId      String? // podkategória (strom, úroveň 2) — dieťa categoryId
   brand              String?
   systemCode         String? // Tork N4/H2/S4/T3...
-  subcategory        String? // [P] 2. úroveň kategórie (z feed kategoriaPlna) — kaskádový facet
+  subcategory        String? // [P] LEGACY textová podkategória — nahradené subcategoryId
   scent              String? // [P] vôňa — facet
   color              String? // [P] farba — facet
   material           String? // [P] materiál — facet
@@ -337,6 +346,7 @@ model Product {
   updatedAt          DateTime         @updatedAt
 
   @@index([categoryId])
+  @@index([subcategoryId])
   @@index([shelfStatus])
   @@index([productKind])
   @@index([isPublished])
