@@ -17,17 +17,17 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
       select: {
         id: true, sku: true, name: true, nameDisplay: true, origin: true, unit: true, brand: true,
         basePrice: true, vatRate: true, descriptionLong: true, isPublished: true, isSubsidized: true,
-        categoryId: true, slug: true,
+        categoryId: true, subcategoryId: true, slug: true,
         media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
       },
     }),
-    prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.category.findMany({ select: { id: true, name: true, parentId: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
   ]);
   if (!product) notFound();
 
   const data = {
     id: product.id, sku: product.sku, name: product.name, origin: product.origin,
-    nameDisplay: product.nameDisplay ?? "", categoryId: product.categoryId ?? "", unit: product.unit,
+    nameDisplay: product.nameDisplay ?? "", categoryId: product.categoryId ?? "", subcategoryId: product.subcategoryId ?? "", unit: product.unit,
     brand: product.brand ?? "", basePrice: product.basePrice != null ? Number(product.basePrice) : null,
     vatRate: Number(product.vatRate), descriptionLong: product.descriptionLong ?? "",
     isPublished: product.isPublished, isSubsidized: product.isSubsidized,

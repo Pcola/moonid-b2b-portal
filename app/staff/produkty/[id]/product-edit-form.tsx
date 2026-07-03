@@ -5,7 +5,7 @@ import Link from "next/link";
 import { updateProduct, updateProductImage } from "../actions";
 
 type Product = {
-  id: string; sku: string; name: string; origin: string; nameDisplay: string; categoryId: string;
+  id: string; sku: string; name: string; origin: string; nameDisplay: string; categoryId: string; subcategoryId: string;
   unit: string; brand: string; basePrice: number | null; vatRate: number; descriptionLong: string;
   isPublished: boolean; isSubsidized: boolean; image: string; slug: string | null;
 };
@@ -13,12 +13,14 @@ type Product = {
 const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
-export function ProductEditForm({ product, cats }: { product: Product; cats: { id: string; name: string }[] }) {
+export function ProductEditForm({ product, cats }: { product: Product; cats: { id: string; name: string; parentId: string | null }[] }) {
   const [f, setF] = useState({
-    nameDisplay: product.nameDisplay, categoryId: product.categoryId, unit: product.unit, brand: product.brand,
+    nameDisplay: product.nameDisplay, categoryId: product.categoryId, subcategoryId: product.subcategoryId, unit: product.unit, brand: product.brand,
     basePrice: product.basePrice != null ? String(product.basePrice) : "", vatRate: String(product.vatRate),
     descriptionLong: product.descriptionLong, isPublished: product.isPublished, isSubsidized: product.isSubsidized,
   });
+  const topCats = cats.filter((c) => !c.parentId);
+  const subCats = cats.filter((c) => c.parentId === f.categoryId);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -31,7 +33,7 @@ export function ProductEditForm({ product, cats }: { product: Product; cats: { i
     setMsg(null);
     start(async () => {
       const res = await updateProduct(product.id, {
-        nameDisplay: f.nameDisplay, categoryId: f.categoryId, unit: f.unit, brand: f.brand,
+        nameDisplay: f.nameDisplay, categoryId: f.categoryId, subcategoryId: f.subcategoryId, unit: f.unit, brand: f.brand,
         basePrice: f.basePrice.trim() === "" ? null : Number(f.basePrice.replace(",", ".")),
         vatRate: Number(f.vatRate.replace(",", ".")), descriptionLong: f.descriptionLong,
         isPublished: f.isPublished, isSubsidized: f.isSubsidized,
@@ -91,9 +93,15 @@ export function ProductEditForm({ product, cats }: { product: Product; cats: { i
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={lbl}>Kategória
-              <select value={f.categoryId} onChange={(e) => setF({ ...f, categoryId: e.target.value })} className={inp}>
+              <select value={f.categoryId} onChange={(e) => setF({ ...f, categoryId: e.target.value, subcategoryId: "" })} className={inp}>
                 <option value="">— nezaradené —</option>
-                {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {topCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label className={lbl}>Podkategória
+              <select value={f.subcategoryId} onChange={(e) => setF({ ...f, subcategoryId: e.target.value })} disabled={subCats.length === 0} className={`${inp} disabled:opacity-50`}>
+                <option value="">{subCats.length === 0 ? "— žiadne podkategórie —" : "— bez podkategórie —"}</option>
+                {subCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </label>
             <label className={lbl}>Značka<input value={f.brand} onChange={(e) => setF({ ...f, brand: e.target.value })} className={inp} /></label>
