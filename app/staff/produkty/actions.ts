@@ -13,6 +13,7 @@ const ID = z.string().min(1).max(100);
 const editSchema = z.object({
   nameDisplay: z.string().trim().max(200).optional().or(z.literal("")),
   categoryId: z.string().trim().max(100).optional().or(z.literal("")),
+  subcategoryId: z.string().trim().max(100).optional().or(z.literal("")),
   unit: z.string().trim().min(1).max(20),
   brand: z.string().trim().max(80).optional().or(z.literal("")),
   basePrice: z.coerce.number().min(0).max(1_000_000).nullable().optional(),
@@ -45,12 +46,21 @@ export async function updateProduct(id: string, input: z.input<typeof editSchema
     const cat = await prisma.category.findUnique({ where: { id: d.categoryId }, select: { id: true } });
     if (!cat) return { ok: false, error: "Neplatná kategória." };
   }
+  // podkategória musí byť dieťaťom vybranej hlavnej kategórie (strom, úroveň 2)
+  let subcategoryId: string | null = null;
+  if (d.subcategoryId) {
+    if (!d.categoryId) return { ok: false, error: "Najprv vyberte hlavnú kategóriu." };
+    const sub = await prisma.category.findUnique({ where: { id: d.subcategoryId }, select: { parentId: true } });
+    if (!sub || sub.parentId !== d.categoryId) return { ok: false, error: "Podkategória nepatrí do vybranej kategórie." };
+    subcategoryId = d.subcategoryId;
+  }
 
   await prisma.product.update({
     where: { id },
     data: {
       nameDisplay: d.nameDisplay?.trim() || null,
       categoryId: d.categoryId || null,
+      subcategoryId,
       unit: d.unit,
       brand: d.brand?.trim() || null,
       basePrice: d.basePrice ?? null,
