@@ -17,7 +17,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
   const order = await prisma.order.findUnique({
     where: { id },
     select: {
-      id: true, number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true,
+      id: true, number: true, status: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, hasBackorder: true,
       createdAt: true, confirmedAt: true, priceTierCode: true, pohodaSync: true, companyId: true, deliveryLocationId: true,
       deliveryMethodLabel: true, shippingFee: true, paymentMethodCode: true, paymentMethodLabel: true, paymentSurcharge: true,
       company: { select: { name: true, address: true, city: true, ico: true, splatDays: true, priceTier: { select: { code: true, name: true } }, locations: { orderBy: [{ isDefault: "desc" }, { label: "asc" }], select: { id: true, label: true, street: true, city: true, zip: true } } } },
@@ -172,6 +172,13 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
           </div>
         </div>
       </div>
+
+      {order.poNumber && (
+        <div className="rounded-2xl border border-line bg-white p-[22px]">
+          <h3 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Objednávkové číslo zákazníka</h3>
+          <p className="mt-1.5 text-[14px] font-medium text-ink">{order.poNumber}</p>
+        </div>
+      )}
 
       {order.note && (
         <div className="rounded-2xl border border-line bg-white p-[22px]">

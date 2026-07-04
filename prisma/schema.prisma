@@ -564,6 +564,7 @@ model Order {
   hasBackorder          Boolean            @default(false)
   priceTierCode         String
   note                  String?
+  poNumber              String? // objednávkové číslo/referencia zákazníka (EN 16931 BT-13)
   subtotal              Decimal            @default(0) @db.Decimal(12, 4)
   vat                   Decimal            @default(0) @db.Decimal(12, 4)
   total                 Decimal            @default(0) @db.Decimal(12, 4)
