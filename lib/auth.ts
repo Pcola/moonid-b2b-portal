@@ -25,6 +25,18 @@ function isStaff(role: string) {
   return role === "STAFF" || role === "ADMIN";
 }
 
+/** MFA gate: true ak má user overený TOTP faktor, ale aktuálna relácia ešte nie je AAL2
+ *  (musí prejsť /mfa výzvou). Fail-open — chyba kontroly nezablokuje prístup. */
+async function needsMfaChallenge(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    return data?.nextLevel === "aal2" && data.currentLevel === "aal1";
+  } catch {
+    return false;
+  }
+}
+
 /** Vyžaduje prihláseného zákazníka (alebo staff). Inak redirect. */
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
@@ -40,6 +52,7 @@ export async function requireStaff(): Promise<SessionUser> {
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1"); // deaktivovaný staff nesmie prejsť
   if (!isStaff(user.role)) redirect("/dashboard");
+  if (await needsMfaChallenge()) redirect("/mfa"); // enrolovaný faktor + AAL1 → dokončiť MFA výzvu
   return user;
 }
 
@@ -49,5 +62,6 @@ export async function requireAdmin(): Promise<SessionUser> {
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1");
   if (user.role !== "ADMIN") redirect("/dashboard");
+  if (await needsMfaChallenge()) redirect("/mfa");
   return user;
 }
