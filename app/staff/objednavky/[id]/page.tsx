@@ -6,6 +6,7 @@ import { STATUS_META, STEP_TITLES, stepIndex, type OrderStatus } from "@/lib/ord
 import { OrderActions } from "./order-actions";
 import { OrderEditor } from "./order-editor";
 import { SHIPPING_VAT_RATE } from "@/lib/store-config";
+import { dec, round2, lineTotal, sumMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +37,13 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
   const editable = status === "PRIJATA" || status === "POTVRDENA";
   const editorItems = order.items.map((it) => ({
     id: it.id, name: it.nameSnapshot, sku: it.skuSnapshot, unit: it.product?.unit ?? "ks",
-    unitPriceSnapshot: Number(it.unitPriceSnapshot), vatRate: Number(it.product?.vatRate ?? 23), qty: Math.round(Number(it.qty)),
+    // kanonické 2-des. net (rovnako ako updateOrder) — náhľad editora tak sedí s uloženou sumou
+    unitPriceSnapshot: round2(it.unitPriceSnapshot), vatRate: Number(it.product?.vatRate ?? 23), qty: Math.round(Number(it.qty)),
   }));
 
   // staff-only marža
-  const costTotal = order.items.reduce((s, it) => s + (it.costSnapshot != null ? Number(it.costSnapshot) * Number(it.qty) : 0), 0);
-  const margin = Number(order.subtotal) - costTotal;
+  const costTotal = sumMoney(order.items.filter((it) => it.costSnapshot != null).map((it) => lineTotal(it.costSnapshot!, Number(it.qty))));
+  const margin = round2(dec(order.subtotal).minus(costTotal));
   const marginPct = Number(order.subtotal) > 0 ? (margin / Number(order.subtotal)) * 100 : 0;
 
   return (

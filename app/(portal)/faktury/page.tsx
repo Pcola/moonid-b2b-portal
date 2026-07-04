@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sumMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Faktúry — Moonid portál", robots: { index: false, follow: false } };
@@ -41,7 +42,7 @@ export default async function FakturyPage() {
   const isOverdue = (i: (typeof invoices)[number]) => i.status === "PENDING" && !i.paidAt && i.dueAt < now;
   const effStatus = (i: (typeof invoices)[number]) => (isOverdue(i) ? "OVERDUE" : i.status);
 
-  const num = (d: typeof invoices) => d.reduce((s, i) => s + Number(i.total), 0);
+  const num = (d: typeof invoices) => sumMoney(d.map((i) => i.total));
   const overdue = num(invoices.filter(isOverdue));
   const pending = num(invoices.filter((i) => i.status === "PENDING" && !isOverdue(i)));
   const paidYear = num(invoices.filter((i) => i.status === "PAID" && i.issuedAt.getFullYear() === year));

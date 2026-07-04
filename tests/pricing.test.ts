@@ -34,4 +34,16 @@ describe("resolveUnitPrice — cenová logika (jadro biznisu)", () => {
     expect(resolveUnitPrice({ basePriceNet: 10, vatRate: 23, isSubsidized: false, tierUnitNet: null, discountPct: 100 })).toEqual({ kind: "ON_REQUEST" });
     expect(resolveUnitPrice({ basePriceNet: 0, vatRate: 23, isSubsidized: false, tierUnitNet: null, discountPct: 0 })).toEqual({ kind: "ON_REQUEST" });
   });
+
+  it(".005 hranica sa zaokrúhli NAHOR — Decimal regresia (float dával 1.84)", () => {
+    // 1.50 × 1.23 = 1.845 presne → obchodné zaokrúhlenie 1.85; float Math.round dal 1.84
+    const r = resolveUnitPrice({ basePriceNet: 1.5, vatRate: 23, isSubsidized: false, tierUnitNet: null, discountPct: 0 });
+    expect(r).toMatchObject({ kind: "PRICE", net: 1.5, gross: 1.85 });
+  });
+
+  it("dlhé desatinné zo zľavy sa počítajú presne", () => {
+    // 3.33 × (1 − 33.33/100) = 3.33 × 0.6667 = 2.220111 → net 2.22; gross 2.220111×1.23 = 2.73073653 → 2.73
+    const r = resolveUnitPrice({ basePriceNet: 3.33, vatRate: 23, isSubsidized: false, tierUnitNet: null, discountPct: 33.33 });
+    expect(r).toMatchObject({ kind: "PRICE", net: 2.22, gross: 2.73 });
+  });
 });

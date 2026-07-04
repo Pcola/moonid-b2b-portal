@@ -7,6 +7,7 @@ import { nextStatus, canCancel, type OrderStatus } from "@/lib/orders/transition
 import { emailOrderStatus } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
 import { SHIPPING_VAT_RATE } from "@/lib/store-config";
+import { dec, round2, lineTotal, lineVat, sumMoney, vatOf } from "@/lib/money";
 import { z } from "zod";
 
 const ID = z.string().min(1).max(100);
@@ -69,7 +70,6 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ o
   return { ok: true };
 }
 
-function r2(n: number) { return Math.round(n * 100) / 100; }
 function canEditOrder(s: OrderStatus) { return s === "PRIJATA" || s === "POTVRDENA"; }
 
 const editSchema = z.object({
@@ -114,24 +114,24 @@ export async function updateOrder(orderId: string, input: z.input<typeof editSch
     } else deliveryLocationId = null;
   }
 
-  let subtotal = 0, vat = 0;
+  const lineVats: number[] = [];
   const updates = keep.map((it) => {
     const q = effQty(it);
-    const net = Number(it.unitPriceSnapshot);
-    const line = r2(net * q);
+    // kanonická jednotková cena = 2 des. (tak ju vidí zákazník a tak ju ukladá createOrder);
+    // 4-des. snapshot sa najprv zaokrúhli — náhľad v editore (money-client) tak sedí s uloženým
+    const net = round2(it.unitPriceSnapshot);
     const vr = Number(it.product?.vatRate ?? 23);
-    const grossUnit = r2(net * (1 + vr / 100)); // rovnaká metóda ako createOrder (zaokr. gross/kus)
-    subtotal += line;
-    vat += r2((grossUnit - net) * q);
-    return { id: it.id, qty: q, lineTotal: line };
+    const grossUnit = round2(dec(net).times(dec(100).plus(vr).dividedBy(100))); // rovnaká metóda ako createOrder (zaokr. gross/kus)
+    lineVats.push(lineVat(net, grossUnit, q));
+    return { id: it.id, qty: q, lineTotal: lineTotal(net, q) };
   });
-  subtotal = r2(subtotal); vat = r2(vat);
+  const subtotal = sumMoney(updates.map((u) => u.lineTotal));
   // doprava + príplatok platby ostávajú (dohodnuté pri objednaní) — len doplníme ich DPH do súm,
   // aby staff úprava množstiev nezahodila poplatky z objednávky.
   const shippingFee = Number(order.shippingFee);
   const paymentSurcharge = Number(order.paymentSurcharge);
-  vat = r2(vat + r2((shippingFee + paymentSurcharge) * (SHIPPING_VAT_RATE / 100)));
-  const total = r2(subtotal + shippingFee + paymentSurcharge + vat);
+  const vat = sumMoney([...lineVats, vatOf(sumMoney([shippingFee, paymentSurcharge]), SHIPPING_VAT_RATE)]);
+  const total = sumMoney([subtotal, shippingFee, paymentSurcharge, vat]);
 
   await prisma.$transaction(async (tx) => {
     if (removeIds.length) await tx.orderItem.deleteMany({ where: { id: { in: removeIds }, orderId } });

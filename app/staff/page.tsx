@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sumMoney } from "@/lib/money";
 import { STATUS_META, type OrderStatus } from "@/lib/orders/transition";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ export default async function StaffDashboard() {
   const monthRevenue = Number(monthAgg._sum.total ?? 0);
 
   // 7-dňový graf
+  const dayBuckets: (typeof weekOrders)[number]["total"][][] = Array.from({ length: 7 }, () => []);
   const days: { label: string; value: number }[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekAgo.getFullYear(), weekAgo.getMonth(), weekAgo.getDate() + i);
@@ -54,10 +56,11 @@ export default async function StaffDashboard() {
   }
   for (const o of weekOrders) {
     const idx = Math.floor((new Date(o.createdAt.getFullYear(), o.createdAt.getMonth(), o.createdAt.getDate()).getTime() - new Date(weekAgo.getFullYear(), weekAgo.getMonth(), weekAgo.getDate()).getTime()) / 86400000);
-    if (idx >= 0 && idx < 7) days[idx].value += Number(o.total);
+    if (idx >= 0 && idx < 7) dayBuckets[idx].push(o.total);
   }
+  for (let i = 0; i < 7; i++) days[i].value = sumMoney(dayBuckets[i]);
   const maxDay = Math.max(1, ...days.map((d) => d.value));
-  const weekTotal = days.reduce((s, d) => s + d.value, 0);
+  const weekTotal = sumMoney(days.map((d) => d.value));
 
   // top produkty
   const topIds = topRows.map((r) => r.productId);

@@ -3,12 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrder } from "../actions";
+import { lineTotal2, sumMoney2, grossUnit2, vatOf2 } from "@/lib/money-client";
 
 type Item = { id: string; name: string; sku: string; unit: string; unitPriceSnapshot: number; vatRate: number; qty: number };
 type Loc = { id: string; label: string | null; street: string | null; city: string | null; zip: string | null };
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
-function r2(n: number) { return Math.round(n * 100) / 100; }
 
 export function OrderEditor({ orderId, editable, items, locations, note, deliveryLocationId, shippingFee, paymentSurcharge, vatRate }: {
   orderId: string; editable: boolean; items: Item[]; locations: Loc[]; note: string | null; deliveryLocationId: string | null;
@@ -26,10 +26,11 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
 
   const set = (id: string, v: number) => setQty((p) => ({ ...p, [id]: Math.max(0, Math.min(9999, Math.floor(v || 0))) }));
   const usable = items.filter((i) => (qty[i.id] ?? 0) > 0);
-  const subtotal = r2(usable.reduce((s, i) => s + r2(i.unitPriceSnapshot * qty[i.id]), 0));
-  const itemsVat = r2(usable.reduce((s, i) => { const g = r2(i.unitPriceSnapshot * (1 + i.vatRate / 100)); return s + r2((g - i.unitPriceSnapshot) * qty[i.id]); }, 0));
-  const vat = r2(itemsVat + r2((shippingFee + paymentSurcharge) * (vatRate / 100)));
-  const total = r2(subtotal + shippingFee + paymentSurcharge + vat); // doprava/príplatok ostávajú
+  // náhľad počíta rovnako ako server (lib/money): centová aritmetika, polovica nahor
+  const subtotal = sumMoney2(usable.map((i) => lineTotal2(i.unitPriceSnapshot, qty[i.id])));
+  const itemsVat = sumMoney2(usable.map((i) => lineTotal2(grossUnit2(i.unitPriceSnapshot, i.vatRate) - i.unitPriceSnapshot, qty[i.id])));
+  const vat = sumMoney2([itemsVat, vatOf2(sumMoney2([shippingFee, paymentSurcharge]), vatRate)]);
+  const total = sumMoney2([subtotal, shippingFee, paymentSurcharge, vat]); // doprava/príplatok ostávajú
 
   function reset() {
     setQty(Object.fromEntries(items.map((i) => [i.id, i.qty])));
@@ -81,7 +82,7 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
                   className="w-[52px] rounded-lg border border-line bg-white px-1 py-1 text-center text-[13.5px] text-ink outline-none focus:border-brand tabular-nums" />
                 <button onClick={() => set(it.id, q + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-muted hover:border-brand/40">+</button>
               </div>
-              <span className="w-[74px] flex-none text-right text-[13.5px] font-semibold tabular-nums text-ink">{removed ? "—" : eur(r2(it.unitPriceSnapshot * q))}</span>
+              <span className="w-[74px] flex-none text-right text-[13.5px] font-semibold tabular-nums text-ink">{removed ? "—" : eur(lineTotal2(it.unitPriceSnapshot, q))}</span>
               <button onClick={() => set(it.id, removed ? it.qty || 1 : 0)} title={removed ? "Vrátiť" : "Odobrať"} className="flex-none text-muted-2 transition hover:text-[#9a3025]">
                 {removed
                   ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.5 2.8L3 8" /><path d="M3 3v5h5" /></svg>

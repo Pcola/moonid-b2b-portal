@@ -1,9 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice, type PricedLine } from "@/lib/pricing";
+import { lineTotal, lineVat, sumMoney } from "@/lib/money";
 import { Prisma } from "@prisma/client";
-
-function r2(n: number) { return Math.round(n * 100) / 100; }
 
 // Atomický get-or-create: 1 košík na firmu (Cart @@unique([companyId])). Nahrádza pôvodný
 // findFirst+create, ktorý pri súbehu (dva taby/dvojklik) vytvoril 2 košíky → tichá strata položiek.
@@ -57,7 +56,8 @@ export async function getCartDetail(companyId: string, tierCode: string | null, 
     },
   });
 
-  let subtotalNet = 0, vat = 0, hasOnRequest = false;
+  const lineNets: number[] = [], lineVats: number[] = [];
+  let hasOnRequest = false;
   const items: CartLine[] = rows.map((row) => {
     const p = row.product;
     const qty = Number(row.qty);
@@ -70,14 +70,16 @@ export async function getCartDetail(companyId: string, tierCode: string | null, 
     });
     let lineNet: number | null = null;
     if (price.kind === "PRICE") {
-      lineNet = r2(price.net * qty);
-      subtotalNet += lineNet;
-      vat += r2((price.gross - price.net) * qty);
+      lineNet = lineTotal(price.net, qty);
+      lineNets.push(lineNet);
+      lineVats.push(lineVat(price.net, price.gross, qty));
     } else {
       hasOnRequest = true;
     }
     return { id: row.id, productId: p.id, slug: p.slug ?? p.id, n: p.nameDisplay || p.name, i: p.media[0]?.storagePath ?? "", unit: p.unit, qty, price, lineNet };
   });
 
-  return { items, subtotalNet: r2(subtotalNet), vat: r2(vat), totalGross: r2(subtotalNet + vat), hasOnRequest };
+  const subtotalNet = sumMoney(lineNets);
+  const vat = sumMoney(lineVats);
+  return { items, subtotalNet, vat, totalGross: sumMoney([subtotalNet, vat]), hasOnRequest };
 }
