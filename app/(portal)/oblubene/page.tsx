@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { FavoriteButton } from "@/components/portal/favorite-button";
 import { QuickAddButton } from "@/components/portal/quick-add-button";
+import { ProductImg } from "@/components/product-img";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Obľúbené — Moonid portál", robots: { index: false, follow: false } };
@@ -69,13 +70,8 @@ export default async function OblubenePage() {
             <div key={p.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
               <FavoriteButton productId={p.id} initial={true} className="absolute right-2 top-2 z-10 bg-white/80 backdrop-blur-sm" />
               <Link prefetch={false} href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
-                <span className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
-                {p.i ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.i} alt={p.n} loading="lazy" className="max-h-full max-w-full object-contain" />
-                ) : (
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-                )}
+                <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
+                <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 208px" iconSize={36} />
               </Link>
               <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">
                 <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-2 line-clamp-1">{p.c}</span>

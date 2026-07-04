@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { ProductImg } from "@/components/product-img";
 
 type P = { id: string; n: string; i: string; c: string; slug: string };
 type Active = { q: string; cat: string; sub: string; brand: string; sort: string };
@@ -145,13 +146,8 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
                 href={`/produkt/${p.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_14px_34px_-16px_rgba(16,42,38,0.22)]"
               >
-                <div className="flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
-                  {p.i ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.i} alt={p.n} loading="lazy" className="max-h-full max-w-full object-contain transition duration-300 group-hover:scale-[1.04]" />
-                  ) : (
-                    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-                  )}
+                <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#fafbfa] p-5">
+                  <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 220px" iconSize={38} imgClassName="transition duration-300 group-hover:scale-[1.04]" />
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">
                   <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-2 line-clamp-1">{p.c}</span>
