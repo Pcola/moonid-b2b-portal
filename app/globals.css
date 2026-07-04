@@ -11,7 +11,8 @@
   --color-paper: #ffffff;
   --color-ink: #16201d;
   --color-muted: #5c584f;
-  --color-muted-2: #86827a;
+  /* WCAG 2.2 AA (1.4.3): #86827a bolo ~3.3:1 na bielej/creme (padalo); #6b675f ≈ 5.2:1 na creme */
+  --color-muted-2: #6b675f;
   --color-muted-3: #54514a;
   --color-line: #e7ebe9;
   --color-mintbg: #eaf1ee;

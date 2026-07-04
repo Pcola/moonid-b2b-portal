@@ -1,0 +1,43 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # týždenný sken (pondelok 06:00 UTC) — zachytí novo zverejnené pravidlá
+
+# least-privilege — oba joby len čítajú kód
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # celá história — gitleaks skenuje aj staré commity
+      # spúšťame gitleaks binárku priamo (nie action) — nepotrebuje GitHub API/PR práva,
+      # takže funguje aj s least-privilege `contents: read`
+      - name: Gitleaks (história + working tree)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          chmod +x gitleaks
+          ./gitleaks detect --source . --config .gitleaks.toml --redact --no-banner --exit-code 1
+
+  sast:
+    name: SAST (semgrep)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet semgrep
+      # high-signal bezpečnostné pravidlá (nie lint-štýl); --error spadne pri náleze.
+      # var-in-href vylúčené — false-positive na JSX href s internou cestou (/produkt/${slug})
+      - run: semgrep scan --config p/security-audit --exclude-rule generic.html-templates.security.var-in-href.var-in-href --error --metrics=off
