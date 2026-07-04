@@ -181,7 +181,12 @@ export async function inviteMember(input: { email: string; name?: string }): Pro
   const ev = z.string().trim().email("Neplatný e-mail").max(160).safeParse(String(input.email ?? "").trim());
   if (!ev.success) return { ok: false, error: "Neplatný e-mail." };
   const existing = await prisma.user.findUnique({ where: { email: ev.data }, select: { companyId: true } });
-  if (existing?.companyId && existing.companyId !== user.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
+  if (existing?.companyId) {
+    if (existing.companyId !== user.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
+    // už je členom TEJTO firmy — opätovné „pozvanie" by cez inviteUser potichu prepísalo rolu
+    // (CUSTOMER_ADMIN → CUSTOMER_USER) a reaktivovalo konto; správu robte v sekcii Používatelia
+    return { ok: false, error: "Tento používateľ už je členom vašej firmy — spravujte ho v sekcii Používatelia." };
+  }
   const company = await prisma.company.findUnique({ where: { id: user.companyId! }, select: { name: true } });
   const res = await inviteUser(ev.data, String(input.name ?? "").trim() || null, "CUSTOMER_USER", user.companyId!, company?.name ?? "Moonid");
   if (!res.ok) return { ok: false, error: res.error };
