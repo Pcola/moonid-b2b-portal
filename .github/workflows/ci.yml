@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+# least-privilege: CI nič nezapisuje do repa (len číta) — default token by mal read/write
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
