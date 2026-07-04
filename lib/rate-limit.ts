@@ -32,6 +32,20 @@ export async function rateLimit(
   }
 }
 
+// Prečíta aktuálny počet v okne BEZ inkrementu (peek) — na kontrolu lockoutu pred akciou.
+// Fail-open (0) pri chybe. Vracia 0 aj keď okno expirovalo.
+export async function peekCount(key: string, windowSec: number): Promise<number> {
+  try {
+    const rows = await prisma.$queryRaw<{ count: number }[]>`
+      SELECT CASE WHEN "windowStart" < now() - make_interval(secs => ${windowSec}) THEN 0 ELSE "count" END AS count
+      FROM "RateLimit" WHERE "key" = ${key}`;
+    return Number(rows[0]?.count ?? 0);
+  } catch (e) {
+    reportError("rateLimit.peek", e, { keyPrefix: key.split(":")[0] });
+    return 0;
+  }
+}
+
 // Klientská IP z requestu (na Verceli cez x-forwarded-for, prvá položka).
 export function clientIp(headers: Headers): string {
   const xff = headers.get("x-forwarded-for");

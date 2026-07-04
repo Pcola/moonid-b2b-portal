@@ -27,10 +27,12 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setErr(null);
-    // app-layer brzda proti brute-force (doplnok k Supabase limitom)
-    const gate = await loginGate();
+    // app-layer brzda proti brute-force (per-IP + per-účet lockout; doplnok k Supabase limitom)
+    const gate = await loginGate(email.trim());
     if (!gate.ok) {
-      setErr("Priveľa pokusov o prihlásenie. Skúste to o pár minút.");
+      setErr(gate.locked
+        ? "Účet je dočasne uzamknutý pre priveľa neúspešných pokusov. Skúste o 15 minút alebo si obnovte heslo."
+        : "Priveľa pokusov o prihlásenie. Skúste to o pár minút.");
       setLoading(false);
       return;
     }
