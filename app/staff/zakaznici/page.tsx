@@ -28,9 +28,14 @@ export default async function StaffCustomers() {
     <div className="flex max-w-[1240px] flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[14px] text-muted">{companies.length}{companies.length >= CAP ? "+" : ""} zákazníkov · {tiersCount} cenové úrovne · klikni pre detail a úpravu</p>
-        <Link href="/staff/zakaznici/novy" className="inline-flex items-center gap-1.5 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>Nový zákazník
-        </Link>
+        <div className="flex items-center gap-2">
+          <a href="/api/staff/export?type=customers" download className="inline-flex items-center gap-1.5 rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[14px] font-semibold text-muted transition hover:border-brand/40 hover:text-ink">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4" /><path d="M5 21h14" /></svg>Export CSV
+          </a>
+          <Link href="/staff/zakaznici/novy" className="inline-flex items-center gap-1.5 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>Nový zákazník
+          </Link>
+        </div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <div className="grid grid-cols-[2fr_1fr_1fr_0.7fr_1fr] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">

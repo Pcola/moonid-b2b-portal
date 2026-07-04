@@ -47,9 +47,14 @@ export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: {
             );
           })}
         </div>
-        <div className="flex items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Číslo alebo firma…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
+        <div className="flex items-center gap-2">
+          <a href="/api/staff/export?type=orders" download className="inline-flex items-center gap-1.5 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[13.5px] font-semibold text-muted transition hover:border-brand/40 hover:text-ink">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4" /><path d="M5 21h14" /></svg>Export CSV
+          </a>
+          <div className="flex items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Číslo alebo firma…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
+          </div>
         </div>
       </div>
 
