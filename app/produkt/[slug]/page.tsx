@@ -78,6 +78,18 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
     offers: { "@type": "Offer", availability: p.isStocked ? "https://schema.org/InStock" : "https://schema.org/BackOrder", priceCurrency: "EUR", seller: { "@type": "Organization", name: "Moonid s.r.o." } },
   };
 
+  // BreadcrumbList — pomáha Google rich results aj AI extrakcii cesty (dáta z breadcrumb nav nižšie)
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.moonid.sk";
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Produkty", item: `${base}/produkty` },
+      { "@type": "ListItem", position: 2, name: cat, item: `${base}/produkty?cat=${encodeURIComponent(cat)}` },
+      { "@type": "ListItem", position: 3, name },
+    ],
+  };
+
   return (
     <>
       <SiteHeader solid />
@@ -193,6 +205,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
       <SiteFooter />
       <CookieBanner />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }} />
     </>
   );
 }
