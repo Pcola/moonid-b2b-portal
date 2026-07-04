@@ -14,7 +14,8 @@ function cell(v: unknown): string {
 function toCsv(headers: string[], rows: unknown[][]): string {
   return "﻿" + [headers, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
 }
-const dec = (n: number) => n.toFixed(2).replace(".", ","); // desatinná čiarka pre Excel
+// desatinná čiarka pre Excel; berie number aj Prisma.Decimal (formát priamo z DB hodnoty, bez float medzikroku)
+const money = (v: { toFixed(dp: number): string }) => v.toFixed(2).replace(".", ",");
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
 function csvResponse(body: string, filename: string): NextResponse {
@@ -50,7 +51,7 @@ export async function GET(req: Request) {
       ["Číslo", "Dátum", "Firma", "IČO", "Úroveň", "Stav", "Položiek", "PO číslo", "Medzisúčet", "DPH", "Spolu s DPH"],
       orders.map((o) => [
         o.number, day(o.createdAt), o.company.name, o.company.ico, o.company.priceTier?.code ?? "",
-        o.status, o._count.items, o.poNumber ?? "", dec(Number(o.subtotal)), dec(Number(o.vat)), dec(Number(o.total)),
+        o.status, o._count.items, o.poNumber ?? "", money(o.subtotal), money(o.vat), money(o.total),
       ]),
     );
     await writeAudit({ userId: user.id, action: "EXPORT_ORDERS", entity: "Order", meta: { count: orders.length } });

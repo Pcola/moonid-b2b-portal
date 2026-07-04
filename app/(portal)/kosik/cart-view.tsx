@@ -5,9 +5,9 @@ import Link from "next/link";
 import type { CartDetail } from "@/lib/cart";
 import { setQty, removeItem, createOrder } from "./actions";
 import { ProductImg } from "@/components/product-img";
+import { sumMoney2, vatOf2 } from "@/lib/money-client";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
-function r2(n: number) { return Math.round(n * 100) / 100; }
 
 type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null };
 type Billing = { name: string; ico: string; address: string | null; city: string | null };
@@ -44,9 +44,10 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
   const needsAddress = selDelObj?.requiresAddress ?? true;
   const shipping = selDelObj ? shippingFor(selDelObj, cart.subtotalNet) : 0;
   const surcharge = selPayObj?.surcharge ?? 0;
-  const extrasVat = r2((shipping + surcharge) * (vatRate / 100));
-  const grandVat = r2(cart.vat + extrasVat);
-  const grandTotal = r2(cart.subtotalNet + shipping + surcharge + grandVat);
+  // náhľad počíta zhodne so serverom (resolveOrderCharges): centová aritmetika, polovica nahor
+  const extrasVat = vatOf2(sumMoney2([shipping, surcharge]), vatRate);
+  const grandVat = sumMoney2([cart.vat, extrasVat]);
+  const grandTotal = sumMoney2([cart.subtotalNet, shipping, surcharge, grandVat]);
 
   function removeOnRequest() {
     start(async () => {

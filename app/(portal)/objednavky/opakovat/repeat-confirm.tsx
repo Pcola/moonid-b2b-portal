@@ -4,14 +4,14 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { placeRepeatOrder, quickAddToRepeatDraft, removeRepeatDraftItem } from "../../kosik/actions";
+import { lineTotal2, sumMoney2 } from "@/lib/money-client";
 
 type Line = { name: string; qty: number; net: number | null; usable: boolean };
 type ExtraLine = Line & { id: string };
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
-function r2(n: number) { return Math.round(n * 100) / 100; }
 function sumNet(lines: { net: number | null; qty: number; usable: boolean }[]) {
-  return lines.reduce((s, l) => (l.usable ? s + r2((l.net ?? 0) * l.qty) : s), 0);
+  return sumMoney2(lines.filter((l) => l.usable).map((l) => lineTotal2(l.net ?? 0, l.qty)));
 }
 
 export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extraLines, deliveryText, note }: {
@@ -24,7 +24,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
   const [placing, startPlace] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
-  const subtotal = r2(sumNet(items) + sumNet(extraLines));
+  const subtotal = sumMoney2([sumNet(items), sumNet(extraLines)]);
   const usableCount = items.filter((i) => i.usable).length + extraLines.filter((c) => c.usable).length;
 
   function addSku() {
@@ -70,7 +70,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
             </div>
             <div className="flex flex-none items-center gap-4 text-right">
               <span className="text-[13.5px] text-muted-2">{l.qty} ks</span>
-              <span className="w-[90px] text-[14px] font-semibold tabular-nums text-ink">{l.usable ? eur(r2((l.net ?? 0) * l.qty)) : "—"}</span>
+              <span className="w-[90px] text-[14px] font-semibold tabular-nums text-ink">{l.usable ? eur(lineTotal2(l.net ?? 0, l.qty)) : "—"}</span>
             </div>
           </div>
         ))}
@@ -86,7 +86,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
             </div>
             <div className="flex flex-none items-center gap-4 text-right">
               <span className="text-[13.5px] text-muted-2">{l.qty} ks</span>
-              <span className="w-[90px] text-[14px] font-semibold tabular-nums text-ink">{l.usable ? eur(r2((l.net ?? 0) * l.qty)) : "—"}</span>
+              <span className="w-[90px] text-[14px] font-semibold tabular-nums text-ink">{l.usable ? eur(lineTotal2(l.net ?? 0, l.qty)) : "—"}</span>
               <button onClick={() => removeExtra(l.id)} disabled={busy} aria-label="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-40">✕</button>
             </div>
           </div>

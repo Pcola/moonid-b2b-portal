@@ -1,10 +1,9 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { round2, sumMoney, vatOf } from "@/lib/money";
 
 // Štandardná sadzba DPH na dopravu/služby (SK). Dráha/príplatok sa zdaňujú touto sadzbou.
 export const SHIPPING_VAT_RATE = 23;
-
-function r2(n: number) { return Math.round(n * 100) / 100; }
 
 export type DeliveryMethodView = {
   code: string; label: string; description: string | null;
@@ -30,7 +29,7 @@ export async function getEnabledPaymentMethods(): Promise<PaymentMethodView[]> {
 /** Doprava netto pre metódu a hodnotu tovaru (netto): zdarma nad prahom, inak paušál. */
 export function shippingFor(m: { flatFee: number; freeThreshold: number | null }, itemsNet: number): number {
   if (m.freeThreshold != null && itemsNet >= m.freeThreshold) return 0;
-  return r2(m.flatFee);
+  return round2(m.flatFee);
 }
 
 /**
@@ -49,8 +48,8 @@ export async function resolveOrderCharges(input: { deliveryCode?: string | null;
   const del = dels.find((d) => d.code === input.deliveryCode) ?? dels[0] ?? null;
   const pay = pays.find((p) => p.code === input.paymentCode) ?? pays[0] ?? null;
   const shippingFee = del ? shippingFor(del, input.itemsNet) : 0;
-  const paymentSurcharge = pay ? r2(pay.surcharge) : 0;
-  const extrasVat = r2((shippingFee + paymentSurcharge) * (SHIPPING_VAT_RATE / 100));
+  const paymentSurcharge = pay ? round2(pay.surcharge) : 0;
+  const extrasVat = vatOf(sumMoney([shippingFee, paymentSurcharge]), SHIPPING_VAT_RATE);
   return {
     delivery: del ? { code: del.code, label: del.label, requiresAddress: del.requiresAddress } : null,
     payment: pay ? { code: pay.code, label: pay.label } : null,

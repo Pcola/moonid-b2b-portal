@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sumMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Staff · Faktúry", robots: { index: false, follow: false } };
@@ -21,7 +22,7 @@ export default async function StaffInvoices() {
     select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true, company: { select: { name: true } } },
   });
 
-  const sum = (arr: typeof invoices) => arr.reduce((s, i) => s + Number(i.total), 0);
+  const sum = (arr: typeof invoices) => sumMoney(arr.map((i) => i.total));
   const issuedMonth = sum(invoices.filter((i) => i.issuedAt >= monthStart));
   const pending = sum(invoices.filter((i) => i.status === "PENDING"));
   const overdue = sum(invoices.filter((i) => i.status === "OVERDUE"));

@@ -10,11 +10,10 @@ import { emailNewOrderToStaff, emailOrderConfirmation, emailApprovalRequest } fr
 import { writeAudit } from "@/lib/audit";
 import { reportError } from "@/lib/observability";
 import { resolveOrderCharges } from "@/lib/store-config";
+import { lineTotal as moneyLine, lineVat, sumMoney } from "@/lib/money";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
-
-function r2(n: number) { return Math.round(n * 100) / 100; }
 
 // vstupná validácia (A03 — zod na každom server action)
 const ID = z.string().min(1).max(100);
@@ -239,7 +238,8 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
 
   type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
-  let subtotal = 0, vat = 0, hasBackorder = false;
+  const lineVats: number[] = [];
+  let hasBackorder = false;
 
   for (const row of rows) {
     const p = row.product;
@@ -257,9 +257,8 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
     const fresh = !!p.stockSyncedAt && now.getTime() - p.stockSyncedAt.getTime() < FRESH_MS;
     const inStock = p.isStocked && p.stockCache != null && Number(p.stockCache) >= qty && fresh;
     if (!inStock) hasBackorder = true;
-    const lineTotal = r2(price.net * qty);
-    subtotal += lineTotal;
-    vat += r2((price.gross - price.net) * qty);
+    const lineTotal = moneyLine(price.net, qty);
+    lineVats.push(lineVat(price.net, price.gross, qty));
     // most do Pohody: zamkni kód karty (len ak je most ACTIVE), inak null = nepôjde do Pohody
     const pohodaSku = p.pohodaLink && p.pohodaLink.linkStatus === "ACTIVE" ? p.pohodaLink.pohodaSku : null;
     items.push({
@@ -268,13 +267,13 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
       qty, lineTotal, fulfillment: inStock ? "SKLADOM" : "NA_OBJEDNAVKU",
     });
   }
-  subtotal = r2(subtotal); vat = r2(vat);
+  const subtotal = sumMoney(items.map((it) => it.lineTotal));
   // poplatky: doprava (podľa prahu) + príplatok platby — server-side autorita (jediný zdroj pravdy)
   const charges = await resolveOrderCharges({ deliveryCode: o.deliveryCode, paymentCode: o.paymentCode, itemsNet: subtotal });
   // deliveryLocationId null = doručiť na fakturačnú adresu (platná voľba); osobný odber → bez adresy
   if (charges.delivery && !charges.delivery.requiresAddress) deliveryLocationId = null;
-  vat = r2(vat + charges.extrasVat);
-  const total = r2(subtotal + charges.shippingFee + charges.paymentSurcharge + vat);
+  const vat = sumMoney([...lineVats, charges.extrasVat]);
+  const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
   const order = await prisma.$transaction(async (tx) => {
     // delete-first guard: súbežná požiadavka (2 taby/dvojklik) — ak košík už bol spracovaný,
@@ -471,7 +470,8 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
   const FRESH_MS = 48 * 3600 * 1000;
   type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
-  let subtotal = 0, vat = 0, hasBackorder = false;
+  const lineVats: number[] = [];
+  let hasBackorder = false;
 
   for (const [productId, qtyRaw] of qtyByPid) {
     const p = byId.get(productId);
@@ -487,14 +487,13 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
     const fresh = !!p.stockSyncedAt && now.getTime() - p.stockSyncedAt.getTime() < FRESH_MS;
     const inStock = p.isStocked && p.stockCache != null && Number(p.stockCache) >= qty && fresh;
     if (!inStock) hasBackorder = true;
-    const lineTotal = r2(price.net * qty);
-    subtotal += lineTotal;
-    vat += r2((price.gross - price.net) * qty);
+    const lineTotal = moneyLine(price.net, qty);
+    lineVats.push(lineVat(price.net, price.gross, qty));
     const pohodaSku = p.pohodaLink && p.pohodaLink.linkStatus === "ACTIVE" ? p.pohodaLink.pohodaSku : null;
     items.push({ productId: p.id, skuSnapshot: p.sku, pohodaSkuSnapshot: pohodaSku, nameSnapshot: p.nameDisplay || p.name, unitPriceSnapshot: price.net, costSnapshot: p.costPrice != null ? Number(p.costPrice) : null, qty, lineTotal, fulfillment: inStock ? "SKLADOM" : "NA_OBJEDNAVKU" });
   }
   if (items.length === 0) return { ok: false, error: "Žiadna z položiek už nie je dostupná na objednanie." };
-  subtotal = r2(subtotal); vat = r2(vat);
+  const subtotal = sumMoney(items.map((it) => it.lineTotal));
 
   // dodacia adresa z predošlej objednávky (ak ešte existuje pre firmu)
   let deliveryLocationId: string | null = null;
@@ -505,8 +504,8 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
   // doprava + platba: prevezmeme metódy z pôvodnej objednávky, dopravu prepočítame k aktuálnej hodnote
   const charges = await resolveOrderCharges({ deliveryCode: src.deliveryMethodCode, paymentCode: src.paymentMethodCode, itemsNet: subtotal });
   if (charges.delivery && !charges.delivery.requiresAddress) deliveryLocationId = null; // osobný odber → bez adresy
-  vat = r2(vat + charges.extrasVat);
-  const total = r2(subtotal + charges.shippingFee + charges.paymentSurcharge + vat);
+  const vat = sumMoney([...lineVats, charges.extrasVat]);
+  const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
   let order: { id: string; number: string };
   try {
