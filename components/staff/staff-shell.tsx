@@ -27,6 +27,7 @@ const NAV = [
   { href: "/staff/doprava-platba", exact: false, label: "Doprava a platba", badge: null, icon: <><rect x="1" y="4" width="14" height="12" rx="1.5" /><path d="M15 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="1.7" /><circle cx="18" cy="18.5" r="1.7" /></> },
   { href: "/staff/faktury", exact: false, label: "Faktúry", badge: null, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
   { href: "/staff/audit", exact: false, label: "Audit log", badge: null, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
+  { href: "/staff/bezpecnost", exact: false, label: "Bezpečnosť", badge: null, icon: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> },
 ];
 
 const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = [
@@ -44,6 +45,7 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => p.startsWith("/staff/doprava-platba"), crumb: "Nastavenia", title: "Doprava a platba" },
   { test: (p) => p.startsWith("/staff/faktury"), crumb: "Účtovníctvo", title: "Faktúry" },
   { test: (p) => p.startsWith("/staff/audit"), crumb: "Bezpečnosť", title: "Audit log" },
+  { test: (p) => p.startsWith("/staff/bezpecnost"), crumb: "Bezpečnosť", title: "Bezpečnosť konta" },
 ];
 
 function Icon({ children }: { children: React.ReactNode }) {
