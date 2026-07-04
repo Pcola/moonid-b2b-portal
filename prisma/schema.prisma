@@ -667,9 +667,11 @@ model Inquiry {
   segment   String?
   message   String?  @db.Text
   emailSent Boolean  @default(false)
+  handledAt DateTime? // vybavené staffom (null = nový lead)
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([handledAt])
 }
 
 // ---------- Faktúry ---------- [C] cache z Pohody + PDF

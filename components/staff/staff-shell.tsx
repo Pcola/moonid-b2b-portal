@@ -10,13 +10,15 @@ type Props = {
   role: string;
   newOrders: number;
   newRequests: number;
+  newInquiries: number;
   children: React.ReactNode;
 };
 
 const NAV = [
-  { href: "/staff", exact: true, label: "Prehľad", badge: null as null | "orders" | "requests", icon: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></> },
+  { href: "/staff", exact: true, label: "Prehľad", badge: null as null | "orders" | "requests" | "inquiries", icon: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></> },
   { href: "/staff/objednavky", exact: false, label: "Objednávky", badge: "orders" as const, icon: <><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /><path d="M9 11v5M15 11v5" /></> },
   { href: "/staff/ziadosti", exact: false, label: "Žiadosti", badge: "requests" as const, icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></> },
+  { href: "/staff/dopyty", exact: false, label: "Dopyty", badge: "inquiries" as const, icon: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></> },
   { href: "/staff/zakaznici", exact: false, label: "Zákazníci", badge: null, icon: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5a3 3 0 0 1 0 6M22 20a6 6 0 0 0-5-5.9" /></> },
   { href: "/staff/produkty", exact: false, label: "Produkty", badge: null, icon: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
   { href: "/staff/kategorie", exact: false, label: "Kategórie", badge: null, icon: <><path d="M3 5h7l2 2h9v11a1 1 0 0 1-1 1H3z" /><path d="M3 5v14" /></> },
@@ -24,6 +26,7 @@ const NAV = [
   { href: "/staff/cenniky", exact: false, label: "Cenníky", badge: null, icon: <><path d="M20 12l-8 8-9-9V4h7z" /><circle cx="7.5" cy="7.5" r="1.3" /></> },
   { href: "/staff/doprava-platba", exact: false, label: "Doprava a platba", badge: null, icon: <><rect x="1" y="4" width="14" height="12" rx="1.5" /><path d="M15 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="1.7" /><circle cx="18" cy="18.5" r="1.7" /></> },
   { href: "/staff/faktury", exact: false, label: "Faktúry", badge: null, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
+  { href: "/staff/audit", exact: false, label: "Audit log", badge: null, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
 ];
 
 const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = [
@@ -31,6 +34,7 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => /^\/staff\/objednavky\/[^/]+$/.test(p), crumb: "Objednávky", title: "Detail objednávky" },
   { test: (p) => p.startsWith("/staff/objednavky"), crumb: "Spracovanie", title: "Objednávky" },
   { test: (p) => p.startsWith("/staff/ziadosti"), crumb: "Onboarding", title: "Žiadosti o prístup" },
+  { test: (p) => p.startsWith("/staff/dopyty"), crumb: "Onboarding", title: "Kontaktné dopyty" },
   { test: (p) => p.startsWith("/staff/zakaznici"), crumb: "CRM", title: "Zákazníci" },
   { test: (p) => /^\/staff\/produkty\/[^/]+$/.test(p), crumb: "Produkty", title: "Úprava produktu" },
   { test: (p) => p.startsWith("/staff/produkty"), crumb: "Katalóg", title: "Produkty" },
@@ -39,13 +43,14 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => p.startsWith("/staff/cenniky"), crumb: "Nastavenia", title: "Cenníky a úrovne" },
   { test: (p) => p.startsWith("/staff/doprava-platba"), crumb: "Nastavenia", title: "Doprava a platba" },
   { test: (p) => p.startsWith("/staff/faktury"), crumb: "Účtovníctvo", title: "Faktúry" },
+  { test: (p) => p.startsWith("/staff/audit"), crumb: "Bezpečnosť", title: "Audit log" },
 ];
 
 function Icon({ children }: { children: React.ReactNode }) {
   return <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
 }
 
-export function StaffShell({ name, role, newOrders, newRequests, children }: Props) {
+export function StaffShell({ name, role, newOrders, newRequests, newInquiries, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -55,7 +60,7 @@ export function StaffShell({ name, role, newOrders, newRequests, children }: Pro
   const isActive = (href: string, exact: boolean) => (exact ? pathname === href : pathname === href || pathname.startsWith(href + "/"));
   const initials = (name || "M").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   const roleLabel = role === "ADMIN" ? "Administrátor" : "Moonid tím";
-  const badgeFor = (b: "orders" | "requests" | null) => (b === "orders" ? newOrders : b === "requests" ? newRequests : 0);
+  const badgeFor = (b: "orders" | "requests" | "inquiries" | null) => (b === "orders" ? newOrders : b === "requests" ? newRequests : b === "inquiries" ? newInquiries : 0);
 
   const sidebar = (
     <div className="flex h-full flex-col gap-1.5 bg-brand-foot p-4 text-[#9fbab3]">
