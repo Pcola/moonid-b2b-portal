@@ -27,6 +27,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 }) {
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
+  const [poNumber, setPoNumber] = useState("");
   const hasLocations = locations.length > 0;
   const [addrMode, setAddrMode] = useState<"saved" | "new">(hasLocations ? "saved" : "new");
   const [otherAddr, setOtherAddr] = useState(false); // false = doručiť na fakturačnú adresu
@@ -90,7 +91,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         : (addrMode === "new"
             ? { newAddress: { label: na.label.trim() || undefined, street: na.street.trim(), city: na.city.trim(), zip: na.zip.trim() } }
             : { deliveryLocationId: deliveryLocationId || null });
-      const res = await createOrder({ note, deliveryCode: selDel, paymentCode: selPay, ...addr });
+      const res = await createOrder({ note, poNumber, deliveryCode: selDel, paymentCode: selPay, ...addr });
       if (!res.ok) { setErr(res.error ?? "Objednávku sa nepodarilo odoslať."); return; }
       setDonePending(!!res.pendingApproval);
       setDone(res.number ?? "");
@@ -248,7 +249,8 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
                 <button onClick={removeOnRequest} disabled={pending} className="mt-1.5 block font-semibold underline disabled:opacity-50">Odobrať položky na vyžiadanie</button>
               </div>
             )}
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-3 w-full`} />
+            <input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="Objednávkové číslo / referencia (nepovinné)" className={`${inp} mt-3 w-full`} />
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-2 w-full`} />
             {err && <p className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
             <button onClick={order} disabled={pending || cart.hasOnRequest} className="mt-3 w-full rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
               {pending ? "Odosielam…" : "Odoslať objednávku"}

@@ -177,7 +177,7 @@ export async function quickAddToCart(raw: string): Promise<QuickResult> {
 }
 
 type NewAddress = { label?: string; street: string; city: string; zip: string };
-type CreateOrderOpts = { note?: string; deliveryLocationId?: string | null; newAddress?: NewAddress | null; deliveryCode?: string | null; paymentCode?: string | null };
+type CreateOrderOpts = { note?: string; poNumber?: string | null; deliveryLocationId?: string | null; newAddress?: NewAddress | null; deliveryCode?: string | null; paymentCode?: string | null };
 
 const newAddressSchema = z.object({
   label: z.string().trim().max(80).optional(),
@@ -288,6 +288,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
         number, companyId: user.companyId!, createdById: user.id,
         status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
         hasBackorder, subtotal, vat, total, note: o.note?.trim().slice(0, 2000) || null,
+        poNumber: o.poNumber?.trim().slice(0, 60) || null,
         deliveryLocationId, requestedDeliveryDate,
         deliveryMethodCode: charges.delivery?.code ?? null, deliveryMethodLabel: charges.delivery?.label ?? null, shippingFee: charges.shippingFee,
         paymentMethodCode: charges.payment?.code ?? null, paymentMethodLabel: charges.payment?.label ?? null, paymentSurcharge: charges.paymentSurcharge,

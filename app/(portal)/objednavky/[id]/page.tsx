@@ -19,7 +19,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const order = await prisma.order.findFirst({
     where: { id, companyId: user.companyId ?? "__none__" },
     select: {
-      number: true, status: true, subtotal: true, vat: true, total: true, note: true, hasBackorder: true, createdAt: true,
+      number: true, status: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, hasBackorder: true, createdAt: true,
       deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true,
       createdById: true, createdBy: { select: { approverId: true } },
       items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, qty: true, lineTotal: true, fulfillment: true } },
@@ -80,7 +80,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
       )}
 
-      {order.note && <div className="mt-6 rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka</div><p className="mt-1 text-[14px] text-muted-3">{order.note}</p></div>}
+      {order.poNumber && <div className="mt-6 rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Vaše objednávkové číslo</div><p className="mt-1 text-[14px] font-medium text-ink">{order.poNumber}</p></div>}
+
+      {order.note && <div className="mt-3 rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka</div><p className="mt-1 text-[14px] text-muted-3">{order.note}</p></div>}
 
       {order.events.length > 0 && (
         <div className="mt-6 rounded-xl border border-line bg-white p-5">
