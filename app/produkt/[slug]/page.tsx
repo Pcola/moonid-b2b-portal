@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { CookieBanner } from "@/components/site/cookie-banner";
+import { ProductImg } from "@/components/product-img";
 import { safeJsonLd } from "@/lib/json-ld";
 
 export const dynamic = "force-dynamic";
@@ -93,17 +94,12 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
         <div className="grid items-start gap-[clamp(32px,4.5vw,72px)] lg:grid-cols-[1.05fr_1fr]">
           {/* obrázok */}
           <div className="lg:sticky lg:top-[100px]">
-            <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-line shadow-[0_36px_70px_-46px_rgba(16,42,38,0.45)]" style={{ background: "radial-gradient(125% 120% at 28% 0%, #ffffff 0%, #f1f5f3 100%)" }}>
-              <span className="absolute left-4 top-4 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-2 backdrop-blur">{cat}</span>
-              <span className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${p.isStocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>
+            <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-line p-[clamp(34px,5vw,68px)] shadow-[0_36px_70px_-46px_rgba(16,42,38,0.45)]" style={{ background: "radial-gradient(125% 120% at 28% 0%, #ffffff 0%, #f1f5f3 100%)" }}>
+              <span className="absolute left-4 top-4 z-10 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-2 backdrop-blur">{cat}</span>
+              <span className={`absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${p.isStocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.isStocked ? "#1aa15f" : "#c98a14" }} />{p.isStocked ? "Skladom" : "Na objednávku"}
               </span>
-              {img ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={img} alt={name} className="h-full w-full object-contain p-[clamp(34px,5vw,68px)]" />
-              ) : (
-                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-30" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-              )}
+              <ProductImg src={img} alt={name} sizes="(max-width: 1024px) 92vw, 520px" priority iconSize={72} />
             </div>
           </div>
 
@@ -184,13 +180,8 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
             <div className="grid gap-[clamp(16px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,190px),1fr))" }}>
               {related.map((r) => (
                 <Link key={r.id} prefetch={false} href={`/produkt/${r.slug}`} className="group flex flex-col">
-                  <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[16px] border border-line bg-[#f6f7f6] transition duration-200 group-hover:-translate-y-1 group-hover:border-brand/30 group-hover:shadow-[0_18px_40px_-26px_rgba(22,40,29,0.45)]">
-                    {r.media[0]?.storagePath ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.media[0].storagePath} alt={r.nameDisplay || r.name} loading="lazy" className="h-full w-full object-contain p-4 transition duration-500 group-hover:scale-105" />
-                    ) : (
-                      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2 opacity-40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-                    )}
+                  <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[16px] border border-line bg-[#f6f7f6] p-4 transition duration-200 group-hover:-translate-y-1 group-hover:border-brand/30 group-hover:shadow-[0_18px_40px_-26px_rgba(22,40,29,0.45)]">
+                    <ProductImg src={r.media[0]?.storagePath} alt={r.nameDisplay || r.name} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 200px" iconSize={34} imgClassName="transition duration-500 group-hover:scale-105" />
                   </div>
                   <span className="mt-3 line-clamp-2 text-[14px] font-medium leading-snug text-ink transition group-hover:text-brand">{r.nameDisplay || r.name}</span>
                 </Link>

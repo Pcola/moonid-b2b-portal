@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { addToCart } from "../../kosik/actions";
 import { useToast } from "@/components/portal/toast";
+import { ProductImg } from "@/components/product-img";
 
 type V = { id: string; label: string; img: string; unit: string; net: number | null; gross: number | null; stocked: boolean };
 
@@ -37,13 +38,8 @@ export function ProductDetail({ title, category, brand, description, specs, vari
       <div className="mt-5 grid gap-[clamp(20px,3vw,44px)] lg:grid-cols-[1fr_1fr] lg:items-start">
         {/* obrázok */}
         <div className="lg:sticky lg:top-[88px]">
-          <div className="flex aspect-square items-center justify-center rounded-2xl border border-line bg-[#fafbfa] p-8">
-            {v.img ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={v.img} alt={title} className="max-h-full max-w-full object-contain" />
-            ) : (
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-2 opacity-30"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-            )}
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-line bg-[#fafbfa] p-8">
+            <ProductImg src={v.img} alt={title} sizes="(max-width: 1024px) 92vw, 480px" priority iconSize={64} />
           </div>
         </div>
 

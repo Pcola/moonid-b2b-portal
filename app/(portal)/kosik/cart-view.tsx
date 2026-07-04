@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { CartDetail } from "@/lib/cart";
 import { setQty, removeItem, createOrder } from "./actions";
+import { ProductImg } from "@/components/product-img";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 function r2(n: number) { return Math.round(n * 100) / 100; }
@@ -107,13 +108,8 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         <div className="flex flex-col gap-3">
           {cart.items.map((it) => (
             <div key={it.id} className="flex items-center gap-4 rounded-xl border border-line bg-white p-3.5">
-              <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa]">
-                {it.i ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={it.i} alt="" className="max-h-full max-w-full object-contain p-1.5" />
-                ) : (
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2 opacity-40"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-                )}
+              <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa] p-1.5">
+                <ProductImg src={it.i} alt={it.n} sizes="64px" iconSize={26} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[14.5px] font-medium text-ink">{it.n}</div>

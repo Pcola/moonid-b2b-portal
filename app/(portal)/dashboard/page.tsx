@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice, type PricedLine } from "@/lib/pricing";
 import { QuickAddButton } from "@/components/portal/quick-add-button";
+import { ProductImg } from "@/components/product-img";
 import { startRepeat } from "../kosik/actions";
 
 export const dynamic = "force-dynamic";
@@ -120,13 +121,8 @@ export default async function DashboardPage() {
           <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))" }}>
             {reorder.map((p) => (
               <div key={p.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4">
-                <div className="flex h-24 items-center justify-center rounded-xl bg-[#fafbfa] p-2">
-                  {p.i ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.i} alt={p.n} loading="lazy" className="max-h-full max-w-full object-contain" />
-                  ) : (
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2 opacity-40"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
-                  )}
+                <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-[#fafbfa] p-2">
+                  <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, 180px" iconSize={28} />
                 </div>
                 <p className="line-clamp-2 min-h-[36px] text-[13px] font-medium leading-snug text-ink">{p.n}</p>
                 <div className="mt-auto flex items-center justify-between gap-2">
