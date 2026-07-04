@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -36,6 +36,15 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+
+  // WCAG 2.1.1/2.4.3: Escape zavrie drawer a vráti fokus na tlačidlo menu
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); menuBtnRef.current?.focus(); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const title = pathname.startsWith("/objednavky/") ? "Objednávka" : (TITLES[pathname] ?? "Portál");
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
@@ -52,7 +61,7 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
         {nav.map((n) => {
           const active = isActive(n.href);
           return (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false}
+            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false} aria-current={active ? "page" : undefined}
               className={`flex items-center gap-3 rounded-[10px] px-3 transition ${n.sub ? "ml-5 py-2 text-[13.5px]" : "py-[11px] text-[14.5px] font-medium"} ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
               <Icon>{n.icon}</Icon>{n.label}
             </Link>
@@ -92,11 +101,12 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
 
       {/* mobile drawer */}
       {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 lg:hidden" onClick={() => setOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[248px] transition-transform lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
+      <aside id="portal-drawer" role="dialog" aria-modal="true" aria-label="Navigácia" inert={!open}
+        className={`fixed inset-y-0 left-0 z-50 w-[248px] transition-transform lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-cream/85 px-4 py-3 backdrop-blur sm:px-6">
-          <button onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Menu">
+          <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="portal-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">{title}</h1>

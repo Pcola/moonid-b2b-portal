@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -55,6 +55,15 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+
+  // WCAG 2.1.1/2.4.3: Escape zavrie drawer a vráti fokus na tlačidlo menu
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); menuBtnRef.current?.focus(); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const page = PAGES.find((x) => x.test(pathname)) ?? { crumb: "Admin", title: "Administrácia" };
   const isActive = (href: string, exact: boolean) => (exact ? pathname === href : pathname === href || pathname.startsWith(href + "/"));
@@ -73,7 +82,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           const active = isActive(n.href, n.exact);
           const count = badgeFor(n.badge);
           return (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false}
+            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false} aria-current={active ? "page" : undefined}
               className={`flex items-center gap-3 rounded-[10px] px-3 py-[11px] text-[14.5px] font-medium transition ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
               <Icon>{n.icon}</Icon>
               <span className="flex-1">{n.label}</span>
@@ -103,11 +112,12 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
       <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
 
       {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 lg:hidden" onClick={() => setOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[248px] transition-transform lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
+      <aside id="staff-drawer" role="dialog" aria-modal="true" aria-label="Navigácia" inert={!open}
+        className={`fixed inset-y-0 left-0 z-50 w-[248px] transition-transform lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-cream/85 px-4 py-2.5 backdrop-blur sm:px-6">
-          <button onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Menu">
+          <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="staff-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div className="flex min-w-0 flex-col">
