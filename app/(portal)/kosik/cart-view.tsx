@@ -251,7 +251,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
             )}
             <input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="Objednávkové číslo / referencia (nepovinné)" className={`${inp} mt-3 w-full`} />
             <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-2 w-full`} />
-            {err && <p className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
+            {err && <p role="alert" className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
             <button onClick={order} disabled={pending || cart.hasOnRequest} className="mt-3 w-full rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
               {pending ? "Odosielam…" : "Odoslať objednávku"}
             </button>

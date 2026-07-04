@@ -32,6 +32,14 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // WCAG 2.1.1: Escape zavrie mobilné menu
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
   // solid = stránka bez tmavého hero (napr. detail produktu) → hlavička biela hneď od načítania
   const solidUI = solid || scrolled;
   const navColor = solidUI ? "#3c3a33" : "#e6efec";
@@ -72,13 +80,13 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
             </Link>
           </div>
 
-          <button onClick={() => setOpen((v) => !v)} aria-label="Otvoriť menu" className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[9px] lg:hidden" style={{ border: `1px solid ${solidUI ? "#d6dedb" : "rgba(255,255,255,0.5)"}`, background: solidUI ? "#fff" : "rgba(255,255,255,0.12)" }}>
+          <button onClick={() => setOpen((v) => !v)} aria-label={open ? "Zavrieť menu" : "Otvoriť menu"} aria-expanded={open} aria-controls="mobile-menu" className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[9px] lg:hidden" style={{ border: `1px solid ${solidUI ? "#d6dedb" : "rgba(255,255,255,0.5)"}`, background: solidUI ? "#fff" : "rgba(255,255,255,0.12)" }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={solidUI ? "#163f38" : "#fff"} strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
           </button>
         </div>
 
         {open && (
-          <div className="flex flex-col gap-0.5 border-t border-line bg-white px-5 pb-5 pt-2 lg:hidden sm:px-8">
+          <div id="mobile-menu" className="flex flex-col gap-0.5 border-t border-line bg-white px-5 pb-5 pt-2 lg:hidden sm:px-8">
             {NAV.map((n) => (
               <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className="border-b border-[#edf0ef] px-1 py-3 text-base font-medium text-[#3c3a33]">{n.label}</Link>
             ))}
