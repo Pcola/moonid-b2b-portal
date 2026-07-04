@@ -1,0 +1,13 @@
+# gitleaks konfigurácia — default pravidlá + allowlist na známe false-positives
+title = "moonid gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignoruj lockfile integrity hashe a príkladové (placeholder) env súbory"
+paths = [
+  '''package-lock\.json''',
+  '''.*\.example$''',
+  '''.*\.example\.[^/]*$''',
+]
