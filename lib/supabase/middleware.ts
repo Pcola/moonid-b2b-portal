@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { sessionIdFromJwt } from "@/lib/session-timeout";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CookieToSet = { name: string; value: string; options?: any };
@@ -31,5 +32,11 @@ export async function updateSession(request: NextRequest) {
 
   // getUser() zároveň obnoví (refreshne) session — dôležité volať tu.
   const { data: { user } } = await supabase.auth.getUser();
-  return { response, user };
+  // session_id pre app-layer timeout (lib/session-timeout) — číta sa až PO refreshi
+  let sessionId: string | null = null;
+  if (user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    sessionId = sessionIdFromJwt(session?.access_token);
+  }
+  return { response, user, supabase, sessionId };
 }

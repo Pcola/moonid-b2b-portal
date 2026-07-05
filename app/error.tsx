@@ -12,6 +12,9 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <span className="text-[13px] font-semibold uppercase tracking-[0.18em] text-brand">Moonid s.r.o.</span>
         <h1 className="text-[40px] font-bold leading-tight text-ink">Niečo sa pokazilo</h1>
         <p className="text-[16px] text-muted">Vyskytla sa neočakávaná chyba. Skúste to prosím znova, prípadne nás kontaktujte na moonid@moonid.sk.</p>
+        {error.digest && (
+          <p className="text-[12.5px] text-muted-2">Kód chyby pre podporu: <code className="rounded bg-cream px-1.5 py-0.5 font-mono">{error.digest}</code></p>
+        )}
         <div className="flex flex-wrap justify-center gap-3">
           <button onClick={reset} className="rounded-[10px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2">Skúsiť znova</button>
           <Link href="/" className="rounded-[10px] border border-line px-5 py-3 text-[15px] font-semibold text-ink transition hover:border-brand">Domov</Link>
