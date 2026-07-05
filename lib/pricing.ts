@@ -16,13 +16,16 @@ export function resolveUnitPrice(p: {
   discountPct: number; // fallback zľava tieru
 }): PricedLine {
   if (p.isSubsidized) return { kind: "ON_REQUEST" };
-  const net =
+  const raw =
     p.tierUnitNet != null
       ? dec(p.tierUnitNet)
       : p.basePriceNet != null
         ? dec(p.basePriceNet).times(dec(100).minus(p.discountPct).dividedBy(100))
         : null;
-  if (net == null || net.lessThanOrEqualTo(0)) return { kind: "ON_REQUEST" };
-  const gross = net.times(dec(100).plus(p.vatRate).dividedBy(100));
-  return { kind: "PRICE", net: round2(net), gross: round2(gross), vatRate: p.vatRate };
+  if (raw == null || raw.lessThanOrEqualTo(0)) return { kind: "ON_REQUEST" };
+  // kanonická jednotková cena = 2 des.: gross sa počíta zo ZAOKRÚHLENÉHO net,
+  // aby zobrazené net × (1+DPH) vždy sedelo so zobrazeným gross (self-konzistencia)
+  const net = round2(raw);
+  const gross = round2(dec(net).times(dec(100).plus(p.vatRate).dividedBy(100)));
+  return { kind: "PRICE", net, gross, vatRate: p.vatRate };
 }

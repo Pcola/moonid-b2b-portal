@@ -42,8 +42,16 @@ describe("resolveUnitPrice — cenová logika (jadro biznisu)", () => {
   });
 
   it("dlhé desatinné zo zľavy sa počítajú presne", () => {
-    // 3.33 × (1 − 33.33/100) = 3.33 × 0.6667 = 2.220111 → net 2.22; gross 2.220111×1.23 = 2.73073653 → 2.73
+    // 3.33 × (1 − 33.33/100) = 3.33 × 0.6667 = 2.220111 → net 2.22; gross 2.22×1.23 = 2.7306 → 2.73
     const r = resolveUnitPrice({ basePriceNet: 3.33, vatRate: 23, isSubsidized: false, tierUnitNet: null, discountPct: 33.33 });
     expect(r).toMatchObject({ kind: "PRICE", net: 2.22, gross: 2.73 });
+  });
+
+  it("gross sa počíta zo ZAOKRÚHLENÉHO net (self-konzistencia zobrazených cien)", () => {
+    // 4-des. base z feedu: 8.1301 × 0.88 = 7.154488 → net 7.15;
+    // gross = 7.15 × 1.23 = 8.7945 → 8.79 (z nezaokrúhleného by vyšlo 8.800020 → 8.80,
+    // čo nesedí so zobrazeným net × DPH — zákazník musí vedieť brutto zreprodukovať)
+    const r = resolveUnitPrice({ basePriceNet: 8.1301, vatRate: 23, isSubsidized: false, tierUnitNet: null, discountPct: 12 });
+    expect(r).toMatchObject({ kind: "PRICE", net: 7.15, gross: 8.79 });
   });
 });

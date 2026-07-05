@@ -34,3 +34,12 @@ export function vatOf2(amount: number, vatRate: number): number {
   const vr100 = Math.round(vatRate * 100);
   return Math.floor((cents(amount) * vr100 + 5000) / 10000) / 100;
 }
+
+/** Netto po zľave: base × (1 − pct/100), polovica nahor — zhodné so serverovým
+ *  resolveUnitPrice (najprv násobenie, až potom round2). base do 4 des. (feed ceny),
+ *  pct do 2 des. Celočíselne v 10⁻⁴ €: u×(10000−pct·100), half-up na centy /10⁶. */
+export function discountedNet2(base: number, discountPct: number): number {
+  const u = Math.round(Number((base * 10000).toPrecision(15))); // presné 10⁻⁴ € jednotky
+  const pct100 = Math.round(discountPct * 100);
+  return Math.floor((u * (10000 - pct100) + 500000) / 1000000) / 100;
+}

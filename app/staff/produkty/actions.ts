@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PRODUCT_BUCKET } from "@/lib/rehost-image";
+import { round2 } from "@/lib/money";
 
 const ID = z.string().min(1).max(100);
 
@@ -106,7 +107,9 @@ export async function setProductPrices(
       const del = await prisma.productPrice.deleteMany({ where: { productId, priceTierCode: e.code } });
       cleared += del.count;
     } else {
-      const unitPriceNet = Math.round(e.price * 10000) / 10000; // Decimal(12,4)
+      // kanonická jednotková cena = 2 des. (viď lib/money) — staff zadáva eurá a centy;
+      // 4 des. v stĺpci sú rezervované pre budúci POHODA sync
+      const unitPriceNet = round2(e.price);
       await prisma.productPrice.upsert({
         where: { productId_priceTierCode: { productId, priceTierCode: e.code } },
         create: { productId, priceTierCode: e.code, unitPriceNet, source: "MANUAL", syncedAt: null },

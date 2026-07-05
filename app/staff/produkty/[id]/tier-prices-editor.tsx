@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setProductPrices } from "../actions";
+import { discountedNet2, grossUnit2 } from "@/lib/money-client";
 
 type Tier = { code: string; name: string; discountPct: number };
 
@@ -34,8 +35,9 @@ export function TierPricesEditor({
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // zhodné so serverom (resolveUnitPrice/round2) — centová aritmetika, polovica nahor
   const defaultNet = (disc: number): number | null =>
-    basePriceNet != null ? Math.round(basePriceNet * (1 - disc / 100) * 100) / 100 : null;
+    basePriceNet != null ? discountedNet2(basePriceNet, disc) : null;
 
   function parse(raw: string): number | null {
     const s = raw.trim().replace(",", ".");
@@ -92,7 +94,7 @@ export function TierPricesEditor({
               const def = defaultNet(t.discountPct);
               const override = parse(vals[t.code] ?? "");
               const effective = typeof override === "number" && !Number.isNaN(override) ? override : def;
-              const gross = effective != null ? effective * (1 + vatRate / 100) : null;
+              const gross = effective != null ? grossUnit2(effective, vatRate) : null;
               return (
                 <tr key={t.code} className="border-b border-line/60">
                   <td className="py-2.5 pr-3">
