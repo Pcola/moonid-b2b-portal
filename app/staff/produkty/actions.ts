@@ -75,6 +75,51 @@ export async function updateProduct(id: string, input: z.input<typeof editSchema
   return { ok: true };
 }
 
+const priceEntry = z.object({
+  code: z.string().trim().min(1).max(10),
+  price: z.number().positive().max(1_000_000).nullable(),
+});
+
+/** Nastaví zmluvné (per-produkt) ceny pre jednotlivé cenové úrovne. Prázdna hodnota =
+ *  zmaže override → úroveň sa vráti na výpočet basePrice × (1 − zľava). Len STAFF.
+ *  Zapisuje sa do ProductPrice(source=MANUAL); money-path (resolveUnitPrice) uprednostní
+ *  tento override pred tier zľavou. Batch = atomicky uloží všetky úrovne naraz. */
+export async function setProductPrices(
+  productId: string,
+  entries: z.input<typeof priceEntry>[],
+): Promise<{ ok: boolean; error?: string }> {
+  const staff = await requireStaff();
+  if (!ID.safeParse(productId).success) return { ok: false, error: "Neplatný vstup." };
+  const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+  if (!product) return { ok: false, error: "Produkt neexistuje." };
+
+  const parsed = z.array(priceEntry).max(50).safeParse(entries);
+  if (!parsed.success) return { ok: false, error: "Neplatná cena (kladné číslo, max 1 000 000)." };
+
+  const validCodes = new Set((await prisma.priceTier.findMany({ select: { code: true } })).map((t) => t.code));
+  for (const e of parsed.data) if (!validCodes.has(e.code)) return { ok: false, error: `Neznáma cenová úroveň: ${e.code}.` };
+
+  let set = 0;
+  let cleared = 0;
+  for (const e of parsed.data) {
+    if (e.price == null) {
+      const del = await prisma.productPrice.deleteMany({ where: { productId, priceTierCode: e.code } });
+      cleared += del.count;
+    } else {
+      const unitPriceNet = Math.round(e.price * 10000) / 10000; // Decimal(12,4)
+      await prisma.productPrice.upsert({
+        where: { productId_priceTierCode: { productId, priceTierCode: e.code } },
+        create: { productId, priceTierCode: e.code, unitPriceNet, source: "MANUAL", syncedAt: null },
+        update: { unitPriceNet, source: "MANUAL", syncedAt: null },
+      });
+      set += 1;
+    }
+  }
+  await writeAudit({ userId: staff.id, action: "PRODUCT_PRICE_SET", entity: "Product", entityId: productId, meta: { set, cleared } });
+  revalidate(productId);
+  return { ok: true };
+}
+
 /** Rýchle publikovať/skryť zo zoznamu. */
 export async function setProductPublished(id: string, value: boolean): Promise<{ ok: boolean }> {
   const staff = await requireStaff();

@@ -76,6 +76,7 @@ enum RequestStatus {
 enum PriceSource {
   POHODA
   COMPUTED
+  MANUAL // zmluvná cena zadaná staffom (override tier zľavy pre konkrétny produkt)
 }
 
 enum OrderStatus {
