@@ -15,9 +15,11 @@ export function LoginForm() {
   const next = safeNextPath(params.get("next")); // anti open-redirect
   const initialErr = params.get("disabled")
     ? "Váš účet je deaktivovaný. Kontaktujte nás na moonid@moonid.sk."
-    : params.get("error") === "auth"
-      ? "Prihlasovací odkaz je neplatný alebo vypršal. Skúste sa prihlásiť nižšie."
-      : null;
+    : params.get("timeout")
+      ? "Boli ste automaticky odhlásený (dlhšia neaktivita alebo vypršanie relácie). Prihláste sa znova."
+      : params.get("error") === "auth"
+        ? "Prihlasovací odkaz je neplatný alebo vypršal. Skúste sa prihlásiť nižšie."
+        : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(initialErr);

@@ -1,8 +1,30 @@
 import "server-only";
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { evaluateSession, sessionIdFromJwt, SESSION_COOKIE } from "@/lib/session-timeout";
+
+/** App-layer timeout relácie aj MIMO middleware (API routes, server actions, RSC) —
+ *  middleware matcher vynecháva /api, takže samotný middleware nestačí (staff CSV export
+ *  by inak timeout obišiel). Ak metadáta relácie hlásia TIMEOUT, správame sa ako
+ *  neprihlásený; upratanie cookies dokončí middleware pri ďalšej navigácii.
+ *  Chýbajúci/cudzí cookie NEblokuje (INIT — nastaví ho middleware) — fail-closed až
+ *  na prítomných metadátach; limity viď lib/session-timeout.ts. */
+async function sessionTimedOut(supabase: Awaited<ReturnType<typeof createClient>>): Promise<boolean> {
+  try {
+    const store = await cookies();
+    const meta = store.get(SESSION_COOKIE)?.value;
+    if (!meta) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = sessionIdFromJwt(session?.access_token);
+    if (!sid) return false;
+    return evaluateSession(meta, sid, Date.now()).kind === "TIMEOUT";
+  } catch {
+    return false; // kontrola timeoutu nesmie zhodiť auth (fail-open na chybe čítania)
+  }
+}
 
 // Aktuálny prihlásený používateľ (Supabase auth → náš User záznam).
 // cache() = jeden lookup per request. Vráti null ak neprihlásený alebo
@@ -11,6 +33,7 @@ export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
   if (!authUser) return null;
+  if (await sessionTimedOut(supabase)) return null; // relácia po idle/absolútnom limite
   return prisma.user.findUnique({
     where: { authId: authUser.id },
     // priceTier zámerne BEZ discountPct (necitlivé code/name) — aby sa cez serializovaný

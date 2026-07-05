@@ -50,7 +50,10 @@ export async function POST(req: Request) {
 
   // anti-abuse: max 5 dopytov / 10 min na IP (SECURITY_AUDIT M-1)
   const rl = await rateLimit(`dopyt:${clientIp(req.headers)}`, { limit: 5, windowSec: 600 });
-  if (!rl.ok) return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
+  if (!rl.ok) {
+    // Retry-After = horná hranica okna (RFC 9110 §10.2.3) — presný zvyšok okna nepoznáme
+    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429, headers: { "Retry-After": "600" } });
+  }
 
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ ok: false, error: "bad_request" }, { status: 400 }); }
