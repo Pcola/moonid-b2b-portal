@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { dec, round2, sumMoney, lineTotal, lineVat, vatOf } from "@/lib/money";
-import { lineTotal2, sumMoney2, grossUnit2, vatOf2 } from "@/lib/money-client";
+import { lineTotal2, sumMoney2, grossUnit2, vatOf2, discountedNet2 } from "@/lib/money-client";
 import { Prisma } from "@prisma/client";
 
 describe("round2 — obchodné zaokrúhľovanie (polovica nahor)", () => {
@@ -73,6 +73,19 @@ describe("money-client — parita klientského náhľadu so serverovým Decimalo
     expect(lineTotal2(2.62, 7)).toBe(lineTotal(2.62, 7));
     const vals = [1.11, 2.22, 3.33, 0.05, 19.99];
     expect(sumMoney2(vals)).toBe(sumMoney(vals));
+  });
+
+  it("discountedNet2 == round2(base×(1−pct/100)) pre 4-des. bázy × bežné zľavy", () => {
+    // 4-des. základy (feed ceny) — klient musí násobiť PRED zaokrúhlením, ako server
+    for (const pct of [0, 8, 12, 18, 22, 33.33]) {
+      for (let u = 10000; u <= 30000; u += 7) {
+        const baseStr = (u / 10000).toFixed(4);
+        const server = round2(new Prisma.Decimal(baseStr).times(dec(100).minus(pct).dividedBy(100)));
+        expect(discountedNet2(Number(baseStr), pct), `base=${baseStr} pct=${pct}`).toBe(server);
+      }
+    }
+    // regresný bod: 4.4450 × 0.90 = 4.0005 → 4.00 (kvantizácia na centy pred násobením by dala 4.01)
+    expect(discountedNet2(4.445, 10)).toBe(4);
   });
 
   it("cents kvantizácia == Decimal round2 aj na .005 hraniciach", () => {
