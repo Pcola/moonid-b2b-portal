@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function Kontakt() {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader solid />
       <main id="top">
         <PageHero
           eyebrow="Kontakt"

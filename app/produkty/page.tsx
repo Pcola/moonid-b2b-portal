@@ -72,7 +72,7 @@ export default async function Produkty({ searchParams }: { searchParams: Promise
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader solid />
       <main id="top">
         <PageHero
           eyebrow="Sortiment"

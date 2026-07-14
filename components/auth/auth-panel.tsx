@@ -13,18 +13,17 @@ export function AuthPanel({
   return (
     <div
       className="relative hidden flex-col justify-between overflow-hidden p-[clamp(40px,5vw,64px)] text-mintbg lg:flex"
-      style={{ background: "radial-gradient(130% 120% at 80% -10%, #21564C 0%, #163F38 55%)" }}
+      style={{ background: "radial-gradient(130% 120% at 80% -10%, #21564C 0%, #143A33 55%)" }}
     >
+      <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className="relative z-[2] flex items-center gap-3">
         <span className="font-display text-[30px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></span>
         <span className="border-l border-white/25 pl-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-mint-2">B2B portál</span>
       </div>
 
-      <div className="relative z-[2] flex max-w-[440px] flex-col gap-6">
-        <span className="inline-flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-mint">
-          <span className="h-[1.5px] w-[26px] bg-mint" />{eyebrow}
-        </span>
-        <h1 className="font-display font-semibold text-white" style={{ fontSize: "clamp(34px,4vw,52px)", lineHeight: 1.04, letterSpacing: "-0.03em", textWrap: "balance" }}>{headline}</h1>
+      <div className="relative z-[2] flex max-w-[460px] flex-col gap-6">
+        <span className="eyebrow eyebrow-dark">{eyebrow}</span>
+        <h1 className="font-display font-semibold text-white" style={{ fontSize: "clamp(36px,4.2vw,56px)", lineHeight: 1.02, letterSpacing: "-0.035em", textWrap: "balance" }}>{headline}</h1>
         {lead && <p className="text-[17px] leading-relaxed text-[#b7ccc6]">{lead}</p>}
         {children && <div className="mt-1.5 border-t border-white/15 pt-5">{children}</div>}
       </div>

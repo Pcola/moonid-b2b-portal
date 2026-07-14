@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function ONas() {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader solid />
       <main id="top">
         <PageHero
           eyebrow="O spoločnosti"

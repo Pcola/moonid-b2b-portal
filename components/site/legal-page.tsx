@@ -7,10 +7,10 @@ import { CookieBanner } from "@/components/site/cookie-banner";
 export function LegalPage({ title, updated, children }: { title: string; updated: string; children: ReactNode }) {
   return (
     <>
-      <SiteHeader />
-      <main id="top" className="mx-auto max-w-[820px] px-5 py-[clamp(40px,6vw,80px)] sm:px-8">
-        <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-brand">Moonid s.r.o.</span>
-        <h1 className="mt-3 text-[clamp(28px,4vw,42px)] font-bold tracking-[-0.02em] text-ink">{title}</h1>
+      <SiteHeader solid />
+      <main id="top" className="mx-auto max-w-[820px] px-5 pb-[clamp(40px,6vw,80px)] pt-[clamp(120px,14vw,160px)] sm:px-8">
+        <span className="eyebrow">Moonid s.r.o.</span>
+        <h1 className="t-h1 mt-4 text-ink" style={{ fontSize: "clamp(30px,4vw,48px)" }}>{title}</h1>
         <p className="mt-2 text-[13px] text-muted-3">Aktualizované: {updated}</p>
         <div className="mt-8 flex flex-col gap-4 text-[15.5px] leading-relaxed text-muted">{children}</div>
       </main>

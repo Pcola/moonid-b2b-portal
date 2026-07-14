@@ -10,6 +10,7 @@ const STATS = [
   { n: "1 600+", l: "produktov v ponuke" },
   { n: "48 h", l: "skladové položky na ceste" },
 ];
+const MARQUEE = ["Hygiena", "Čistiaca chémia", "Papierový program", "Dávkovače", "Gastro", "Kancelária", "Hotelové amenity"];
 const BRANDS = [
   { src: "/images/logo-tork.png", alt: "Tork" },
   { src: "/images/logo-kimberly-clark.png", alt: "Kimberly-Clark Professional" },
@@ -67,10 +68,10 @@ const WHY = [
   { t: "Spoľahlivé a načas", d: "Pravidelný vlastný rozvoz — tovar máte načas, bez výpadkov a čakania na kuriéra.", p: <><path d="M3 6h11v9H3z" /><path d="M14 9h3.5l3 3v3H14z" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17.5" cy="17.5" r="1.6" /></> },
 ];
 const CLIENTS = [
-  { src: "/images/klient-grandhotelsole.svg", alt: "Grand Hotel SOLE Nitra", h: 66 },
-  { src: "/images/klient-podhajska.png", alt: "Kúpalisko Podhájska", h: 80 },
-  { src: "/images/klient-westend.svg", alt: "Westend", h: 34 },
-  { src: "/images/klient-loko.png", alt: "LOKO trans Slovakia", h: 70 },
+  { src: "/images/klient-grandhotelsole.svg", alt: "Grand Hotel SOLE Nitra", h: 60 },
+  { src: "/images/klient-podhajska.png", alt: "Kúpalisko Podhájska", h: 72 },
+  { src: "/images/klient-westend.svg", alt: "Westend", h: 32 },
+  { src: "/images/klient-loko.png", alt: "LOKO trans Slovakia", h: 64 },
 ];
 
 export const faqLd = {
@@ -81,7 +82,7 @@ export const faqLd = {
 
 /* ───────── helpers ───────── */
 const wrap = "mx-auto max-w-[1240px] px-5 sm:px-8";
-const pad = { padding: "clamp(72px,10vw,140px) 0" } as const;
+const pad = { padding: "clamp(76px,10vw,148px) 0" } as const;
 const lead = { fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.6 } as const;
 
 function Eyebrow({ num, children, dark = false }: { num?: string; children: React.ReactNode; dark?: boolean }) {
@@ -92,71 +93,102 @@ function Eyebrow({ num, children, dark = false }: { num?: string; children: Reac
     </span>
   );
 }
-const Ico = ({ children }: { children: React.ReactNode }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+const Ico = ({ children, size = 24 }: { children: React.ReactNode; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
 );
 const Arrow = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 
-/* primárne CTA — verejný web */
-const btnPrimary = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-brand px-[26px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-2";
-const btnOnDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-white px-[26px] py-[15px] text-base font-semibold text-brand transition-colors duration-200 hover:bg-mintbg";
-const btnGhostDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-[10px] border border-white/35 px-[22px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10";
-const btnGhost = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-[10px] border border-line bg-white px-[24px] py-[15px] text-base font-semibold text-ink transition-colors duration-200 hover:border-brand/40";
+const btnPrimary = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-brand px-[26px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-2";
+const btnOnDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-white px-[26px] py-[15px] text-base font-semibold text-brand transition-colors duration-200 hover:bg-mintbg";
+const btnGhostDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/35 px-[22px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10";
+const btnGhost = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-line bg-white px-[24px] py-[15px] text-base font-semibold text-ink transition-colors duration-200 hover:border-brand/40";
 
-/* ───────── HERO (domov) ───────── */
+/* ═════════ HERO — split layout + textový marquee ═════════ */
 export function HeroSection() {
   return (
-    <section className="relative flex items-end overflow-hidden bg-brand-deep" style={{ minHeight: "clamp(600px,86vh,860px)" }}>
-      <Image src="/images/hero-still-life.jpg" alt="Čistiace a hygienické prostriedky pre prevádzku — uteráky, dávkovač mydla a čistiace potreby" fill priority sizes="100vw" className="hero-img object-cover" style={{ objectPosition: "right center" }} />
-      <div className="absolute inset-0" style={{ background: "linear-gradient(100deg,rgba(13,28,24,0.88) 0%,rgba(15,36,30,0.66) 34%,rgba(17,48,42,0.22) 62%,rgba(17,48,42,0.02) 100%)" }} />
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(13,28,24,0.34) 0%,rgba(13,28,24,0) 30%,rgba(13,28,24,0.3) 100%)" }} />
-      <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
-      <div className={`relative z-[2] w-full ${wrap}`} style={{ paddingTop: "clamp(110px,13vw,170px)", paddingBottom: "clamp(48px,6vw,84px)" }}>
-        <div className="hero-stagger flex max-w-[860px] flex-col items-start gap-[28px]">
-          <Eyebrow dark>Dodávateľ pre vašu prevádzku · od 2017</Eyebrow>
-          <h1 className="t-display text-white">
-            Hygiena a <span className="wipe wipe-dark wipe-anim">čistenie</span><br />pre vašu prevádzku
-          </h1>
-          <p className="max-w-[600px] text-[#d7e4e0]" style={lead}>
-            Jeden dodávateľ pre hotely, wellness, gastro, úrady aj školy v okrese Nové Zámky
-            a Nitrianskom kraji. Vlastný rozvoz, dávkovače na prenájom a objednávky na faktúru.
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-3.5">
-            <Link href="/kontakt" className={btnOnDark}>Vyžiadať cenovú ponuku</Link>
-            <Link href="/kontakt#ako-zacat" className={btnGhostDark}>Ako sa stať zákazníkom</Link>
+    <section className="relative overflow-hidden bg-brand-deep">
+      <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(90% 70% at 8% 0%, rgba(46,98,88,0.4) 0%, rgba(13,28,24,0) 55%)" }} aria-hidden="true" />
+
+      <div className={`relative ${wrap}`} style={{ paddingTop: "clamp(110px,13vw,152px)" }}>
+        <div className="grid items-stretch gap-8 pb-[clamp(40px,5vw,72px)] lg:grid-cols-[1.04fr_0.96fr] lg:gap-14">
+          {/* ľavý stĺpec — obsah */}
+          <div className="hero-stagger flex flex-col justify-center gap-7 py-2 lg:py-8">
+            <Eyebrow dark>Dodávateľ pre vašu prevádzku · od 2017</Eyebrow>
+            <h1 className="t-display text-white">
+              Hygiena a<br /><span className="wipe wipe-dark wipe-anim">čistenie</span> pre<br />vašu prevádzku
+            </h1>
+            <p className="max-w-[520px] text-[#cfe0db]" style={lead}>
+              Jeden dodávateľ pre hotely, wellness, gastro, úrady aj školy v okrese Nové Zámky
+              a Nitrianskom kraji. Vlastný rozvoz, dávkovače na prenájom a objednávky na faktúru.
+            </p>
+            <div className="flex flex-wrap items-center gap-3.5">
+              <Link href="/kontakt" className={btnOnDark}>Vyžiadať cenovú ponuku</Link>
+              <Link href="/kontakt#ako-zacat" className={btnGhostDark}>Ako začať</Link>
+            </div>
+            <div className="mt-2 grid max-w-[560px] grid-cols-3 border-t border-white/15 pt-6">
+              {STATS.map((s, i) => (
+                <div key={s.l} className={`flex flex-col gap-1.5 ${i > 0 ? "border-l border-white/12 pl-[clamp(14px,2vw,28px)]" : ""}`}>
+                  <span className="font-display text-white" style={{ fontSize: "clamp(24px,2.9vw,38px)", lineHeight: 1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
+                  <span className="text-[12.5px] leading-snug text-[#9db8b1]">{s.l}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-3 grid w-full max-w-[640px] grid-cols-3 border-t border-white/20 pt-6">
-            {STATS.map((s, i) => (
-              <div key={s.l} className={`flex flex-col gap-1.5 ${i > 0 ? "border-l border-white/15 pl-[clamp(16px,2.5vw,32px)]" : ""}`}>
-                <span className="font-display text-white" style={{ fontSize: "clamp(26px,3.2vw,40px)", lineHeight: 1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
-                <span className="text-[12.5px] leading-snug text-[#a9c2bb]">{s.l}</span>
+
+          {/* pravý stĺpec — obrazový panel */}
+          <div className="rise-load relative min-h-[380px] overflow-hidden rounded-[28px] border border-white/10 lg:min-h-0" style={{ animationDelay: ".25s" }}>
+            <Image src="/images/hero-still-life.jpg" alt="Biele uteráky, dávkovač mydla a čistiace potreby na tmavozelenom pozadí" fill priority sizes="(max-width:1024px) 100vw, 46vw" className="object-cover" style={{ objectPosition: "72% center" }} />
+            <div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-3 rounded-2xl border border-white/15 bg-brand-deep/60 px-5 py-4 backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <span className="dot-mint !bg-mint" style={{ boxShadow: "0 0 0 3px rgba(143,224,205,.18)" }} />
+                <div className="flex flex-col">
+                  <span className="text-[13.5px] font-semibold text-white">Vlastný rozvoz</span>
+                  <span className="text-[12px] text-[#9db8b1]">Nové Zámky a Nitriansky kraj</span>
+                </div>
               </div>
-            ))}
+              <Link href="/o-nas" aria-label="Viac o rozvoze" className="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded-xl border border-white/20 text-white transition-colors hover:bg-white/10"><Arrow /></Link>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* textový marquee pás */}
+      <div className="marquee-band relative border-t border-white/10 py-[clamp(18px,2.4vw,28px)]" role="img" aria-label={`Sortiment: ${MARQUEE.join(", ")}`}>
+        <div className="marquee-track">
+          {[...MARQUEE, ...MARQUEE].map((m, i) => (
+            <span key={i} aria-hidden={i >= MARQUEE.length} className="flex items-center gap-[clamp(28px,4vw,56px)]">
+              <span className="text-outline font-display whitespace-nowrap font-semibold uppercase" style={{ fontSize: "clamp(26px,3.4vw,44px)", letterSpacing: "0.01em" }}>{m}</span>
+              <span className="h-2 w-2 flex-none rounded-full bg-mint/40" />
+            </span>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-/* ───────── PAGE HERO (podstránky, tmavý pás) ───────── */
+/* ═════════ PAGE HERO — svetlý editoriálny header podstránok ═════════ */
 export function PageHero({ eyebrow: eb, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
   return (
-    <section className="relative overflow-hidden text-mintbg" style={{ background: "radial-gradient(130% 120% at 85% -10%, #21564C 0%, #163F38 52%)", paddingTop: "clamp(140px,16vw,200px)", paddingBottom: "clamp(52px,7vw,92px)" }}>
-      <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
+    <section className="microgrid relative border-b border-line bg-white" style={{ paddingTop: "clamp(128px,15vw,180px)", paddingBottom: "clamp(44px,6vw,76px)" }}>
       <div className={`relative ${wrap}`}>
-        <Eyebrow dark>{eb}</Eyebrow>
-        <h1 className="t-h1 mt-5 max-w-[860px] text-white">{title}</h1>
-        {subtitle && <p className="mt-5 max-w-[620px] text-[#b7ccc6]" style={lead}>{subtitle}</p>}
+        <nav aria-label="Omrvinková navigácia" className="mb-6 flex items-center gap-2.5 text-[13px] font-medium text-muted-2">
+          <Link href="/" className="transition-colors hover:text-brand">Domov</Link>
+          <span className="text-line">/</span>
+          <span className="text-mint-ink">{eb}</span>
+        </nav>
+        <h1 className="t-h1 max-w-[900px] text-ink" style={{ fontSize: "clamp(38px,5.4vw,76px)" }}>{title}</h1>
+        {subtitle && <p className="mt-6 max-w-[640px] text-muted-3" style={lead}>{subtitle}</p>}
       </div>
     </section>
   );
 }
 
-/* ───────── BRANDS ───────── */
+/* ═════════ BRANDS ═════════ */
 export function BrandsSection() {
   return (
-    <section className="border-y border-line bg-white" style={{ padding: "clamp(30px,4vw,44px) 0" }}>
+    <section className="border-b border-line bg-white" style={{ padding: "clamp(30px,4vw,44px) 0" }}>
       <div className={`${wrap} flex flex-col items-center gap-6`}>
         <span className="text-[11.5px] font-semibold uppercase tracking-[0.2em] text-muted-2">Dodávame overené značky</span>
         <div className="brand-marquee" role="img" aria-label="Dodávané značky: Tork, Kimberly-Clark, Katrin, Lotus, Vileda, Leifheit, Sanytol">
@@ -172,8 +204,12 @@ export function BrandsSection() {
   );
 }
 
-/* ───────── SORTIMENT (bento) ───────── */
+/* ═════════ SORTIMENT — bento grid ═════════ */
 export function SortimentSection() {
+  const tiles = [
+    { name: "Čistiace prostriedky", icon: <><path d="M9 3h6" /><path d="M10 3v4l-4.5 8A4 4 0 0 0 9 21h6a4 4 0 0 0 3.5-6L14 7V3" /></> },
+    { name: "Hygienický papier", icon: <><circle cx="9" cy="9" r="5.5" /><circle cx="9" cy="9" r="1.6" /><path d="M14.5 6H20a1 1 0 0 1 1 1v13H6a2.5 2.5 0 0 1 0-5" /></> },
+  ];
   return (
     <section id="sortiment" className="bg-cream" style={pad}>
       <div className={wrap}>
@@ -185,28 +221,43 @@ export function SortimentSection() {
           <Link href="/produkty" className="navlink hidden items-center gap-2 text-[15px] font-semibold text-mint-ink md:inline-flex">Celý katalóg <Arrow /></Link>
         </div>
 
-        <div className="reveal mb-[clamp(14px,1.8vw,20px)] grid gap-[clamp(14px,1.8vw,20px)] lg:grid-cols-2">
-          <div className="microgrid relative flex min-h-[300px] flex-col justify-between gap-8 overflow-hidden rounded-2xl bg-brand p-[clamp(28px,3.5vw,44px)]">
+        {/* bento */}
+        <div className="reveal grid gap-[clamp(12px,1.6vw,18px)] md:grid-cols-2 lg:grid-cols-4 lg:[grid-template-rows:repeat(2,minmax(220px,auto))]">
+          {/* A — veľká zelená dlaždica 2×2 */}
+          <div className="microgrid-dark relative flex flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(26px,3vw,40px)] md:col-span-2 lg:row-span-2">
             <div className="flex flex-col gap-3">
-              <span className="stat-num text-white">1 600+</span>
+              <span className="stat-num text-white" style={{ fontSize: "clamp(56px,7vw,110px)" }}>1 600+</span>
               <span className="t-h3 text-mint">položiek v sortimente</span>
-              <p className="mt-1 max-w-[420px] text-[15.5px] leading-relaxed text-[#a9c2bb]">
+              <p className="mt-1 max-w-[400px] text-[15.5px] leading-relaxed text-[#a9c2bb]">
                 Najpredávanejšie produkty držíme skladom, zvyšok objednáme pri vašej objednávke —
                 od čistiacej chémie a papiera až po dávkovače, gastro a kancelárske potreby.
               </p>
             </div>
             <Link href="/produkty" className={`${btnOnDark} self-start !py-[13px] text-[15px]`}>Pozrieť celý sortiment <Arrow /></Link>
           </div>
-          <div className="relative min-h-[300px] overflow-hidden rounded-2xl border border-line">
+
+          {/* B — obrazová dlaždica 2×1 */}
+          <div className="relative min-h-[220px] overflow-hidden rounded-[22px] border border-line md:col-span-2">
             <Image src="/images/rozvoz.jpg" alt="Vlastný rozvoz Moonid — dodávka naložená tovarom" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
             <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-brand-deep/85 to-transparent p-5 pt-12">
               <span className="dot-mint !bg-mint" style={{ boxShadow: "0 0 0 3px rgba(143,224,205,.2)" }} />
-              <span className="text-[13.5px] font-semibold text-white">Vlastný rozvoz · Nové Zámky a Nitriansky kraj</span>
+              <span className="text-[13.5px] font-semibold text-white">Pravidelný závoz priamo na prevádzku</span>
             </div>
           </div>
+
+          {/* C, D — kategórie 1×1 */}
+          {tiles.map((t) => (
+            <Link key={t.name} href={`/produkty?cat=${encodeURIComponent(t.name)}`} className="group flex min-h-[190px] cursor-pointer flex-col justify-between gap-6 rounded-[22px] border border-line bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_18px_40px_-24px_rgba(13,33,27,0.35)]">
+              <span className="text-mint-ink"><Ico size={30}>{t.icon}</Ico></span>
+              <div className="flex items-end justify-between gap-3">
+                <span className="t-h3 !text-[19px] text-ink">{t.name}</span>
+                <span className="text-muted-2 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-brand"><Arrow /></span>
+              </div>
+            </Link>
+          ))}
         </div>
 
-        <div className="reveal flex flex-wrap gap-2.5">
+        <div className="reveal mt-[clamp(20px,2.5vw,28px)] flex flex-wrap gap-2.5">
           {KATEGORIE.map((k) => (
             <Link key={k} href={`/produkty?cat=${encodeURIComponent(k)}`} className="cursor-pointer rounded-full border border-line bg-white px-4 py-2.5 text-[13.5px] font-medium text-muted-3 transition-colors duration-200 hover:border-brand/40 hover:text-brand">
               {k}
@@ -218,72 +269,110 @@ export function SortimentSection() {
   );
 }
 
-/* ───────── DÁVKOVAČE (Swiss hairline riadky) ───────── */
+/* ═════════ DÁVKOVAČE — sticky split editoriál ═════════ */
 export function DavkovaceSection() {
   return (
     <section id="davkovace" className="bg-white" style={pad}>
       <div className={wrap}>
-        <div className="reveal mb-[clamp(44px,5vw,72px)] grid items-end gap-8 lg:grid-cols-[1fr_auto]">
-          <div className="max-w-[720px]">
+        <div className="grid gap-[clamp(40px,6vw,96px)] lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="reveal lg:sticky lg:top-[120px] lg:self-start">
             <Eyebrow num="02">Dávkovače a náplne</Eyebrow>
-            <h2 className="t-h2 mt-4 text-ink">Dávkovače vám <span className="wipe">osadíme</span>.<br />Platíte len náplne.</h2>
+            <h2 className="t-h2 mt-4 text-ink">Dávkovače vám <span className="wipe">osadíme</span>. Platíte len náplne.</h2>
+            <p className="mt-5 max-w-[420px] text-muted-3" style={lead}>
+              Žiadna investícia do vybavenia, žiadne riešenie kompatibility — naprieč celou prevádzkou.
+            </p>
+            <Link href="/kontakt" className={`${btnPrimary} mt-8`}>Chcem dávkovače <Arrow /></Link>
           </div>
-          <p className="max-w-[380px] text-muted-3" style={lead}>
-            Žiadna investícia do vybavenia, žiadne riešenie kompatibility — naprieč celou prevádzkou.
-          </p>
-        </div>
-        <div className="reveal-cascade grid md:grid-cols-3">
-          {RENTAL.map((r, i) => (
-            <div key={r.t} className="flex flex-col gap-4 border-t border-line py-8 md:pr-[clamp(20px,3vw,44px)]">
-              <span className="stat-num text-[clamp(36px,3.6vw,52px)] text-mint-ink/25">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="t-h3 text-ink">{r.t}</h3>
-              <p className="text-[15.5px] leading-relaxed text-muted">{r.d}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-10">
-          <Link href="/kontakt" className={btnPrimary}>Chcem dávkovače pre svoju prevádzku <Arrow /></Link>
+          <div className="reveal-cascade flex flex-col">
+            {RENTAL.map((r, i) => (
+              <div key={r.t} className="grid grid-cols-[auto_1fr] items-start gap-x-[clamp(20px,3vw,40px)] border-t border-line py-[clamp(28px,3.4vw,44px)] last:border-b">
+                <span className="text-outline font-display font-semibold" style={{ fontSize: "clamp(48px,5.4vw,80px)", lineHeight: 0.9, WebkitTextStroke: "1.5px rgba(15,107,87,0.35)" }}>{String(i + 1).padStart(2, "0")}</span>
+                <div className="flex flex-col gap-2.5 pt-1.5">
+                  <h3 className="t-h3 text-ink">{r.t}</h3>
+                  <p className="max-w-[480px] text-[15.5px] leading-relaxed text-muted">{r.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-/* ───────── PORTÁL ───────── */
+/* ═════════ PORTÁL — s CSS mockupom aplikácie ═════════ */
 export function PortalSection() {
   return (
     <section id="portal" className="bg-cream" style={pad}>
       <div className={wrap}>
-        <div className="reveal relative overflow-hidden rounded-[24px] text-mintbg" style={{ background: "radial-gradient(130% 130% at 88% -20%, #21564C 0%, #163F38 56%)" }}>
+        <div className="reveal relative overflow-hidden rounded-[28px] text-mintbg" style={{ background: "radial-gradient(130% 130% at 88% -20%, #21564C 0%, #143A33 56%)" }}>
           <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
-          <div className="relative z-[2] grid items-center gap-[clamp(36px,5vw,72px)] p-[clamp(32px,5vw,72px)] lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="relative z-[2] grid items-center gap-[clamp(36px,5vw,64px)] p-[clamp(30px,4.5vw,64px)] lg:grid-cols-[1fr_1.05fr]">
             <div className="flex flex-col gap-6">
               <Eyebrow num="03" dark>Objednávkový portál</Eyebrow>
-              <h2 className="t-h2 text-white">Objednávajte online<br />cez B2B portál</h2>
-              <p className="max-w-[520px] text-[#b7ccc6]" style={{ fontSize: "clamp(16px,1.6vw,18.5px)", lineHeight: 1.6 }}>
+              <h2 className="t-h2 text-white">Objednávajte online cez B2B portál</h2>
+              <p className="max-w-[480px] text-[#b7ccc6]" style={{ fontSize: "clamp(16px,1.6vw,18px)", lineHeight: 1.6 }}>
                 Po prvej objednávke vám zriadime prístup — pozriete si svoje dohodnuté ceny, históriu aj faktúry
-                a celý sortiment doobjednáte jedným klikom. Portál pozná vašu prevádzku, žiadne hľadanie kódov náplní.
+                a celý sortiment doobjednáte jedným klikom.
               </p>
-              <div className="mt-1 grid max-w-[560px] grid-cols-1 gap-x-7 gap-y-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-x-7 gap-y-3.5 sm:grid-cols-2">
                 {PORTAL_FEATS.map((f) => (
                   <div key={f} className="flex items-start gap-3">
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8fe0cd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
-                    <span className="text-[15px] leading-snug text-[#d7e4e0]">{f}</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8fe0cd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
+                    <span className="text-[14.5px] leading-snug text-[#d7e4e0]">{f}</span>
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="flex flex-col gap-4 rounded-[18px] border border-white/15 bg-white/[0.06] p-[clamp(26px,3vw,36px)] backdrop-blur-sm">
-              <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-mint-2">Vstup do portálu</span>
-                <h3 className="t-h3 !text-[clamp(21px,2.3vw,26px)] text-white">Prihláste sa do svojho účtu</h3>
+              <div className="mt-1 flex flex-wrap gap-3">
+                <Link href="/login" className={`${btnOnDark} !py-3.5 text-[15px]`}>Prihlásiť sa</Link>
+                <Link href="/kontakt#ako-zacat" className={`${btnGhostDark} !py-3.5 text-[15px]`}>Ešte nie ste zákazník?</Link>
               </div>
-              <Link href="/login" className={`${btnOnDark} !py-3.5 text-[15.5px]`}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
-                Prihlásiť sa
-              </Link>
-              <Link href="/kontakt#ako-zacat" className={`${btnGhostDark} !py-[13px] text-[15.5px]`}>Ešte nie ste zákazník?</Link>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-[#8fb3ab]">Prístup zriadime po prvej objednávke. Ozvite sa a poradíme, ako začať.</p>
+            </div>
+
+            {/* CSS mockup portálu — okno prehliadača */}
+            <div aria-hidden="true" className="select-none overflow-hidden rounded-2xl border border-white/15 bg-[#0d1c18] shadow-[0_50px_100px_-40px_rgba(0,0,0,0.7)]">
+              {/* chrome lišta */}
+              <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+                <span className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-white/15" /><span className="h-2.5 w-2.5 rounded-full bg-white/15" /><span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                </span>
+                <span className="flex-1 rounded-md bg-white/8 px-3 py-1 text-center text-[11px] tracking-wide text-[#7fa199]">portal.moonid.sk</span>
+              </div>
+              <div className="grid grid-cols-[86px_1fr]">
+                {/* mini sidebar */}
+                <div className="flex flex-col gap-3 border-r border-white/8 p-3.5">
+                  <span className="font-display text-[13px] font-semibold text-white">m<span className="text-mint">.</span></span>
+                  {[44, 36, 40, 30].map((w, i) => (
+                    <span key={i} className={`h-1.5 rounded-full ${i === 0 ? "bg-mint/60" : "bg-white/12"}`} style={{ width: w }} />
+                  ))}
+                </div>
+                {/* obsah */}
+                <div className="flex flex-col gap-3 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="h-2 w-24 rounded-full bg-white/25" />
+                    <span className="rounded-lg bg-mint px-2.5 py-1 text-[10px] font-bold text-brand-deep">Košík · 3</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {["1 600+", "48 h", "−18 %"].map((v) => (
+                      <div key={v} className="rounded-xl bg-white/6 p-2.5">
+                        <div className="font-display text-[15px] font-semibold text-white">{v}</div>
+                        <div className="mt-1 h-1 w-10 rounded-full bg-white/15" />
+                      </div>
+                    ))}
+                  </div>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-xl bg-white/5 p-2.5">
+                      <span className="h-9 w-9 flex-none rounded-lg bg-white/10" />
+                      <span className="flex flex-1 flex-col gap-1.5">
+                        <span className="h-1.5 rounded-full bg-white/20" style={{ width: `${70 - i * 14}%` }} />
+                        <span className="h-1.5 w-12 rounded-full bg-white/10" />
+                      </span>
+                      <span className="font-display text-[12px] font-semibold text-mint">{["12,40 €", "8,90 €", "24,10 €"][i]}</span>
+                      <span className="rounded-md bg-mint/15 px-2 py-1 text-[9px] font-bold text-mint">+ Pridať</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -292,7 +381,7 @@ export function PortalSection() {
   );
 }
 
-/* ───────── PRE KOHO ───────── */
+/* ═════════ PRE KOHO ═════════ */
 export function PreKohoSection({ cream = false }: { cream?: boolean }) {
   return (
     <section id="prekoho" className={cream ? "bg-cream" : "bg-white"} style={pad}>
@@ -303,9 +392,12 @@ export function PreKohoSection({ cream = false }: { cream?: boolean }) {
           <p className="mt-5 text-muted-3" style={lead}>Zásobujeme širokú škálu prevádzok v regióne — od ubytovania a gastra cez priemysel, obchod a služby až po školy a samosprávu.</p>
         </div>
         <div className="reveal-cascade grid sm:grid-cols-2 lg:grid-cols-4">
-          {SEGMENTS.map((s) => (
-            <div key={s.t} className="flex flex-col gap-4 border-t border-line py-7 sm:pr-[clamp(18px,2.5vw,36px)]">
-              <span className="text-mint-ink"><Ico>{s.p}</Ico></span>
+          {SEGMENTS.map((s, i) => (
+            <div key={s.t} className="relative flex flex-col gap-4 border-t border-line py-7 sm:pr-[clamp(18px,2.5vw,36px)]">
+              <div className="flex items-center justify-between">
+                <span className="text-mint-ink"><Ico>{s.p}</Ico></span>
+                <span className="font-display text-[12px] tabular-nums text-muted-2/70">{String(i + 1).padStart(2, "0")}</span>
+              </div>
               <div className="flex flex-col gap-2">
                 <h3 className="text-[17px] font-semibold leading-snug text-ink">{s.t}</h3>
                 <p className="text-[14.5px] leading-relaxed text-muted">{s.d}</p>
@@ -318,7 +410,7 @@ export function PreKohoSection({ cream = false }: { cream?: boolean }) {
   );
 }
 
-/* ───────── HOTEL ───────── */
+/* ═════════ HOTEL ═════════ */
 export function HotelSection() {
   const cards = [
     { img: "/images/hotel-kozmetika.png", t: "Hotelová kozmetika a amenity", d: "Mydielka, sprchové gély, šampóny, telové mlieka a kozmetické sady — vo fľaštičkách, sáčkoch aj v dávkovačoch na steny." },
@@ -334,7 +426,7 @@ export function HotelSection() {
         </div>
         <div className="reveal grid gap-[clamp(20px,2.5vw,28px)] lg:grid-cols-2">
           {cards.map((c) => (
-            <div key={c.t} className="card-hover flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
+            <div key={c.t} className="card-hover flex flex-col overflow-hidden rounded-[22px] border border-line bg-white">
               <div className="relative h-[340px] w-full"><Image src={c.img} alt={c.t} fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" /></div>
               <div className="flex flex-col gap-3 p-[clamp(26px,3vw,36px)]">
                 <h3 className="t-h3 !text-[clamp(22px,2.4vw,28px)] text-ink">{c.t}</h3>
@@ -348,7 +440,7 @@ export function HotelSection() {
   );
 }
 
-/* ───────── PREČO MOONID ───────── */
+/* ═════════ PREČO MOONID ═════════ */
 export function PrecoSection() {
   return (
     <section id="preco" className="relative overflow-hidden text-mintbg" style={{ ...pad, background: "radial-gradient(130% 120% at 85% -10%, #21564C 0%, #163F38 52%)" }}>
@@ -360,8 +452,8 @@ export function PrecoSection() {
         </div>
         <div className="reveal-cascade grid gap-[clamp(18px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(248px,1fr))" }}>
           {WHY.map((w) => (
-            <div key={w.t} className="why-card flex flex-col gap-[18px] rounded-[18px] border border-white/10 bg-white/[0.045] p-[clamp(26px,2.6vw,32px)]">
-              <span className="inline-flex h-[54px] w-[54px] items-center justify-center rounded-[14px] border border-mint/25 bg-mint/[0.12] text-mint"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{w.p}</svg></span>
+            <div key={w.t} className="why-card flex flex-col gap-[18px] rounded-[20px] border border-white/10 bg-white/[0.045] p-[clamp(26px,2.6vw,32px)]">
+              <span className="inline-flex h-[54px] w-[54px] items-center justify-center rounded-[14px] border border-mint/25 bg-mint/[0.12] text-mint"><Ico size={26}>{w.p}</Ico></span>
               <div className="flex flex-col gap-2.5">
                 <h3 className="t-h3 !text-xl text-white">{w.t}</h3>
                 <p className="text-[15.5px] leading-relaxed text-[#b7ccc6]">{w.d}</p>
@@ -374,21 +466,19 @@ export function PrecoSection() {
   );
 }
 
-/* ───────── REFERENCIE ───────── */
+/* ═════════ REFERENCIE — pull-quote editoriál ═════════ */
 export function ReferencieSection() {
   return (
     <section id="referencie" className="bg-white" style={pad}>
       <div className={wrap}>
-        <div className="reveal mx-auto max-w-[920px] text-center">
-          <span className="eyebrow !gap-0 before:hidden">Dôverujú nám</span>
-          <div className="mt-6"><Testimonials /></div>
+        <div className="reveal mx-auto max-w-[960px] text-center">
+          <Eyebrow>Dôverujú nám</Eyebrow>
+          <div className="mt-8"><Testimonials /></div>
         </div>
-        <div className="reveal-cascade mx-auto mt-[clamp(44px,5vw,64px)] grid max-w-[1000px] gap-[clamp(14px,2vw,20px)]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))" }}>
+        <div className="reveal mx-auto mt-[clamp(48px,6vw,72px)] flex max-w-[1000px] flex-wrap items-center justify-center gap-x-[clamp(40px,6vw,80px)] gap-y-8 border-t border-line pt-[clamp(36px,4vw,52px)]">
           {CLIENTS.map((c) => (
-            <div key={c.alt} className="flex h-[104px] items-center justify-center rounded-[14px] border border-line bg-white px-[22px] py-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.src} alt={c.alt} loading="lazy" className="w-auto object-contain" style={{ maxHeight: c.h, maxWidth: "80%" }} />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={c.alt} src={c.src} alt={c.alt} loading="lazy" className="w-auto object-contain opacity-60 grayscale transition-all duration-300 hover:opacity-100 hover:grayscale-0" style={{ maxHeight: c.h }} />
           ))}
         </div>
       </div>
@@ -396,32 +486,36 @@ export function ReferencieSection() {
   );
 }
 
-/* ───────── AKO ZAČAŤ (Swiss hairline kroky) ───────── */
+/* ═════════ AKO ZAČAŤ ═════════ */
 export function AkoZacatSection() {
   return (
     <section id="ako-zacat" className="bg-white" style={pad}>
       <div className={wrap}>
-        <div className="reveal mb-[clamp(40px,5vw,64px)] max-w-[720px]">
-          <Eyebrow>Ako začať</Eyebrow>
-          <h2 className="t-h2 mt-4 text-ink">Ako sa stať zákazníkom</h2>
-          <p className="mt-5 text-muted-3" style={lead}>Od prvého dopytu k pravidelným dodávkam v troch krokoch — bez záväzkov a bez zbytočnej byrokracie.</p>
+        <div className="grid gap-[clamp(40px,6vw,96px)] lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="reveal lg:sticky lg:top-[120px] lg:self-start">
+            <Eyebrow>Ako začať</Eyebrow>
+            <h2 className="t-h2 mt-4 text-ink">Ako sa stať zákazníkom</h2>
+            <p className="mt-5 max-w-[420px] text-muted-3" style={lead}>Od prvého dopytu k pravidelným dodávkam v troch krokoch — bez záväzkov a bez zbytočnej byrokracie.</p>
+            <a href="#form" className={`${btnPrimary} mt-8`}>Vyžiadať nezáväznú ponuku <Arrow /></a>
+          </div>
+          <div className="reveal-cascade flex flex-col">
+            {STEPS.map((s, i) => (
+              <div key={s.t} className="grid grid-cols-[auto_1fr] items-start gap-x-[clamp(20px,3vw,40px)] border-t border-line py-[clamp(28px,3.4vw,44px)] last:border-b">
+                <span className="text-outline font-display font-semibold" style={{ fontSize: "clamp(48px,5.4vw,80px)", lineHeight: 0.9, WebkitTextStroke: "1.5px rgba(15,107,87,0.35)" }}>{String(i + 1).padStart(2, "0")}</span>
+                <div className="flex flex-col gap-2.5 pt-1.5">
+                  <h3 className="t-h3 text-ink">{s.t}</h3>
+                  <p className="max-w-[480px] text-[15.5px] leading-relaxed text-muted">{s.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="reveal-cascade grid md:grid-cols-3">
-          {STEPS.map((s, i) => (
-            <div key={s.t} className="flex flex-col gap-4 border-t border-line py-8 md:pr-[clamp(20px,3vw,44px)]">
-              <span className="stat-num text-[clamp(36px,3.6vw,52px)] text-mint-ink/25">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="t-h3 text-ink">{s.t}</h3>
-              <p className="text-[15.5px] leading-relaxed text-muted">{s.d}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-10"><a href="#form" className={btnPrimary}>Vyžiadať nezáväznú ponuku <Arrow /></a></div>
       </div>
     </section>
   );
 }
 
-/* ───────── PODMIENKY ───────── */
+/* ═════════ PODMIENKY ═════════ */
 export function PodmienkySection() {
   return (
     <section id="podmienky" className="border-y border-line bg-cream" style={pad}>
@@ -443,13 +537,13 @@ export function PodmienkySection() {
   );
 }
 
-/* ───────── FAQ (prístupný akordeón — AEO friendly) ───────── */
+/* ═════════ FAQ — akordeón (AEO friendly) ═════════ */
 export function FaqSection() {
   return (
     <section id="faq" className="bg-white" style={pad}>
       <div className={wrap}>
         <div className="grid gap-[clamp(36px,5vw,80px)] lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="reveal">
+          <div className="reveal lg:sticky lg:top-[120px] lg:self-start">
             <Eyebrow num="04">Časté otázky</Eyebrow>
             <h2 className="t-h2 mt-4 text-ink">Na čo sa zákazníci pýtajú</h2>
             <p className="mt-5 max-w-[380px] text-muted-3" style={lead}>Nenašli ste odpoveď? Zavolajte nám na <a href="tel:+421919216908" className="font-semibold text-mint-ink hover:underline">0919 216 908</a>.</p>
@@ -476,7 +570,7 @@ export function FaqSection() {
   );
 }
 
-/* ───────── KONTAKT (info + formulár) ───────── */
+/* ═════════ KONTAKT (info + formulár) ═════════ */
 export function KontaktSection() {
   return (
     <section id="form" className="relative overflow-hidden bg-brand-deep text-[#e7efec]" style={pad}>
@@ -510,14 +604,14 @@ export function KontaktSection() {
               ))}
             </dl>
           </div>
-          <div className="rounded-2xl p-[clamp(28px,3.4vw,46px)]" style={{ background: "#fbfcfb", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.55)" }}><ContactForm /></div>
+          <div className="rounded-[22px] p-[clamp(28px,3.4vw,46px)]" style={{ background: "#fbfcfb", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.55)" }}><ContactForm /></div>
         </div>
       </div>
     </section>
   );
 }
 
-/* ───────── CTA pás ───────── */
+/* ═════════ CTA pás ═════════ */
 export function CtaBand() {
   return (
     <section className="microgrid relative border-t border-line bg-cream" style={pad}>

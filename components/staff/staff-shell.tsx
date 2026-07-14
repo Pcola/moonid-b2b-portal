@@ -14,20 +14,47 @@ type Props = {
   children: React.ReactNode;
 };
 
-const NAV = [
-  { href: "/staff", exact: true, label: "Prehľad", badge: null as null | "orders" | "requests" | "inquiries", icon: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></> },
-  { href: "/staff/objednavky", exact: false, label: "Objednávky", badge: "orders" as const, icon: <><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /><path d="M9 11v5M15 11v5" /></> },
-  { href: "/staff/ziadosti", exact: false, label: "Žiadosti", badge: "requests" as const, icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></> },
-  { href: "/staff/dopyty", exact: false, label: "Dopyty", badge: "inquiries" as const, icon: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></> },
-  { href: "/staff/zakaznici", exact: false, label: "Zákazníci", badge: null, icon: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5a3 3 0 0 1 0 6M22 20a6 6 0 0 0-5-5.9" /></> },
-  { href: "/staff/produkty", exact: false, label: "Produkty", badge: null, icon: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
-  { href: "/staff/kategorie", exact: false, label: "Kategórie", badge: null, icon: <><path d="M3 5h7l2 2h9v11a1 1 0 0 1-1 1H3z" /><path d="M3 5v14" /></> },
-  { href: "/staff/katalog", exact: false, label: "Párovanie", badge: null, icon: <><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M20 4 9 15M15 20h5v-5" /></> },
-  { href: "/staff/cenniky", exact: false, label: "Cenníky", badge: null, icon: <><path d="M20 12l-8 8-9-9V4h7z" /><circle cx="7.5" cy="7.5" r="1.3" /></> },
-  { href: "/staff/doprava-platba", exact: false, label: "Doprava a platba", badge: null, icon: <><rect x="1" y="4" width="14" height="12" rx="1.5" /><path d="M15 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="1.7" /><circle cx="18" cy="18.5" r="1.7" /></> },
-  { href: "/staff/faktury", exact: false, label: "Faktúry", badge: null, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
-  { href: "/staff/audit", exact: false, label: "Audit log", badge: null, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
-  { href: "/staff/bezpecnost", exact: false, label: "Bezpečnosť", badge: null, icon: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> },
+type StaffBadge = null | "orders" | "requests" | "inquiries";
+type StaffItem = { href: string; exact: boolean; label: string; badge: StaffBadge; icon: React.ReactNode };
+const NAV_GROUPS: { label: string | null; items: StaffItem[] }[] = [
+  {
+    label: null,
+    items: [
+      { href: "/staff", exact: true, label: "Prehľad", badge: null, icon: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></> },
+    ],
+  },
+  {
+    label: "Prevádzka",
+    items: [
+      { href: "/staff/objednavky", exact: false, label: "Objednávky", badge: "orders", icon: <><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /><path d="M9 11v5M15 11v5" /></> },
+      { href: "/staff/ziadosti", exact: false, label: "Žiadosti", badge: "requests", icon: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></> },
+      { href: "/staff/dopyty", exact: false, label: "Dopyty", badge: "inquiries", icon: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></> },
+      { href: "/staff/zakaznici", exact: false, label: "Zákazníci", badge: null, icon: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5a3 3 0 0 1 0 6M22 20a6 6 0 0 0-5-5.9" /></> },
+    ],
+  },
+  {
+    label: "Katalóg",
+    items: [
+      { href: "/staff/produkty", exact: false, label: "Produkty", badge: null, icon: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
+      { href: "/staff/kategorie", exact: false, label: "Kategórie", badge: null, icon: <><path d="M3 5h7l2 2h9v11a1 1 0 0 1-1 1H3z" /><path d="M3 5v14" /></> },
+      { href: "/staff/katalog", exact: false, label: "Párovanie", badge: null, icon: <><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M20 4 9 15M15 20h5v-5" /></> },
+    ],
+  },
+  {
+    label: "Obchod",
+    items: [
+      { href: "/staff/cenniky", exact: false, label: "Cenníky", badge: null, icon: <><path d="M20 12l-8 8-9-9V4h7z" /><circle cx="7.5" cy="7.5" r="1.3" /></> },
+      { href: "/staff/doprava-platba", exact: false, label: "Doprava a platba", badge: null, icon: <><rect x="1" y="4" width="14" height="12" rx="1.5" /><path d="M15 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="1.7" /><circle cx="18" cy="18.5" r="1.7" /></> },
+      { href: "/staff/faktury", exact: false, label: "Faktúry", badge: null, icon: <><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 8h6M9 12h6M9 16h4" /></> },
+    ],
+  },
+  {
+    label: "Systém",
+    items: [
+      { href: "/staff/audit", exact: false, label: "Audit log", badge: null, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
+      { href: "/staff/bezpecnost", exact: false, label: "Bezpečnosť", badge: null, icon: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> },
+    ],
+  },
 ];
 
 const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = [
@@ -79,19 +106,24 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
         <Link href="/staff" onClick={() => setOpen(false)} prefetch={false} className="font-display text-[24px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></Link>
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">{role === "ADMIN" ? "Admin" : "Staff"}</span>
       </div>
-      <nav className="flex flex-col gap-1">
-        {NAV.map((n) => {
-          const active = isActive(n.href, n.exact);
-          const count = badgeFor(n.badge);
-          return (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false} aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-[10px] px-3 py-[11px] text-[14.5px] font-medium transition ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
-              <Icon>{n.icon}</Icon>
-              <span className="flex-1">{n.label}</span>
-              {count > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C8881A] px-1.5 text-[11px] font-bold text-white">{count}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto [scrollbar-width:thin]">
+        {NAV_GROUPS.map((g, gi) => (
+          <div key={gi} className="flex flex-col gap-0.5">
+            {g.label && <span className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#5f7f78]">{g.label}</span>}
+            {g.items.map((n) => {
+              const active = isActive(n.href, n.exact);
+              const count = badgeFor(n.badge);
+              return (
+                <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false} aria-current={active ? "page" : undefined}
+                  className={`flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[9px] text-[14px] font-medium transition-colors duration-150 ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
+                  <Icon>{n.icon}</Icon>
+                  <span className="flex-1">{n.label}</span>
+                  {count > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C8881A] px-1.5 text-[11px] font-bold text-white">{count}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-1 pt-3">
