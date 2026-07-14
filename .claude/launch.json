@@ -7,6 +7,42 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "moonid-site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5173", "--directory", "C:/workspace/websites/moonid_ch"],
+      "port": 5173
+    },
+    {
+      "name": "moonid-v2",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5174", "--directory", "C:/workspace/websites/moonid_ch_v2"],
+      "port": 5174
+    },
+    {
+      "name": "moonid-v3",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5175", "--directory", "C:/workspace/websites/moonid_ch_v3"],
+      "port": 5175
+    },
+    {
+      "name": "moonid-v4",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5176", "--directory", "C:/workspace/websites/moonid_ch_v4"],
+      "port": 5176
+    },
+    {
+      "name": "moonid-v5",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5177", "--directory", "C:/workspace/websites/moonid_ch_v5"],
+      "port": 5177
+    },
+    {
+      "name": "moonid-v6",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["C:/workspace/websites/moonid_ch_v6/serve.py", "5178"],
+      "port": 5178
     }
   ]
 }

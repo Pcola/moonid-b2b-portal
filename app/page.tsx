@@ -1,7 +1,6 @@
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { CookieBanner } from "@/components/site/cookie-banner";
-import { safeJsonLd } from "@/lib/json-ld";
 import {
   HeroSection,
   BrandsSection,
@@ -9,7 +8,6 @@ import {
   DavkovaceSection,
   PortalSection,
   FaqSection,
-  faqLd,
   CtaBand,
 } from "@/components/site/sections";
 
@@ -28,7 +26,6 @@ export default function Home() {
       </main>
       <SiteFooter />
       <CookieBanner />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
     </>
   );
 }

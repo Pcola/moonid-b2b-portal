@@ -121,7 +121,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
               {p.brand && <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-brand">{p.brand}</span>}
               <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-muted-2">{cat}</span>
             </div>
-            <h1 className="mt-2.5 font-normal text-ink" style={{ fontSize: "clamp(27px,3.5vw,42px)", lineHeight: 1.1, letterSpacing: "-0.015em", textWrap: "balance" }}>{name}</h1>
+            <h1 className="font-display mt-2.5 font-semibold text-ink" style={{ fontSize: "clamp(27px,3.5vw,42px)", lineHeight: 1.06, letterSpacing: "-0.025em", textWrap: "balance" }}>{name}</h1>
 
             {/* cena + CTA */}
             <div className="mt-7 overflow-hidden rounded-[18px] border border-mint/45" style={{ background: "linear-gradient(135deg,#f3f8f6 0%,#eaf1ee 100%)" }}>
@@ -186,7 +186,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
         {related.length > 0 && (
           <section className="mt-[clamp(64px,8vw,110px)] border-t border-line pt-[clamp(40px,5vw,60px)]">
             <div className="mb-[clamp(24px,3vw,36px)] flex items-baseline justify-between gap-4">
-              <h2 className="font-normal text-ink" style={{ fontSize: "clamp(22px,2.6vw,32px)", letterSpacing: "-0.01em" }}>Podobné produkty</h2>
+              <h2 className="font-display font-semibold text-ink" style={{ fontSize: "clamp(22px,2.6vw,32px)", letterSpacing: "-0.02em" }}>Podobné produkty</h2>
               <Link href={`/produkty?cat=${encodeURIComponent(cat)}`} className="whitespace-nowrap text-[14px] font-semibold text-brand transition hover:text-brand-2">Celá kategória →</Link>
             </div>
             <div className="grid gap-[clamp(16px,2vw,24px)]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,190px),1fr))" }}>

@@ -49,7 +49,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
     <div className="fixed inset-x-0 top-0 z-50">
       <a href="#top" className="skip-link">Preskočiť na obsah</a>
       {/* util bar */}
-      <div className="overflow-hidden text-[13px] transition-all duration-500" style={{ height: scrolled ? 0 : 40, opacity: scrolled ? 0 : 1, background: "#122f2a", color: "#a9c2bb" }}>
+      <div className="overflow-hidden text-[13px] transition-all duration-500" style={{ height: scrolled ? 0 : 40, opacity: scrolled ? 0 : 1, background: "#0f2a26", color: "#a9c2bb" }}>
         <div className="mx-auto flex h-10 max-w-[1240px] items-center justify-between gap-5 px-5 sm:px-8">
           <span className="hidden tracking-wide sm:inline">B2B dodávateľ hygieny, čistenia a vybavenia · Slovensko</span>
           <div className="flex items-center gap-5">
@@ -61,9 +61,11 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
       </div>
 
       {/* header */}
-      <header className="transition-all duration-300" style={{ background: solidUI ? "rgba(255,255,255,0.92)" : "transparent", backdropFilter: solidUI ? "saturate(180%) blur(16px)" : "none", WebkitBackdropFilter: solidUI ? "saturate(180%) blur(16px)" : "none", borderBottom: `1px solid ${solidUI ? "#e7ebe9" : "transparent"}` }}>
+      <header className="transition-all duration-300" style={{ background: solidUI ? "rgba(255,255,255,0.92)" : "transparent", backdropFilter: solidUI ? "saturate(180%) blur(16px)" : "none", WebkitBackdropFilter: solidUI ? "saturate(180%) blur(16px)" : "none", borderBottom: `1px solid ${solidUI ? "#e5eae8" : "transparent"}` }}>
         <div className="mx-auto flex h-[74px] max-w-[1240px] items-center justify-between gap-5 px-5 sm:px-8">
-          <Link href="/" className="text-[30px] font-bold leading-none tracking-[-0.02em] transition-colors" style={{ color: logoColor }}>moonid</Link>
+          <Link href="/" className="font-display text-[29px] font-semibold leading-none tracking-[-0.03em] transition-colors" style={{ color: logoColor }}>
+            moonid<span className="text-mint" style={{ color: solidUI ? "#0f6b57" : "#8fe0cd" }}>.</span>
+          </Link>
 
           <nav className="hidden items-center gap-[34px] lg:flex" aria-label="Hlavná navigácia">
             {NAV.map((n) => (

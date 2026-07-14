@@ -55,7 +55,7 @@ export default async function OblubenePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Obľúbené</h1>
+        <h1 className="font-display text-[22px] font-semibold tracking-[-0.02em] text-ink">Obľúbené</h1>
         <p className="mt-1.5 text-[14.5px] text-muted">Produkty označené hviezdou — zdieľané pre celú vašu firmu.</p>
       </div>
 

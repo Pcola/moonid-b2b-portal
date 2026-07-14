@@ -39,7 +39,7 @@ export function SiteFooter() {
               <span className="h-px w-7" style={{ background: "#5c857b" }} />
               <span className="text-[11.5px] font-semibold uppercase tracking-[0.22em] text-[#8fb3ab]">Moonid s.r.o.</span>
             </div>
-            <h2 className="text-white" style={{ fontSize: "clamp(28px,3.6vw,44px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>
+            <h2 className="font-display font-semibold text-white" style={{ fontSize: "clamp(28px,3.6vw,44px)", lineHeight: 1.08, letterSpacing: "-0.03em" }}>
               Jeden dodávateľ pre celú vašu prevádzku.
             </h2>
           </div>
@@ -55,7 +55,7 @@ export function SiteFooter() {
         {/* columns */}
         <div className="grid grid-cols-2 gap-x-[clamp(32px,5vw,64px)] gap-y-12 py-[clamp(40px,5vw,64px)] lg:grid-cols-[1.6fr_1fr_1.2fr_1.1fr]">
           <div className="col-span-2 flex max-w-[320px] flex-col gap-4 lg:col-span-1">
-            <span className="text-[28px] font-medium leading-none tracking-[-0.02em] text-white">moonid</span>
+            <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></span>
             <p className="text-[14.5px] leading-relaxed text-[#88a8a1]">Hygiena, čistenie a vybavenie pre hotely, gastro, kancelárie aj inštitúcie. Pravidelný rozvoz, faktúra so splatnosťou.</p>
           </div>
           <nav className="flex flex-col gap-[13px]" aria-label="Navigácia">
@@ -80,8 +80,8 @@ export function SiteFooter() {
         </div>
 
         {/* oversized wordmark */}
-        <div aria-hidden="true" className="select-none font-bold text-white/5" style={{ fontSize: "clamp(74px,17vw,236px)", lineHeight: 0.82, letterSpacing: "-0.05em", whiteSpace: "nowrap", margin: "clamp(8px,1.5vw,20px) 0 clamp(28px,3.5vw,48px)" }}>
-          moonid
+        <div aria-hidden="true" className="font-display select-none font-semibold text-white/5" style={{ fontSize: "clamp(74px,17vw,236px)", lineHeight: 0.82, letterSpacing: "-0.05em", whiteSpace: "nowrap", margin: "clamp(8px,1.5vw,20px) 0 clamp(28px,3.5vw,48px)" }}>
+          moonid<span className="text-mint/15">.</span>
         </div>
 
         {/* bottom row */}

@@ -54,7 +54,7 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
   const sidebar = (
     <div className="flex h-full flex-col gap-1.5 bg-brand-foot p-4 text-[#9fbab3]">
       <div className="flex items-center gap-2.5 px-2 pb-4 pt-1">
-        <Link href="/dashboard" onClick={() => setOpen(false)} prefetch={false} className="text-[24px] font-bold tracking-[-0.02em] text-white">moonid</Link>
+        <Link href="/dashboard" onClick={() => setOpen(false)} prefetch={false} className="font-display text-[24px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></Link>
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">B2B</span>
       </div>
       <nav className="flex flex-col gap-1">
@@ -109,7 +109,7 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
           <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="portal-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">{title}</h1>
+          <h1 className="font-display text-[19px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
           <div className="ml-auto flex items-center gap-2.5">
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/katalog?q=${encodeURIComponent(q.trim())}` : "/katalog"); }} className="hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>

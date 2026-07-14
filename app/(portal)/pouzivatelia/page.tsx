@@ -20,7 +20,7 @@ export default async function PouzivateliaPage() {
   return (
     <div className="flex max-w-[820px] flex-col gap-5">
       <div>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Používatelia firmy</h1>
+        <h1 className="font-display text-[22px] font-semibold tracking-[-0.02em] text-ink">Používatelia firmy</h1>
         <p className="mt-1 text-[14.5px] text-muted">Pozvite kolegov, nastavte im právo objednávať priamo alebo cez schválenie a určte schvaľovateľa. Deaktivovaný člen sa nemôže prihlásiť.</p>
       </div>
       <MemberManager isAdmin members={users} currentUserId={user.id} />

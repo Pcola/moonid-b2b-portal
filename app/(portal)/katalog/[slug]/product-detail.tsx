@@ -47,7 +47,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             {category && <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-muted-2">{category}</span>}
-            <h1 className="text-[clamp(22px,2.6vw,30px)] font-normal leading-tight tracking-[-0.01em] text-ink">{title}</h1>
+            <h1 className="font-display text-[clamp(22px,2.6vw,30px)] font-semibold leading-tight tracking-[-0.02em] text-ink">{title}</h1>
             {brand && <span className="text-[13.5px] text-muted">Značka: <span className="font-medium text-ink">{brand}</span></span>}
           </div>
 

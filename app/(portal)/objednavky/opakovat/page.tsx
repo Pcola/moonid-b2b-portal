@@ -76,7 +76,7 @@ export default async function OpakovatPage({ searchParams }: { searchParams: Pro
   return (
     <div className="max-w-[760px]">
       <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
-      <h1 className="mt-3 text-[22px] font-normal tracking-[-0.01em] text-ink">Zopakovať objednávku <span className="font-mono text-[18px] text-muted-2">{last.number}</span></h1>
+      <h1 className="mt-3 font-display text-[22px] font-semibold tracking-[-0.02em] text-ink">Zopakovať objednávku <span className="font-mono text-[18px] text-muted-2">{last.number}</span></h1>
       <p className="mt-1.5 text-[14.5px] text-muted">Skontrolujte položky a adresu — nič nemusíte vypĺňať. Môžete aj doobjednať ďalší tovar. Ceny a dostupnosť sú prepočítané k dnešku.</p>
       <RepeatOrderConfirm sourceOrderId={last.id} idempotencyKey={randomUUID()} items={items} extraLines={extraLines} deliveryText={deliveryText} note={last.note} />
     </div>

@@ -76,7 +76,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
   const sidebar = (
     <div className="flex h-full flex-col gap-1.5 bg-brand-foot p-4 text-[#9fbab3]">
       <div className="flex items-center gap-2.5 px-2 pb-4 pt-1">
-        <Link href="/staff" onClick={() => setOpen(false)} prefetch={false} className="text-[24px] font-bold tracking-[-0.02em] text-white">moonid</Link>
+        <Link href="/staff" onClick={() => setOpen(false)} prefetch={false} className="font-display text-[24px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></Link>
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">{role === "ADMIN" ? "Admin" : "Staff"}</span>
       </div>
       <nav className="flex flex-col gap-1">
@@ -124,7 +124,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           </button>
           <div className="flex min-w-0 flex-col">
             <span className="text-[12px] text-muted-2">{page.crumb}</span>
-            <h1 className="truncate text-[19px] font-semibold tracking-[-0.01em] text-ink">{page.title}</h1>
+            <h1 className="font-display truncate text-[19px] font-semibold tracking-[-0.02em] text-ink">{page.title}</h1>
           </div>
           <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>

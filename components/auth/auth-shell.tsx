@@ -15,7 +15,7 @@ export function AuthShell({
       {panel}
       <div className="flex items-center justify-center bg-white p-[clamp(28px,5vw,56px)]">
         <div className={`flex w-full flex-col gap-7 ${rightMax}`}>
-          <Link href="/" className="text-[26px] font-bold tracking-[-0.02em] text-brand lg:hidden">moonid</Link>
+          <Link href="/" className="font-display text-[26px] font-semibold tracking-[-0.03em] text-brand lg:hidden">moonid<span className="text-mint-ink">.</span></Link>
           {children}
         </div>
       </div>

@@ -153,7 +153,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
                   <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-2 line-clamp-1">{p.c}</span>
                   <h3 className="line-clamp-2 text-[14.5px] font-medium leading-snug text-ink">{p.n}</h3>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">
-                    <span className="text-[13px] font-semibold text-brand-2">Cena na vyžiadanie</span>
+                    <span className="text-[13px] font-semibold text-mint-ink">Cena na vyžiadanie</span>
                     <svg className="text-muted-2 transition group-hover:translate-x-0.5 group-hover:text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </div>
                 </div>

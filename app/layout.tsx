@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk } from "next/font/google";
+import { Hanken_Grotesk, Bricolage_Grotesque } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { safeJsonLd } from "@/lib/json-ld";
@@ -9,6 +9,14 @@ const sans = Hanken_Grotesk({
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-hanken",
+  display: "swap",
+});
+
+// Display font redizajnu — nadpisy, obrie číslovky, wordmark (design-system/MASTER.md)
+const displayFont = Bricolage_Grotesque({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
@@ -28,7 +36,7 @@ export const metadata: Metadata = {
     url: "https://www.moonid.sk/",
     title: "Moonid s.r.o. — hygiena, čistenie a vybavenie pre vašu prevádzku",
     description: DESC,
-    images: [{ url: "/images/hero-cleaning.png", width: 1200, height: 630, alt: "Moonid — hygiena a čistenie pre prevádzky" }],
+    images: [{ url: "/images/hero-still-life.jpg", width: 1200, height: 630, alt: "Moonid — hygiena a čistenie pre prevádzky" }],
   },
 };
 
@@ -41,7 +49,7 @@ const businessLd = {
   description: DESC,
   url: "https://www.moonid.sk/",
   logo: "https://www.moonid.sk/icon.svg",
-  image: "https://www.moonid.sk/images/hero-cleaning.png",
+  image: "https://www.moonid.sk/images/hero-still-life.jpg",
   telephone: "+421919216908",
   email: "moonid@moonid.sk",
   priceRange: "€€",
@@ -69,7 +77,7 @@ const businessLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sk" className={sans.variable}>
+    <html lang="sk" className={`${sans.variable} ${displayFont.variable}`}>
       <body>
         {children}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(businessLd) }} />

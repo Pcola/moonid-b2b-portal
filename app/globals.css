@@ -1,23 +1,40 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════
+   Moonid dizajnový systém — tokeny (source of truth: design-system/MASTER.md)
+   Štýl „Clean Slate": švajčiarsky grid, klinická čistota, mint akcent.
+   ═══════════════════════════════════════════════════════════════ */
 @theme {
   --color-brand: #163f38;
   --color-brand-2: #1e5249;
-  --color-brand-deep: #102a26;
-  --color-brand-foot: #0f2622;
-  --color-mint: #9ad3c8;
+  --color-brand-deep: #0f2a26;
+  --color-brand-foot: #0c211d;
+  --color-mint: #8fe0cd;
   --color-mint-2: #8fc3b9;
-  --color-cream: #f4f6f5;
+  /* akcent na bielej — AA pre malý text (4.5:1+) */
+  --color-mint-ink: #0f6b57;
+  --color-cream: #f5f7f6;
   --color-paper: #ffffff;
-  --color-ink: #16201d;
+  --color-ink: #0d1715;
   --color-muted: #5c584f;
-  /* WCAG 2.2 AA (1.4.3): #86827a bolo ~3.3:1 na bielej/creme (padalo); #6b675f ≈ 5.2:1 na creme */
+  /* WCAG 2.2 AA (1.4.3): #86827a bolo ~3.3:1 (padalo); #6b675f ≈ 5.2:1 na creme */
   --color-muted-2: #6b675f;
   --color-muted-3: #54514a;
-  --color-line: #e7ebe9;
-  --color-mintbg: #eaf1ee;
+  --color-line: #e5eae8;
+  --color-mintbg: #eaf3f0;
 
   --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-hanken), system-ui, sans-serif;
+}
+
+/* fluidná typografická škála */
+:root {
+  --fs-display: clamp(44px, 6.4vw, 92px);
+  --fs-h1: clamp(36px, 5vw, 68px);
+  --fs-h2: clamp(32px, 4.4vw, 56px);
+  --fs-h3: clamp(20px, 2.2vw, 26px);
+  --fs-lead: clamp(17px, 1.7vw, 20px);
+  --fs-stat: clamp(40px, 5vw, 76px);
 }
 
 html {
@@ -26,15 +43,126 @@ html {
 }
 body {
   background: #fff;
-  color: #1a1a17;
+  color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 h1, h2, h3 { margin: 0; font-weight: 400; }
 
+/* ---- display typografia (Bricolage Grotesque) ---- */
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+.t-h1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.t-h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.t-h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.stat-num {
+  font-family: var(--font-display);
+  font-size: var(--fs-stat);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.font-display { font-family: var(--font-display); }
+
+/* ---- eyebrow (číslované sekcie: „01 / Sortiment") ---- */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-mint-ink);
+}
+.eyebrow::before { content: ""; width: 26px; height: 1.5px; background: currentColor; opacity: 0.6; }
+.eyebrow-dark { color: var(--color-mint); }
+.eyebrow-num {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+
+/* ---- „wipe" — mint ťah stierkou za kľúčovým slovom (ownable motív) ---- */
+.wipe {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.wipe::before {
+  content: "";
+  position: absolute;
+  inset: 8% -0.14em -2% -0.1em;
+  background: linear-gradient(94deg, rgba(143, 224, 205, 0.5) 0%, rgba(143, 224, 205, 0.34) 78%, rgba(143, 224, 205, 0.08) 100%);
+  border-radius: 0.14em 0.5em 0.16em 0.55em;
+  transform: skewX(-8deg);
+  z-index: -1;
+  transform-origin: left center;
+}
+.wipe-anim::before { animation: wipeIn 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 0.5s both; }
+@keyframes wipeIn { from { transform: skewX(-8deg) scaleX(0); } to { transform: skewX(-8deg) scaleX(1); } }
+/* na tmavom pozadí plnší mint */
+.wipe-dark::before {
+  background: linear-gradient(94deg, rgba(143, 224, 205, 0.34) 0%, rgba(143, 224, 205, 0.22) 78%, rgba(143, 224, 205, 0.05) 100%);
+}
+
+/* ---- microgrid — jemná „kachličková" mriežka na svetlých plochách ---- */
+.microgrid {
+  background-image:
+    linear-gradient(to right, rgba(22, 63, 56, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 63, 56, 0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+  mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+}
+.microgrid-dark {
+  background-image:
+    linear-gradient(to right, rgba(143, 224, 205, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(143, 224, 205, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(120% 100% at 80% 0%, #000 25%, transparent 80%);
+  mask-image: radial-gradient(120% 100% at 80% 0%, #000 25%, transparent 80%);
+}
+
+/* ---- mint status bodka (skladom) ---- */
+.dot-mint {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-mint-ink);
+  box-shadow: 0 0 0 3px rgba(15, 107, 87, 0.14);
+}
+
 /* ---- scroll reveal + load animácie ---- */
-@keyframes riseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 .rise-load { animation: riseIn .9s cubic-bezier(.2,.7,.2,1) both; }
 .reveal { animation: riseIn .8s cubic-bezier(.2,.7,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 20%; }
 .reveal-cascade > * { animation: riseIn .7s cubic-bezier(.2,.7,.2,1) both; animation-timeline: view(); animation-range: entry 0% cover 16%; }
@@ -59,9 +187,18 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 
 /* ---- karty ---- */
 .card-hover { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.card-hover:hover { transform: translateY(-4px); box-shadow: 0 18px 38px -20px rgba(22,40,29,.32); border-color: #c9d8d2; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 18px 38px -20px rgba(13, 33, 27, .3); border-color: #c6d6d0; }
 .why-card { transition: transform .35s cubic-bezier(.2,.7,.2,1), background .3s ease, border-color .3s ease, box-shadow .3s ease; }
-.why-card:hover { transform: translateY(-6px); background: rgba(255,255,255,.08); border-color: rgba(143,195,185,.5); box-shadow: 0 26px 54px -30px rgba(0,0,0,.65); }
+.why-card:hover { transform: translateY(-6px); background: rgba(255,255,255,.08); border-color: rgba(143,224,205,.4); box-shadow: 0 26px 54px -30px rgba(0,0,0,.65); }
+
+/* ---- FAQ akordeón (details/summary — prístupný, bez JS) ---- */
+.faq-item summary { list-style: none; cursor: pointer; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item .faq-icon { transition: transform .3s cubic-bezier(.2,.7,.2,1); }
+.faq-item[open] .faq-icon { transform: rotate(45deg); }
+.faq-item .faq-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s cubic-bezier(.2,.7,.2,1); }
+.faq-item[open] .faq-body { grid-template-rows: 1fr; }
+.faq-item .faq-body > div { overflow: hidden; }
 
 /* ---- navlink podčiarknutie ---- */
 .navlink { position: relative; }
@@ -92,6 +229,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .hero-img { transform: none !important; }
+  .wipe::before { transform: skewX(-8deg) !important; }
   .brand-marquee { overflow: visible; -webkit-mask-image: none; mask-image: none; }
   .brand-track { flex-wrap: wrap; justify-content: center; width: auto; animation: none; padding-right: 0; }
   .brand-dup { display: none !important; }
