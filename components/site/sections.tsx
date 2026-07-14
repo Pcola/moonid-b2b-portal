@@ -171,7 +171,8 @@ export function HeroSection() {
 /* ═════════ PAGE HERO — svetlý editoriálny header podstránok ═════════ */
 export function PageHero({ eyebrow: eb, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
   return (
-    <section className="microgrid relative border-b border-line bg-white" style={{ paddingTop: "clamp(128px,15vw,180px)", paddingBottom: "clamp(44px,6vw,76px)" }}>
+    <section className="relative border-b border-line bg-white" style={{ paddingTop: "clamp(128px,15vw,180px)", paddingBottom: "clamp(44px,6vw,76px)" }}>
+      <div className="microgrid pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className={`relative ${wrap}`}>
         <nav aria-label="Omrvinková navigácia" className="mb-6 flex items-center gap-2.5 text-[13px] font-medium text-muted-2">
           <Link href="/" className="transition-colors hover:text-brand">Domov</Link>
@@ -224,8 +225,9 @@ export function SortimentSection() {
         {/* bento */}
         <div className="reveal grid gap-[clamp(12px,1.6vw,18px)] md:grid-cols-2 lg:grid-cols-4 lg:[grid-template-rows:repeat(2,minmax(220px,auto))]">
           {/* A — veľká zelená dlaždica 2×2 */}
-          <div className="microgrid-dark relative flex flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(26px,3vw,40px)] md:col-span-2 lg:row-span-2">
-            <div className="flex flex-col gap-3">
+          <div className="relative flex flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(26px,3vw,40px)] md:col-span-2 lg:row-span-2">
+            <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
+            <div className="relative flex flex-col gap-3">
               <span className="stat-num text-white" style={{ fontSize: "clamp(56px,7vw,110px)" }}>1 600+</span>
               <span className="t-h3 text-mint">položiek v sortimente</span>
               <p className="mt-1 max-w-[400px] text-[15.5px] leading-relaxed text-[#a9c2bb]">
@@ -233,7 +235,7 @@ export function SortimentSection() {
                 od čistiacej chémie a papiera až po dávkovače, gastro a kancelárske potreby.
               </p>
             </div>
-            <Link href="/produkty" className={`${btnOnDark} self-start !py-[13px] text-[15px]`}>Pozrieť celý sortiment <Arrow /></Link>
+            <Link href="/produkty" className={`${btnOnDark} relative self-start !py-[13px] text-[15px]`}>Pozrieť celý sortiment <Arrow /></Link>
           </div>
 
           {/* B — obrazová dlaždica 2×1 */}
@@ -614,7 +616,8 @@ export function KontaktSection() {
 /* ═════════ CTA pás ═════════ */
 export function CtaBand() {
   return (
-    <section className="microgrid relative border-t border-line bg-cream" style={pad}>
+    <section className="relative border-t border-line bg-cream" style={pad}>
+      <div className="microgrid pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className={`${wrap} relative flex flex-col items-center gap-7 text-center`}>
         <h2 className="t-h2 max-w-[760px] text-ink">Pripravíme ponuku na mieru <span className="wipe">vašej prevádzke</span></h2>
         <p className="max-w-[560px] text-muted-3" style={lead}>Napíšte nám, čo potrebujete — ozveme sa spravidla do 24 hodín. Bez záväzkov.</p>
