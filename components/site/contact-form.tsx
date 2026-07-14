@@ -15,9 +15,9 @@ const SEGMENTS = [
 const TYPY = ["Cenová ponuka", "Prenájom dávkovačov", "Prístup do portálu", "Iné"];
 
 const inputCls =
-  "border-0 border-b border-[#d2d8d4] bg-transparent px-0.5 py-2 text-[15.5px] text-ink outline-none transition-colors focus:border-brand";
+  "border-0 border-b border-[#d2d8d4] bg-transparent px-0.5 py-2.5 text-[16.5px] text-ink outline-none transition-colors focus:border-brand";
 const labelCls =
-  "flex flex-col gap-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-2";
+  "flex flex-col gap-2.5 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-2";
 
 export function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -51,7 +51,7 @@ export function ContactForm() {
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
         </span>
         <h3 className="text-ink" style={{ fontSize: "clamp(24px,3vw,30px)", letterSpacing: "-0.01em" }}>Ďakujeme, ozveme sa vám čo najskôr.</h3>
-        <p className="max-w-[400px] text-[15px] leading-relaxed text-muted-3">
+        <p className="max-w-[400px] text-[16px] leading-relaxed text-muted-3">
           Vaša správa bola odoslaná. Ak je to súrne, zavolajte nám na{" "}
           <a href="tel:+421919216908" className="font-semibold text-brand">0919 216 908</a>.
         </p>
@@ -102,17 +102,17 @@ export function ContactForm() {
           </label>
         </div>
         <input type="text" name="web" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
-        <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-muted-3">
+        <label className="flex items-start gap-2.5 text-[13.5px] leading-relaxed text-muted-3">
           <input name="gdpr" type="checkbox" required className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
           <span>Súhlasím so spracovaním osobných údajov za účelom vybavenia dopytu (<a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>). *</span>
         </label>
         {error && <p role="alert" className="text-[14px] text-[#a23b2a]">Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908.</p>}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-4">
-          <button type="submit" disabled={submitting} className="inline-flex items-center gap-2.5 rounded-[9px] bg-brand px-7 py-[15px] text-[15.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-70">
+          <button type="submit" disabled={submitting} className="inline-flex items-center gap-2.5 rounded-[9px] bg-brand px-7 py-[15px] text-[16px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-70">
             {submitting ? "Odosielam…" : "Odoslať dopyt"}
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>
-          <span className="text-[13px] leading-snug text-muted-2">Odpovieme spravidla do 24 hodín.</span>
+          <span className="text-[14px] leading-snug text-muted-2">Odpovieme spravidla do 24 hodín.</span>
         </div>
       </form>
     </>

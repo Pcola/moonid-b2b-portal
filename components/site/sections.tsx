@@ -83,7 +83,7 @@ export const faqLd = {
 /* ───────── helpers ───────── */
 const wrap = "mx-auto max-w-[1240px] px-5 sm:px-8";
 const pad = { padding: "clamp(76px,10vw,148px) 0" } as const;
-const lead = { fontSize: "clamp(17px,1.7vw,20px)", lineHeight: 1.6 } as const;
+const lead = { fontSize: "clamp(18px,1.8vw,21px)", lineHeight: 1.6 } as const;
 
 function Eyebrow({ num, children, dark = false }: { num?: string; children: React.ReactNode; dark?: boolean }) {
   return (
@@ -103,58 +103,42 @@ const btnOnDark = "inline-flex cursor-pointer items-center justify-center gap-2.
 const btnGhostDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/55 px-[22px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10";
 const btnGhost = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-[#b9cac4] bg-white px-[24px] py-[15px] text-base font-semibold text-brand transition-colors duration-200 hover:border-brand hover:bg-mintbg/50";
 
-/* ═════════ HERO — split layout + textový marquee ═════════ */
+/* ═════════ HERO — full-width obraz + textový marquee ═════════ */
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-brand-deep">
+    <section className="relative flex flex-col overflow-hidden bg-brand-deep" style={{ minHeight: "clamp(640px,92vh,900px)" }}>
+      <Image src="/images/hero-still-life.jpg" alt="Biele uteráky, dávkovač mydla a čistiace potreby na tmavozelenom pozadí" fill priority sizes="100vw" className="hero-img object-cover" style={{ objectPosition: "76% center" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(98deg, rgba(13,28,24,0.92) 0%, rgba(15,36,30,0.78) 30%, rgba(17,48,42,0.34) 58%, rgba(17,48,42,0.04) 100%)" }} aria-hidden="true" />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(13,28,24,0.42) 0%, rgba(13,28,24,0) 26%, rgba(13,28,24,0.5) 100%)" }} aria-hidden="true" />
       <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(90% 70% at 8% 0%, rgba(46,98,88,0.4) 0%, rgba(13,28,24,0) 55%)" }} aria-hidden="true" />
 
-      <div className={`relative ${wrap}`} style={{ paddingTop: "clamp(110px,13vw,152px)" }}>
-        <div className="grid items-stretch gap-8 pb-[clamp(40px,5vw,72px)] lg:grid-cols-[1.04fr_0.96fr] lg:gap-14">
-          {/* ľavý stĺpec — obsah */}
-          <div className="hero-stagger flex flex-col justify-center gap-7 py-2 lg:py-8">
-            <Eyebrow dark>Dodávateľ pre vašu prevádzku · od 2017</Eyebrow>
-            <h1 className="t-display text-white">
-              Hygiena a<br /><span className="wipe wipe-dark wipe-anim">čistenie</span> pre<br />vašu prevádzku
-            </h1>
-            <p className="max-w-[520px] text-[#cfe0db]" style={lead}>
-              Jeden dodávateľ pre hotely, wellness, gastro, úrady aj školy v okrese Nové Zámky
-              a Nitrianskom kraji. Vlastný rozvoz, dávkovače na prenájom a objednávky na faktúru.
-            </p>
-            <div className="flex flex-wrap items-center gap-3.5">
-              <Link href="/kontakt" className={btnOnDark}>Vyžiadať cenovú ponuku</Link>
-              <Link href="/kontakt#ako-zacat" className={btnGhostDark}>Ako začať</Link>
-            </div>
-            <div className="mt-2 grid max-w-[560px] grid-cols-3 border-t border-white/15 pt-6">
-              {STATS.map((s, i) => (
-                <div key={s.l} className={`flex flex-col gap-1.5 ${i > 0 ? "border-l border-white/12 pl-[clamp(14px,2vw,28px)]" : ""}`}>
-                  <span className="font-display text-white" style={{ fontSize: "clamp(24px,2.9vw,38px)", lineHeight: 1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
-                  <span className="text-[12.5px] leading-snug text-[#9db8b1]">{s.l}</span>
-                </div>
-              ))}
-            </div>
+      <div className={`relative flex flex-1 items-end ${wrap} w-full`} style={{ paddingTop: "clamp(120px,14vw,170px)", paddingBottom: "clamp(44px,5.5vw,72px)" }}>
+        <div className="hero-stagger flex max-w-[880px] flex-col items-start gap-7">
+          <Eyebrow dark>Dodávateľ pre vašu prevádzku · od 2017</Eyebrow>
+          <h1 className="t-display text-white">
+            Hygiena a <span className="wipe wipe-dark wipe-anim">čistenie</span><br />pre vašu prevádzku
+          </h1>
+          <p className="max-w-[620px] text-[#d7e4e0]" style={lead}>
+            Jeden dodávateľ pre hotely, wellness, gastro, úrady aj školy v okrese Nové Zámky
+            a Nitrianskom kraji. Vlastný rozvoz, dávkovače na prenájom a objednávky na faktúru.
+          </p>
+          <div className="flex flex-wrap items-center gap-3.5">
+            <Link href="/kontakt" className={btnOnDark}>Vyžiadať cenovú ponuku</Link>
+            <Link href="/kontakt#ako-zacat" className={btnGhostDark}>Ako začať</Link>
           </div>
-
-          {/* pravý stĺpec — obrazový panel */}
-          <div className="rise-load relative min-h-[380px] overflow-hidden rounded-[28px] border border-white/10 lg:min-h-0" style={{ animationDelay: ".25s" }}>
-            <Image src="/images/hero-still-life.jpg" alt="Biele uteráky, dávkovač mydla a čistiace potreby na tmavozelenom pozadí" fill priority sizes="(max-width:1024px) 100vw, 46vw" className="object-cover" style={{ objectPosition: "72% center" }} />
-            <div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-3 rounded-2xl border border-white/15 bg-brand-deep/60 px-5 py-4 backdrop-blur-md">
-              <div className="flex items-center gap-3">
-                <span className="dot-mint !bg-mint" style={{ boxShadow: "0 0 0 3px rgba(143,224,205,.18)" }} />
-                <div className="flex flex-col">
-                  <span className="text-[13.5px] font-semibold text-white">Vlastný rozvoz</span>
-                  <span className="text-[12px] text-[#9db8b1]">Nové Zámky a Nitriansky kraj</span>
-                </div>
+          <div className="mt-2 grid w-full max-w-[640px] grid-cols-3 border-t border-white/20 pt-6">
+            {STATS.map((s, i) => (
+              <div key={s.l} className={`flex flex-col gap-1.5 ${i > 0 ? "border-l border-white/15 pl-[clamp(16px,2.5vw,32px)]" : ""}`}>
+                <span className="font-display text-white" style={{ fontSize: "clamp(26px,3.2vw,42px)", lineHeight: 1, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
+                <span className="text-[13px] leading-snug text-[#a9c2bb]">{s.l}</span>
               </div>
-              <Link href="/o-nas" aria-label="Viac o rozvoze" className="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded-xl border border-white/20 text-white transition-colors hover:bg-white/10"><Arrow /></Link>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* textový marquee pás */}
-      <div className="marquee-band relative border-t border-white/10 py-[clamp(18px,2.4vw,28px)]" role="img" aria-label={`Sortiment: ${MARQUEE.join(", ")}`}>
+      <div className="marquee-band relative border-t border-white/12 bg-brand-deep/40 py-[clamp(18px,2.4vw,28px)] backdrop-blur-sm" role="img" aria-label={`Sortiment: ${MARQUEE.join(", ")}`}>
         <div className="marquee-track">
           {[...MARQUEE, ...MARQUEE].map((m, i) => (
             <span key={i} aria-hidden={i >= MARQUEE.length} className="flex items-center gap-[clamp(28px,4vw,56px)]">
@@ -230,7 +214,7 @@ export function SortimentSection() {
             <div className="relative flex flex-col gap-3">
               <span className="stat-num text-white" style={{ fontSize: "clamp(56px,7vw,110px)" }}>1 600+</span>
               <span className="t-h3 text-mint">položiek v sortimente</span>
-              <p className="mt-1 max-w-[400px] text-[15.5px] leading-relaxed text-[#a9c2bb]">
+              <p className="mt-1 max-w-[400px] text-[16.5px] leading-relaxed text-[#a9c2bb]">
                 Najpredávanejšie produkty držíme skladom, zvyšok objednáme pri vašej objednávke —
                 od čistiacej chémie a papiera až po dávkovače, gastro a kancelárske potreby.
               </p>
@@ -240,7 +224,7 @@ export function SortimentSection() {
 
           {/* B — obrazová dlaždica 2×1 */}
           <div className="relative min-h-[220px] overflow-hidden rounded-[22px] border border-line md:col-span-2">
-            <Image src="/images/rozvoz.jpg" alt="Vlastný rozvoz Moonid — dodávka naložená tovarom" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
+            <Image src="/images/rozvoz-zavoz.jpg" alt="Vozík naložený krabicami s hygienickým tovarom pripravený na rozvoz" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
             <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-brand-deep/85 to-transparent p-5 pt-12">
               <span className="dot-mint !bg-mint" style={{ boxShadow: "0 0 0 3px rgba(143,224,205,.2)" }} />
               <span className="text-[13.5px] font-semibold text-white">Pravidelný závoz priamo na prevádzku</span>
@@ -261,7 +245,7 @@ export function SortimentSection() {
 
         <div className="reveal mt-[clamp(20px,2.5vw,28px)] flex flex-wrap gap-2.5">
           {KATEGORIE.map((k) => (
-            <Link key={k} href={`/produkty?cat=${encodeURIComponent(k)}`} className="cursor-pointer rounded-full border border-line bg-white px-4 py-2.5 text-[13.5px] font-medium text-muted-3 transition-colors duration-200 hover:border-brand/40 hover:text-brand">
+            <Link key={k} href={`/produkty?cat=${encodeURIComponent(k)}`} className="cursor-pointer rounded-full border border-line bg-white px-4 py-2.5 text-[14px] font-medium text-muted-3 transition-colors duration-200 hover:border-brand/40 hover:text-brand">
               {k}
             </Link>
           ))}
@@ -291,7 +275,7 @@ export function DavkovaceSection() {
                 <span className="font-display font-semibold text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-2.5 pt-1.5">
                   <h3 className="t-h3 text-ink">{r.t}</h3>
-                  <p className="max-w-[480px] text-[15.5px] leading-relaxed text-muted">{r.d}</p>
+                  <p className="max-w-[480px] text-[16.5px] leading-relaxed text-muted">{r.d}</p>
                 </div>
               </div>
             ))}
@@ -321,7 +305,7 @@ export function PortalSection() {
                 {PORTAL_FEATS.map((f) => (
                   <div key={f} className="flex items-start gap-3">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8fe0cd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
-                    <span className="text-[14.5px] leading-snug text-[#d7e4e0]">{f}</span>
+                    <span className="text-[15.5px] leading-snug text-[#d7e4e0]">{f}</span>
                   </div>
                 ))}
               </div>
@@ -401,8 +385,8 @@ export function PreKohoSection({ cream = false }: { cream?: boolean }) {
                 <span className="font-display text-[12px] tabular-nums text-muted-2">{String(i + 1).padStart(2, "0")}</span>
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-[17px] font-semibold leading-snug text-ink">{s.t}</h3>
-                <p className="text-[14.5px] leading-relaxed text-muted">{s.d}</p>
+                <h3 className="text-[18px] font-semibold leading-snug text-ink">{s.t}</h3>
+                <p className="text-[15.5px] leading-relaxed text-muted">{s.d}</p>
               </div>
             </div>
           ))}
@@ -415,8 +399,8 @@ export function PreKohoSection({ cream = false }: { cream?: boolean }) {
 /* ═════════ HOTEL ═════════ */
 export function HotelSection() {
   const cards = [
-    { img: "/images/hotel-kozmetika.png", t: "Hotelová kozmetika a amenity", d: "Mydielka, sprchové gély, šampóny, telové mlieka a kozmetické sady — vo fľaštičkách, sáčkoch aj v dávkovačoch na steny." },
-    { img: "/images/hotel-vybavenie-izieb.png", t: "Vybavenie izieb a kúpeľní", d: "Uteráky a osušky, župany, papuče, kozmetické a hygienické sady, dávkovače a jednorazové potreby pre hostí." },
+    { img: "/images/hotel-amenity.jpg", t: "Hotelová kozmetika a amenity", d: "Mydielka, sprchové gély, šampóny, telové mlieka a kozmetické sady — vo fľaštičkách, sáčkoch aj v dávkovačoch na steny." },
+    { img: "/images/hotel-bathroom.jpg", t: "Vybavenie izieb a kúpeľní", d: "Uteráky a osušky, župany, papuče, kozmetické a hygienické sady, dávkovače a jednorazové potreby pre hostí." },
   ];
   return (
     <section id="hotel" className="border-t border-line bg-cream" style={pad}>
@@ -432,7 +416,7 @@ export function HotelSection() {
               <div className="relative h-[340px] w-full"><Image src={c.img} alt={c.t} fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" /></div>
               <div className="flex flex-col gap-3 p-[clamp(26px,3vw,36px)]">
                 <h3 className="t-h3 !text-[clamp(22px,2.4vw,28px)] text-ink">{c.t}</h3>
-                <p className="text-[15.5px] leading-relaxed text-muted-3">{c.d}</p>
+                <p className="text-[16.5px] leading-relaxed text-muted-3">{c.d}</p>
               </div>
             </div>
           ))}
@@ -458,7 +442,7 @@ export function PrecoSection() {
               <span className="inline-flex h-[54px] w-[54px] items-center justify-center rounded-[14px] border border-mint/25 bg-mint/[0.12] text-mint"><Ico size={26}>{w.p}</Ico></span>
               <div className="flex flex-col gap-2.5">
                 <h3 className="t-h3 !text-xl text-white">{w.t}</h3>
-                <p className="text-[15.5px] leading-relaxed text-[#b7ccc6]">{w.d}</p>
+                <p className="text-[16.5px] leading-relaxed text-[#b7ccc6]">{w.d}</p>
               </div>
             </div>
           ))}
@@ -506,7 +490,7 @@ export function AkoZacatSection() {
                 <span className="font-display font-semibold text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-2.5 pt-1.5">
                   <h3 className="t-h3 text-ink">{s.t}</h3>
-                  <p className="max-w-[480px] text-[15.5px] leading-relaxed text-muted">{s.d}</p>
+                  <p className="max-w-[480px] text-[16.5px] leading-relaxed text-muted">{s.d}</p>
                 </div>
               </div>
             ))}
@@ -530,7 +514,7 @@ export function PodmienkySection() {
           {TERMS.map((t) => (
             <div key={t.k} className="flex flex-col gap-1.5 border-t border-line py-5">
               <dt className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-mint-ink">{t.k}</dt>
-              <dd className="text-[15.5px] leading-relaxed text-muted">{t.v}</dd>
+              <dd className="text-[16.5px] leading-relaxed text-muted">{t.v}</dd>
             </div>
           ))}
         </dl>
@@ -554,13 +538,13 @@ export function FaqSection() {
             {FAQ.map((f) => (
               <details key={f.q} className="faq-item group border-t border-line last:border-b">
                 <summary className="flex items-center justify-between gap-5 py-[22px]">
-                  <h3 className="text-[17px] font-semibold text-ink">{f.q}</h3>
+                  <h3 className="text-[18px] font-semibold text-ink">{f.q}</h3>
                   <span className="faq-icon flex h-8 w-8 flex-none items-center justify-center rounded-full border border-line text-muted-2" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                   </span>
                 </summary>
                 <div className="faq-body">
-                  <div><p className="max-w-[560px] pb-[22px] text-[15px] leading-relaxed text-muted">{f.a}</p></div>
+                  <div><p className="max-w-[560px] pb-[22px] text-[16px] leading-relaxed text-muted">{f.a}</p></div>
                 </div>
               </details>
             ))}
@@ -572,41 +556,70 @@ export function FaqSection() {
   );
 }
 
-/* ═════════ KONTAKT (info + formulár) ═════════ */
+/* ═════════ KONTAKT (kanály + formulár) ═════════ */
 export function KontaktSection() {
+  const channels = [
+    {
+      label: "Zavolajte nám",
+      value: "0919 216 908",
+      sub: "Po–Štv 8:00–17:00 · Pia 8:00–14:00",
+      href: "tel:+421919216908",
+      big: true,
+      icon: <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.5 2.9.7a2 2 0 0 1 1.6 2z" />,
+    },
+    {
+      label: "Napíšte nám",
+      value: "moonid@moonid.sk",
+      sub: "Odpovieme spravidla do 24 hodín",
+      href: "mailto:moonid@moonid.sk",
+      icon: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 6 10-6" /></>,
+    },
+    {
+      label: "Navštívte nás",
+      value: "Hlavná 39/78, Dolný Ohaj",
+      sub: "941 43 · okres Nové Zámky",
+      href: "https://maps.google.com/?q=Hlavn%C3%A1+39%2F78%2C+941+43+Doln%C3%BD+Ohaj",
+      icon: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z" /><circle cx="12" cy="10" r="3" /></>,
+    },
+  ];
   return (
     <section id="form" className="relative overflow-hidden bg-brand-deep text-[#e7efec]" style={pad}>
       <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(120% 80% at 12% -10%, rgba(46,98,88,0.45) 0%, rgba(16,42,38,0) 60%)" }} />
       <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
       <div className={`relative ${wrap}`}>
-        <div className="grid items-start gap-[clamp(44px,6vw,96px)] lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid items-start gap-[clamp(44px,6vw,96px)] lg:grid-cols-[0.95fr_1.05fr]">
           <div className="flex flex-col">
             <Eyebrow dark>Kontakt</Eyebrow>
             <h2 className="t-h2 mt-5 text-white">Napíšte nám</h2>
-            <p className="mt-[18px] max-w-[430px] text-[#a9c2bb]" style={lead}>Pripravíme cenovú ponuku na mieru a ozveme sa vám spravidla do 24 hodín.</p>
-            <div className="mt-[clamp(36px,4vw,52px)] flex flex-col gap-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e938b]">Telefón</span>
-              <a href="tel:+421919216908" className="font-display font-semibold text-white transition-colors hover:text-mint" style={{ fontSize: "clamp(28px,3.2vw,40px)", letterSpacing: "-0.02em" }}>0919 216 908</a>
-            </div>
-            <div className="mt-6 flex flex-col gap-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e938b]">E-mail</span>
-              <a href="mailto:moonid@moonid.sk" className="font-medium text-[#e7efec] transition-colors hover:text-mint" style={{ fontSize: "clamp(18px,1.8vw,21px)" }}>moonid@moonid.sk</a>
-            </div>
-            <dl className="mt-[clamp(40px,4.5vw,56px)] flex flex-col">
-              {[
-                ["Kontaktná osoba", <span key="1">Jozef Slobodník <span className="text-[#7fa59c]">— konateľ</span></span>],
-                ["Otváracie hodiny", <span key="2">Po–Štv 8:00–17:00 <span className="text-[#7fa59c]">· Pia 8:00–14:00</span></span>],
-                ["Adresa", <span key="3">Hlavná 39/78 <span className="text-[#7fa59c]">· 941 43 Dolný Ohaj</span></span>],
-                ["Fakturačné údaje", <span key="4" className="text-[14px] text-[#8fb3ab]">IČO 50 934 660 · IČ DPH SK2120530995</span>],
-              ].map(([k, v], idx) => (
-                <div key={idx} className="flex items-baseline gap-6 border-t border-white/10 py-[18px]">
-                  <dt className="w-[124px] flex-none pt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#6e938b]">{k}</dt>
-                  <dd className="text-[15.5px] leading-relaxed text-[#e7efec]">{v}</dd>
-                </div>
+            <p className="mt-5 max-w-[440px] text-[#b7ccc6]" style={{ fontSize: "clamp(18px,1.8vw,21px)", lineHeight: 1.6 }}>
+              Pripravíme cenovú ponuku na mieru a ozveme sa vám spravidla do 24 hodín.
+            </p>
+
+            <div className="mt-[clamp(32px,4vw,48px)] flex flex-col">
+              {channels.map((c) => (
+                <a key={c.label} href={c.href} {...(c.href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {})}
+                  className="group flex cursor-pointer items-center gap-5 border-t border-white/12 py-[clamp(20px,2.5vw,28px)] transition-colors last:border-b hover:bg-white/[0.04]">
+                  <span className="flex h-[52px] w-[52px] flex-none items-center justify-center rounded-2xl border border-mint/25 bg-mint/10 text-mint">
+                    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{c.icon}</svg>
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-[12.5px] font-semibold uppercase tracking-[0.16em] text-[#8fb3ab]">{c.label}</span>
+                    <span className={`font-display font-semibold text-white transition-colors group-hover:text-mint ${c.big ? "" : "truncate"}`}
+                      style={{ fontSize: c.big ? "clamp(28px,3.4vw,44px)" : "clamp(19px,2vw,24px)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                      {c.value}
+                    </span>
+                    <span className="text-[14.5px] text-[#8fa8a1]">{c.sub}</span>
+                  </span>
+                  <span className="hidden text-[#6e938b] transition-transform duration-200 group-hover:translate-x-1 group-hover:text-mint sm:block"><Arrow /></span>
+                </a>
               ))}
-            </dl>
+            </div>
+
+            <p className="mt-7 text-[14px] leading-relaxed text-[#7fa59c]">
+              Moonid s.r.o. · Jozef Slobodník — konateľ · IČO 50 934 660 · IČ DPH SK2120530995
+            </p>
           </div>
-          <div className="rounded-[22px] p-[clamp(28px,3.4vw,46px)]" style={{ background: "#fbfcfb", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.55)" }}><ContactForm /></div>
+          <div className="rounded-[24px] p-[clamp(28px,3.4vw,48px)] lg:sticky lg:top-[100px]" style={{ background: "#fbfcfb", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.55)" }}><ContactForm /></div>
         </div>
       </div>
     </section>

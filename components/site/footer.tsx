@@ -56,26 +56,26 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 gap-x-[clamp(32px,5vw,64px)] gap-y-12 py-[clamp(40px,5vw,64px)] lg:grid-cols-[1.6fr_1fr_1.2fr_1.1fr]">
           <div className="col-span-2 flex max-w-[320px] flex-col gap-4 lg:col-span-1">
             <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></span>
-            <p className="text-[14.5px] leading-relaxed text-[#88a8a1]">Hygiena, čistenie a vybavenie pre hotely, gastro, kancelárie aj inštitúcie. Pravidelný rozvoz, faktúra so splatnosťou.</p>
+            <p className="text-[15.5px] leading-relaxed text-[#88a8a1]">Hygiena, čistenie a vybavenie pre hotely, gastro, kancelárie aj inštitúcie. Pravidelný rozvoz, faktúra so splatnosťou.</p>
           </div>
           <nav className="flex flex-col gap-[13px]" aria-label="Navigácia">
             <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6e908a]">Navigácia</span>
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="text-[14.5px] font-medium text-[#c7d8d3] transition hover:text-white">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="text-[15.5px] font-medium text-[#c7d8d3] transition hover:text-white">{n.label}</Link>
             ))}
           </nav>
           <nav className="flex flex-col gap-[13px]" aria-label="Informácie">
             <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6e908a]">Informácie</span>
             {INFO.map((i) => (
-              <Link key={i.href} href={i.href} className="text-[14.5px] font-medium text-[#c7d8d3] transition hover:text-white">{i.label}</Link>
+              <Link key={i.href} href={i.href} className="text-[15.5px] font-medium text-[#c7d8d3] transition hover:text-white">{i.label}</Link>
             ))}
           </nav>
           <div className="flex flex-col gap-[13px]">
             <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6e908a]">Spojenie</span>
-            <Link href="/login" className="inline-flex items-center gap-2 text-[14.5px] font-semibold text-[#c7d8d3] transition hover:text-white"><LoginIcon /> Prihlásiť sa do portálu</Link>
-            <a href="mailto:moonid@moonid.sk" className="text-[14.5px] font-medium text-[#c7d8d3] transition hover:text-white">moonid@moonid.sk</a>
-            <span className="text-[14.5px] leading-relaxed text-[#88a8a1]">Hlavná 39/78<br />941 43 Dolný Ohaj</span>
-            <span className="text-[14.5px] leading-relaxed text-[#88a8a1]">Po–Štv 8:00–17:00<br />Pia 8:00–14:00</span>
+            <Link href="/login" className="inline-flex items-center gap-2 text-[15.5px] font-semibold text-[#c7d8d3] transition hover:text-white"><LoginIcon /> Prihlásiť sa do portálu</Link>
+            <a href="mailto:moonid@moonid.sk" className="text-[15.5px] font-medium text-[#c7d8d3] transition hover:text-white">moonid@moonid.sk</a>
+            <span className="text-[15.5px] leading-relaxed text-[#88a8a1]">Hlavná 39/78<br />941 43 Dolný Ohaj</span>
+            <span className="text-[15.5px] leading-relaxed text-[#88a8a1]">Po–Štv 8:00–17:00<br />Pia 8:00–14:00</span>
           </div>
         </div>
 
@@ -86,7 +86,7 @@ export function SiteFooter() {
 
         {/* bottom row */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3.5 border-t border-white/10 pt-[clamp(20px,2.4vw,28px)]">
-          <span className="text-[13px] text-[#6e908a]">IČO 50 934 660 · DIČ 2120530995 · IČ DPH SK2120530995 · © {new Date().getFullYear()} Moonid s.r.o.</span>
+          <span className="text-[13.5px] text-[#6e908a]">IČO 50 934 660 · DIČ 2120530995 · IČ DPH SK2120530995 · © {new Date().getFullYear()} Moonid s.r.o.</span>
           <a href="#top" className="inline-flex items-center gap-2 text-[13px] font-medium tracking-wide text-[#88a8a1] transition hover:text-white">
             Späť hore
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>

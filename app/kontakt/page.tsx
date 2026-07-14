@@ -20,9 +20,9 @@ export default function Kontakt() {
           title="Začnime spoluprácu"
           subtitle="Napíšte nám, čo vaša prevádzka potrebuje — pripravíme cenovú ponuku na mieru a ozveme sa vám spravidla do 24 hodín."
         />
+        <KontaktSection />
         <AkoZacatSection />
         <PodmienkySection />
-        <KontaktSection />
         <FaqSection />
       </main>
       <SiteFooter />

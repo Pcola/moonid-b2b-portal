@@ -87,13 +87,13 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap items-center gap-2.5">
           {recent.length > 0 && (
             <form action={startRepeat}>
-              <button type="submit" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[18px] py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2">
+              <button type="submit" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[18px] py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
                 Opakovať poslednú objednávku
               </button>
             </form>
           )}
-          <Link href="/katalog" className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-[18px] py-3 text-[14.5px] font-semibold text-brand transition hover:border-mint-2">
+          <Link href="/katalog" className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-[18px] py-3 text-[15px] font-semibold text-brand transition hover:border-mint-2">
             Nová objednávka
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
           </Link>
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
           <div className="flex items-end justify-between">
             <div className="flex flex-col gap-1">
               <h2 className="font-display text-[22px] font-semibold tracking-[-0.02em] text-ink">Rýchle doobjednanie</h2>
-              <p className="text-[14px] text-muted">Vaše naposledy objednávané položky.</p>
+              <p className="text-[15px] text-muted">Vaše naposledy objednávané položky.</p>
             </div>
             <Link href="/katalog" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand transition hover:text-brand-2">Celý katalóg<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
           </div>
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
                 <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-[#fafbfa] p-2">
                   <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, 180px" iconSize={28} />
                 </div>
-                <p className="line-clamp-2 min-h-[36px] text-[13px] font-medium leading-snug text-ink">{p.n}</p>
+                <p className="line-clamp-2 min-h-[38px] text-[14px] font-medium leading-snug text-ink">{p.n}</p>
                 <div className="mt-auto flex items-center justify-between gap-2">
                   <span className="text-[17px] font-semibold text-brand">{p.price.kind === "PRICE" ? eur(p.price.net) : "—"}</span>
                   {p.price.kind === "PRICE" && <QuickAddButton productId={p.id} />}
@@ -143,16 +143,16 @@ export default async function DashboardPage() {
             <Link href="/objednavky" className="text-[14px] font-semibold text-brand transition hover:text-brand-2">Všetky</Link>
           </div>
           {recent.length === 0 ? (
-            <div className="px-[22px] py-12 text-center text-[14px] text-muted">Zatiaľ žiadne objednávky. <Link href="/katalog" className="font-semibold text-brand">Začnite v katalógu</Link>.</div>
+            <div className="px-[22px] py-12 text-center text-[15px] text-muted">Zatiaľ žiadne objednávky. <Link href="/katalog" className="font-semibold text-brand">Začnite v katalógu</Link>.</div>
           ) : (
             recent.map((o) => {
               const s = STATUS[o.status] ?? { label: o.status, cls: "bg-cream text-muted" };
               return (
                 <Link key={o.id} href={`/objednavky/${o.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-cream/60">
-                  <span className="font-mono text-[13.5px] font-semibold text-ink">{o.number}</span>
-                  <span className="text-[12.5px] text-muted-2">{new Date(o.createdAt).toLocaleDateString("sk")} · {o._count.items} pol.</span>
+                  <span className="font-mono text-[14.5px] font-semibold text-ink">{o.number}</span>
+                  <span className="text-[13.5px] text-muted-2">{new Date(o.createdAt).toLocaleDateString("sk")} · {o._count.items} pol.</span>
                   <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
-                  <span className="text-right text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(o.total))}</span>
+                  <span className="text-right text-[15.5px] font-semibold tabular-nums text-ink">{eur(Number(o.total))}</span>
                 </Link>
               );
             })
@@ -164,7 +164,7 @@ export default async function DashboardPage() {
             <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-mint-2/15 text-mint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></span>
             <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-mint-2">Ako to funguje</span>
           </div>
-          <div className="flex flex-col gap-3 text-[14px] text-[#d7e4e0]">
+          <div className="flex flex-col gap-3 text-[15px] text-[#d7e4e0]">
             {["Objednáte z katalógu so svojimi cenami", "Potvrdíme dostupnosť a termín rozvozu", "Doručíme — bez platby vopred", "Faktúru uhradíte v dohodnutej splatnosti"].map((t, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-mint-2/20 text-[11px] font-bold text-mint">{i + 1}</span>{t}

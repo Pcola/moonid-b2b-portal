@@ -115,7 +115,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
               const count = badgeFor(n.badge);
               return (
                 <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false} aria-current={active ? "page" : undefined}
-                  className={`flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[9px] text-[14px] font-medium transition-colors duration-150 ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
+                  className={`flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[9px] text-[14.5px] font-medium transition-colors duration-150 ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
                   <Icon>{n.icon}</Icon>
                   <span className="flex-1">{n.label}</span>
                   {count > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C8881A] px-1.5 text-[11px] font-bold text-white">{count}</span>}
@@ -156,7 +156,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           </button>
           <div className="flex min-w-0 flex-col">
             <span className="text-[12px] text-muted-2">{page.crumb}</span>
-            <h1 className="font-display truncate text-[19px] font-semibold tracking-[-0.02em] text-ink">{page.title}</h1>
+            <h1 className="font-display truncate text-[20px] font-semibold tracking-[-0.02em] text-ink">{page.title}</h1>
           </div>
           <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>

@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { recordLoginSuccess, recordLoginFailure, loginGate } from "@/app/(auth)/actions";
 
-const labelCls = "flex flex-col gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-3";
-const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-[13px] text-[15.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
+const labelCls = "flex flex-col gap-2 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-3";
+const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-[13px] text-[16.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
 
 export function LoginForm() {
   const router = useRouter();
@@ -65,14 +65,14 @@ export function LoginForm() {
         <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" className={inputCls} aria-invalid={!!err} aria-describedby={err ? "login-error" : undefined} />
       </label>
       <div className="flex items-center justify-between">
-        <label className="flex cursor-pointer items-center gap-2.5 text-[14px] text-muted-3">
+        <label className="flex cursor-pointer items-center gap-2.5 text-[14.5px] text-muted-3">
           <input type="checkbox" defaultChecked className="h-4 w-4" style={{ accentColor: "#163f38" }} />
           Zapamätať si ma
         </label>
         <a href="/zabudnute-heslo" className="text-[14px] font-semibold text-brand transition hover:text-brand-2">Zabudli ste heslo?</a>
       </div>
       <button type="submit" disabled={loading}
-        className="inline-flex items-center justify-center gap-2.5 rounded-[10px] bg-brand px-4 py-[15px] text-[15.5px] font-semibold text-white transition hover:-translate-y-px hover:bg-brand-2 disabled:opacity-60">
+        className="inline-flex items-center justify-center gap-2.5 rounded-[10px] bg-brand px-4 py-[15px] text-[16px] font-semibold text-white transition hover:-translate-y-px hover:bg-brand-2 disabled:opacity-60">
         {loading ? "Prihlasujem…" : (
           <>
             Prihlásiť sa

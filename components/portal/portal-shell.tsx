@@ -91,8 +91,8 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
       <div className="mx-4 mb-4 flex items-center gap-3 rounded-xl bg-cream px-3.5 py-3">
         <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-brand text-[12.5px] font-bold text-white">{(companyName || "M").slice(0, 2).toUpperCase()}</span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-semibold text-ink">{companyName || "Vaša firma"}</div>
-          {tierCode && <div className="text-[11.5px] font-medium text-mint-ink">Cenová úroveň {tierCode}</div>}
+          <div className="truncate text-[14px] font-semibold text-ink">{companyName || "Vaša firma"}</div>
+          {tierCode && <div className="text-[12.5px] font-medium text-mint-ink">Cenová úroveň {tierCode}</div>}
         </div>
       </div>
 
@@ -100,12 +100,12 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
       <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 [scrollbar-width:thin]" aria-label="Navigácia portálu">
         {groups.map((g, gi) => (
           <div key={gi} className="flex flex-col gap-0.5">
-            {g.label && <span className="mb-1.5 px-3 text-[10.5px] font-bold uppercase tracking-[0.16em] text-muted-2">{g.label}</span>}
+            {g.label && <span className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-2">{g.label}</span>}
             {g.items.map((n) => {
               const active = isActive(n.href);
               return (
                 <Link key={n.href} href={n.href} onClick={() => setOpen(false)} prefetch={false} aria-current={active ? "page" : undefined} data-active={active}
-                  className={`pnav-item flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[10px] text-[14px] transition-colors duration-150 ${active ? "bg-mintbg font-semibold text-brand" : "font-medium text-muted-3 hover:bg-cream hover:text-ink"}`}>
+                  className={`pnav-item flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[10px] text-[15px] transition-colors duration-150 ${active ? "bg-mintbg font-semibold text-brand" : "font-medium text-muted-3 hover:bg-cream hover:text-ink"}`}>
                   <span className={active ? "text-mint-ink" : "text-muted-2"}><Icon>{n.icon}</Icon></span>
                   {n.label}
                 </Link>
@@ -119,8 +119,8 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
       <div className="flex items-center gap-3 border-t border-line px-4 py-3.5">
         <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-mintbg text-[12.5px] font-bold text-mint-ink">{initials}</span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-semibold text-ink">{identity}</div>
-          <div className="truncate text-[11.5px] text-muted-2">{userName?.trim() ? companyName : email}</div>
+          <div className="truncate text-[14px] font-semibold text-ink">{identity}</div>
+          <div className="truncate text-[12.5px] text-muted-2">{userName?.trim() ? companyName : email}</div>
         </div>
         <form action="/auth/logout" method="post">
           <button type="submit" aria-label="Odhlásiť sa" title="Odhlásiť sa" className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-2 transition-colors hover:bg-cream hover:text-ink">
@@ -147,13 +147,13 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
           <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="portal-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
-          <h1 className="font-display text-[19px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
+          <h1 className="font-display text-[21px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
           <div className="ml-auto flex items-center gap-2.5">
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/katalog?q=${encodeURIComponent(q.trim())}` : "/katalog"); }} className="hidden items-center gap-2 rounded-xl bg-cream px-3.5 py-2.5 transition-colors focus-within:bg-white focus-within:shadow-[inset_0_0_0_1.5px_var(--color-brand)] sm:flex">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b675f" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-              <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať produkt" placeholder="Hľadať produkt…" className="w-[150px] bg-transparent text-[14px] text-ink outline-none lg:w-[220px]" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať produkt" placeholder="Hľadať produkt…" className="w-[150px] bg-transparent text-[15px] text-ink outline-none lg:w-[220px]" />
             </form>
-            <Link href="/kosik" prefetch={false} aria-label="Košík" className="relative inline-flex h-[42px] cursor-pointer items-center gap-2 rounded-xl bg-brand px-4 text-[14px] font-semibold text-white transition-colors duration-200 hover:bg-brand-2">
+            <Link href="/kosik" prefetch={false} aria-label="Košík" className="relative inline-flex h-[42px] cursor-pointer items-center gap-2 rounded-xl bg-brand px-4 text-[14.5px] font-semibold text-white transition-colors duration-200 hover:bg-brand-2">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z" /><path d="M6 6 5 3H3" /><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /></svg>
               <span className="hidden sm:inline">Košík</span>
               {cartCount > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-mint px-1.5 text-[11.5px] font-bold text-brand-deep">{cartCount}</span>}

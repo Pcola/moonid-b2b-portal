@@ -70,17 +70,17 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
 
           <nav className="hidden items-center gap-[30px] lg:flex" aria-label="Hlavná navigácia">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="navlink text-[14px] font-medium transition-colors" style={{ color: text }}>{n.label}</Link>
+              <Link key={n.href} href={n.href} className="navlink text-[15px] font-medium transition-colors" style={{ color: text }}>{n.label}</Link>
             ))}
           </nav>
 
           <div className="hidden items-center gap-2 lg:flex">
-            <Link href="/login" className="inline-flex h-[44px] cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl px-4 text-[14px] font-semibold transition-colors duration-200 hover:opacity-75" style={{ color: text }}>
+            <Link href="/login" className="inline-flex h-[44px] cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl px-4 text-[14.5px] font-semibold transition-colors duration-200 hover:opacity-75" style={{ color: text }}>
               <LoginIcon size={15} /> Prihlásiť sa
             </Link>
             <Link
               href="/kontakt"
-              className="inline-flex h-[44px] cursor-pointer items-center whitespace-nowrap rounded-xl px-5 text-[14px] font-semibold transition-colors duration-200"
+              className="inline-flex h-[44px] cursor-pointer items-center whitespace-nowrap rounded-xl px-5 text-[14.5px] font-semibold transition-colors duration-200"
               style={{ background: light ? "#163f38" : "#ffffff", color: light ? "#ffffff" : "#163f38" }}
             >
               Vyžiadať ponuku

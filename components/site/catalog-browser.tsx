@@ -49,7 +49,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
 
   const facetRow = (label: string, count: number, on: boolean, onClick: () => void) => (
     <button key={label} type="button" onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[9px] text-left text-[14px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
+      className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[9px] text-left text-[15px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
       <span className="truncate pr-2">{label}</span>
       <span className={`text-[12px] tabular-nums ${on ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
     </button>
@@ -60,7 +60,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
-          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
+          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[15.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
       <div>
@@ -151,9 +151,9 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">
                   <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-2 line-clamp-1">{p.c}</span>
-                  <h3 className="line-clamp-2 text-[14.5px] font-medium leading-snug text-ink">{p.n}</h3>
+                  <h3 className="line-clamp-2 text-[15.5px] font-medium leading-snug text-ink">{p.n}</h3>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">
-                    <span className="text-[13px] font-semibold text-mint-ink">Cena na vyžiadanie</span>
+                    <span className="text-[14px] font-semibold text-mint-ink">Cena na vyžiadanie</span>
                     <svg className="text-muted-2 transition group-hover:translate-x-0.5 group-hover:text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </div>
                 </div>

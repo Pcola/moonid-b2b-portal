@@ -91,7 +91,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
 
   const facetRow = (label: string, count: number, on: boolean, onClick: () => void) => (
     <button key={label} type="button" onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[14px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
+      className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[15px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
       <span className="truncate pr-2">{label}</span>
       <span className={`text-[12px] tabular-nums ${on ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
     </button>
@@ -235,11 +235,11 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
                 </Link>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">
                   <span className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-2 line-clamp-1">{p.c}</span>
-                  <Link prefetch={false} href={`/katalog/${p.slug}`} className="line-clamp-2 text-[14px] font-medium leading-snug text-ink transition hover:text-brand">{p.n}</Link>
+                  <Link prefetch={false} href={`/katalog/${p.slug}`} className="line-clamp-2 text-[15px] font-medium leading-snug text-ink transition hover:text-brand">{p.n}</Link>
                   <div className="mt-auto pt-2">
                     {p.price.kind === "PRICE" ? (
                       <>
-                        <div className="text-[17px] font-semibold text-ink">{eur(p.price.net)} <span className="text-[12px] font-normal text-muted-2">/ {p.unit}</span></div>
+                        <div className="text-[18px] font-semibold text-ink">{eur(p.price.net)} <span className="text-[12px] font-normal text-muted-2">/ {p.unit}</span></div>
                         <div className="text-[11.5px] text-muted-2">bez DPH · s DPH {eur(p.price.gross)}</div>
                       </>
                     ) : (
