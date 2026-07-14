@@ -107,7 +107,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 .eyebrow-dark { color: var(--color-mint); }
 .eyebrow-num {
   font-variant-numeric: tabular-nums;
-  opacity: 0.55;
+  opacity: 0.8;
 }
 
 /* ---- „wipe" — mint ťah stierkou za kľúčovým slovom (ownable motív) ---- */
@@ -115,6 +115,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   position: relative;
   display: inline-block;
   white-space: nowrap;
+  isolation: isolate; /* z-index -1 pseudo-elementu ostane vo vnútri spanu, nepadne za pozadie sekcie */
 }
 .wipe::before {
   content: "";
@@ -180,7 +181,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 /* ---- textový marquee pás (outline display typografia) ---- */
 .text-outline {
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(143, 224, 205, 0.28);
+  -webkit-text-stroke: 2px rgba(143, 224, 205, 0.55);
 }
 .marquee-band { position: relative; overflow: hidden; width: 100%; }
 .marquee-track {
@@ -197,7 +198,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 .brand-marquee { position: relative; width: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); }
 .brand-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; padding-right: clamp(44px, 6vw, 84px); animation: brandScroll 34s linear infinite; }
 .brand-marquee:hover .brand-track { animation-play-state: paused; }
-.brand-logo { height: 32px; width: auto; flex: none; object-fit: contain; filter: grayscale(1); opacity: .55; transition: filter .35s ease, opacity .35s ease; }
+.brand-logo { height: 32px; width: auto; flex: none; object-fit: contain; filter: grayscale(1); opacity: .7; transition: filter .35s ease, opacity .35s ease; }
 .brand-marquee:hover .brand-logo { filter: grayscale(0); opacity: 1; }
 
 /* ---- karty ---- */

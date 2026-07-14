@@ -75,7 +75,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
           </nav>
 
           <div className="hidden items-center gap-2 lg:flex">
-            <Link href="/login" className="inline-flex h-[44px] cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl px-4 text-[14px] font-semibold transition-colors duration-200 hover:bg-black/5" style={{ color: text }}>
+            <Link href="/login" className="inline-flex h-[44px] cursor-pointer items-center gap-2 whitespace-nowrap rounded-xl px-4 text-[14px] font-semibold transition-colors duration-200 hover:opacity-75" style={{ color: text }}>
               <LoginIcon size={15} /> Prihlásiť sa
             </Link>
             <Link
@@ -118,7 +118,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
                 onClick={() => setOpen(false)}
                 className="group flex items-baseline gap-4 border-b border-white/10 py-4"
               >
-                <span className="font-display text-[13px] tabular-nums text-mint/50">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-display text-[13px] tabular-nums text-mint/80">{String(i + 1).padStart(2, "0")}</span>
                 <span className="font-display text-[32px] font-semibold tracking-[-0.02em] text-white transition-colors group-hover:text-mint">{n.label}</span>
               </Link>
             ))}

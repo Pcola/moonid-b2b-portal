@@ -100,8 +100,8 @@ const Arrow = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" 
 
 const btnPrimary = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-brand px-[26px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-2";
 const btnOnDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-white px-[26px] py-[15px] text-base font-semibold text-brand transition-colors duration-200 hover:bg-mintbg";
-const btnGhostDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/35 px-[22px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10";
-const btnGhost = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-line bg-white px-[24px] py-[15px] text-base font-semibold text-ink transition-colors duration-200 hover:border-brand/40";
+const btnGhostDark = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/55 px-[22px] py-[15px] text-base font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10";
+const btnGhost = "inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-[#b9cac4] bg-white px-[24px] py-[15px] text-base font-semibold text-brand transition-colors duration-200 hover:border-brand hover:bg-mintbg/50";
 
 /* ═════════ HERO — split layout + textový marquee ═════════ */
 export function HeroSection() {
@@ -286,7 +286,7 @@ export function DavkovaceSection() {
           <div className="reveal-cascade flex flex-col">
             {RENTAL.map((r, i) => (
               <div key={r.t} className="grid grid-cols-[auto_1fr] items-start gap-x-[clamp(20px,3vw,40px)] border-t border-line py-[clamp(28px,3.4vw,44px)] last:border-b">
-                <span className="text-outline font-display font-semibold" style={{ fontSize: "clamp(48px,5.4vw,80px)", lineHeight: 0.9, WebkitTextStroke: "1.5px rgba(15,107,87,0.35)" }}>{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-display font-semibold text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-2.5 pt-1.5">
                   <h3 className="t-h3 text-ink">{r.t}</h3>
                   <p className="max-w-[480px] text-[15.5px] leading-relaxed text-muted">{r.d}</p>
@@ -338,37 +338,37 @@ export function PortalSection() {
                 </span>
                 <span className="flex-1 rounded-md bg-white/8 px-3 py-1 text-center text-[11px] tracking-wide text-[#7fa199]">portal.moonid.sk</span>
               </div>
-              <div className="grid grid-cols-[86px_1fr]">
+              <div className="grid grid-cols-[104px_1fr]">
                 {/* mini sidebar */}
-                <div className="flex flex-col gap-3 border-r border-white/8 p-3.5">
-                  <span className="font-display text-[13px] font-semibold text-white">m<span className="text-mint">.</span></span>
-                  {[44, 36, 40, 30].map((w, i) => (
-                    <span key={i} className={`h-1.5 rounded-full ${i === 0 ? "bg-mint/60" : "bg-white/12"}`} style={{ width: w }} />
+                <div className="flex flex-col gap-2.5 border-r border-white/10 p-3.5">
+                  <span className="font-display mb-1 text-[14px] font-semibold text-white">m<span className="text-mint">.</span></span>
+                  {["Prehľad", "Katalóg", "Objednávky", "Faktúry"].map((l, i) => (
+                    <span key={l} className={`rounded-md px-2 py-1 text-[10.5px] font-semibold ${i === 1 ? "bg-mint/20 text-mint" : "text-[#7fa199]"}`}>{l}</span>
                   ))}
                 </div>
                 {/* obsah */}
                 <div className="flex flex-col gap-3 p-4">
                   <div className="flex items-center justify-between">
-                    <span className="h-2 w-24 rounded-full bg-white/25" />
+                    <span className="text-[12px] font-semibold text-white/80">Katalóg — vaše ceny</span>
                     <span className="rounded-lg bg-mint px-2.5 py-1 text-[10px] font-bold text-brand-deep">Košík · 3</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    {["1 600+", "48 h", "−18 %"].map((v) => (
-                      <div key={v} className="rounded-xl bg-white/6 p-2.5">
+                    {[["1 600+", "položiek"], ["48 h", "dodanie"], ["−18 %", "vaša zľava"]].map(([v, l]) => (
+                      <div key={v} className="rounded-xl bg-white/8 p-2.5">
                         <div className="font-display text-[15px] font-semibold text-white">{v}</div>
-                        <div className="mt-1 h-1 w-10 rounded-full bg-white/15" />
+                        <div className="mt-0.5 text-[9.5px] font-medium text-[#8fb3ab]">{l}</div>
                       </div>
                     ))}
                   </div>
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-xl bg-white/5 p-2.5">
-                      <span className="h-9 w-9 flex-none rounded-lg bg-white/10" />
-                      <span className="flex flex-1 flex-col gap-1.5">
-                        <span className="h-1.5 rounded-full bg-white/20" style={{ width: `${70 - i * 14}%` }} />
-                        <span className="h-1.5 w-12 rounded-full bg-white/10" />
+                  {[["Tork utierky v roli H1", "2-vrstvové · 6 ks", "12,40 €"], ["Jar Professional 5 l", "koncentrát", "8,90 €"], ["Sanytol dezinfekcia", "univerzálna · 1 l", "24,10 €"]].map(([n, d, p]) => (
+                    <div key={n} className="flex items-center gap-3 rounded-xl bg-white/6 p-2.5">
+                      <span className="h-9 w-9 flex-none rounded-lg bg-white/12" />
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-[11px] font-semibold text-white/90">{n}</span>
+                        <span className="text-[9.5px] text-[#7fa199]">{d}</span>
                       </span>
-                      <span className="font-display text-[12px] font-semibold text-mint">{["12,40 €", "8,90 €", "24,10 €"][i]}</span>
-                      <span className="rounded-md bg-mint/15 px-2 py-1 text-[9px] font-bold text-mint">+ Pridať</span>
+                      <span className="font-display text-[12px] font-semibold text-mint">{p}</span>
+                      <span className="rounded-md bg-mint/20 px-2 py-1 text-[9px] font-bold text-mint">+ Pridať</span>
                     </div>
                   ))}
                 </div>
@@ -396,7 +396,7 @@ export function PreKohoSection({ cream = false }: { cream?: boolean }) {
             <div key={s.t} className="relative flex flex-col gap-4 border-t border-line py-7 sm:pr-[clamp(18px,2.5vw,36px)]">
               <div className="flex items-center justify-between">
                 <span className="text-mint-ink"><Ico>{s.p}</Ico></span>
-                <span className="font-display text-[12px] tabular-nums text-muted-2/70">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-display text-[12px] tabular-nums text-muted-2">{String(i + 1).padStart(2, "0")}</span>
               </div>
               <div className="flex flex-col gap-2">
                 <h3 className="text-[17px] font-semibold leading-snug text-ink">{s.t}</h3>
@@ -501,7 +501,7 @@ export function AkoZacatSection() {
           <div className="reveal-cascade flex flex-col">
             {STEPS.map((s, i) => (
               <div key={s.t} className="grid grid-cols-[auto_1fr] items-start gap-x-[clamp(20px,3vw,40px)] border-t border-line py-[clamp(28px,3.4vw,44px)] last:border-b">
-                <span className="text-outline font-display font-semibold" style={{ fontSize: "clamp(48px,5.4vw,80px)", lineHeight: 0.9, WebkitTextStroke: "1.5px rgba(15,107,87,0.35)" }}>{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-display font-semibold text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-2.5 pt-1.5">
                   <h3 className="t-h3 text-ink">{s.t}</h3>
                   <p className="max-w-[480px] text-[15.5px] leading-relaxed text-muted">{s.d}</p>
