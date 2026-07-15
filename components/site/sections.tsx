@@ -20,10 +20,6 @@ const BRANDS = [
   { src: "/images/logo-leifheit.png", alt: "Leifheit" },
   { src: "/images/logo-sanytol.png", alt: "Sanytol" },
 ];
-const KATEGORIE = [
-  "Čistiace prostriedky", "Hygienický papier", "Dávkovače a zásobníky", "Upratovanie",
-  "Dezinfekcia", "Mydlá a peny", "Vrecia a obaly", "Príslušenstvo",
-];
 const RENTAL = [
   { t: "Vyberieme a osadíme", d: "Navrhneme dávkovače na mydlo, papierové utierky, toaletný papier a dezinfekciu podľa vašej prevádzky a osadíme ich." },
   { t: "Dopĺňame pri rozvoze", d: "Pri pravidelnom závoze sledujeme spotrebu a dopĺňame správne náplne — nikdy vám nedôjde mydlo na toaletách." },
@@ -189,12 +185,8 @@ export function BrandsSection() {
   );
 }
 
-/* ═════════ SORTIMENT — bento grid ═════════ */
+/* ═════════ SORTIMENT — dve karty: sortiment + závoz ═════════ */
 export function SortimentSection() {
-  const tiles = [
-    { name: "Čistiace prostriedky", icon: <><path d="M9 3h6" /><path d="M10 3v4l-4.5 8A4 4 0 0 0 9 21h6a4 4 0 0 0 3.5-6L14 7V3" /></> },
-    { name: "Hygienický papier", icon: <><circle cx="9" cy="9" r="5.5" /><circle cx="9" cy="9" r="1.6" /><path d="M14.5 6H20a1 1 0 0 1 1 1v13H6a2.5 2.5 0 0 1 0-5" /></> },
-  ];
   return (
     <section id="sortiment" className="bg-cream" style={pad}>
       <div className={wrap}>
@@ -206,15 +198,14 @@ export function SortimentSection() {
           <Link href="/produkty" className="navlink hidden items-center gap-2 text-[15px] font-semibold text-mint-ink md:inline-flex">Celý katalóg <Arrow /></Link>
         </div>
 
-        {/* bento */}
-        <div className="reveal grid gap-[clamp(12px,1.6vw,18px)] md:grid-cols-2 lg:grid-cols-4 lg:[grid-template-rows:repeat(2,minmax(220px,auto))]">
-          {/* A — veľká zelená dlaždica 2×2 */}
-          <div className="relative flex flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(26px,3vw,40px)] md:col-span-2 lg:row-span-2">
+        <div className="reveal grid gap-[clamp(14px,1.8vw,20px)] lg:grid-cols-2">
+          {/* sortiment — zelená karta */}
+          <div className="relative flex min-h-[380px] flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(28px,3.5vw,44px)]">
             <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
             <div className="relative flex flex-col gap-3">
               <span className="stat-num text-white" style={{ fontSize: "clamp(56px,7vw,110px)" }}>1 600+</span>
               <span className="t-h3 text-mint">položiek v sortimente</span>
-              <p className="mt-1 max-w-[400px] text-[16.5px] leading-relaxed text-[#a9c2bb]">
+              <p className="mt-1 max-w-[420px] text-[16.5px] leading-relaxed text-[#a9c2bb]">
                 Najpredávanejšie produkty držíme skladom, zvyšok objednáme pri vašej objednávke —
                 od čistiacej chémie a papiera až po dávkovače, gastro a kancelárske potreby.
               </p>
@@ -222,33 +213,14 @@ export function SortimentSection() {
             <Link href="/produkty" className={`${btnOnDark} relative self-start !py-[13px] text-[15px]`}>Pozrieť celý sortiment <Arrow /></Link>
           </div>
 
-          {/* B — obrazová dlaždica 2×1 */}
-          <div className="relative min-h-[220px] overflow-hidden rounded-[22px] border border-line md:col-span-2">
+          {/* závoz — obrazová karta */}
+          <div className="relative min-h-[380px] overflow-hidden rounded-[22px] border border-line">
             <Image src="/images/rozvoz-zavoz.jpg" alt="Vozík naložený krabicami s hygienickým tovarom pripravený na rozvoz" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
-            <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-brand-deep/85 to-transparent p-5 pt-12">
+            <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-brand-deep/85 to-transparent p-6 pt-14">
               <span className="dot-mint !bg-mint" style={{ boxShadow: "0 0 0 3px rgba(143,224,205,.2)" }} />
-              <span className="text-[13.5px] font-semibold text-white">Pravidelný závoz priamo na prevádzku</span>
+              <span className="text-[15px] font-semibold text-white">Pravidelný závoz priamo na prevádzku</span>
             </div>
           </div>
-
-          {/* C, D — kategórie 1×1 */}
-          {tiles.map((t) => (
-            <Link key={t.name} href={`/produkty?cat=${encodeURIComponent(t.name)}`} className="group flex min-h-[190px] cursor-pointer flex-col justify-between gap-6 rounded-[22px] border border-line bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_18px_40px_-24px_rgba(13,33,27,0.35)]">
-              <span className="text-mint-ink"><Ico size={30}>{t.icon}</Ico></span>
-              <div className="flex items-end justify-between gap-3">
-                <span className="t-h3 !text-[19px] text-ink">{t.name}</span>
-                <span className="text-muted-2 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-brand"><Arrow /></span>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <div className="reveal mt-[clamp(20px,2.5vw,28px)] flex flex-wrap gap-2.5">
-          {KATEGORIE.map((k) => (
-            <Link key={k} href={`/produkty?cat=${encodeURIComponent(k)}`} className="cursor-pointer rounded-full border border-line bg-white px-4 py-2.5 text-[14px] font-medium text-muted-3 transition-colors duration-200 hover:border-brand/40 hover:text-brand">
-              {k}
-            </Link>
-          ))}
         </div>
       </div>
     </section>
