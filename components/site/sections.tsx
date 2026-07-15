@@ -213,12 +213,13 @@ export function SortimentSection() {
             <Link href="/produkty" className={`${btnOnDark} relative self-start !py-[13px] text-[15px]`}>Pozrieť celý sortiment <Arrow /></Link>
           </div>
 
-          {/* závoz — obrazová karta */}
+          {/* závoz — obrazová karta, text vo voľnom ľavom priestore */}
           <div className="relative min-h-[380px] overflow-hidden rounded-[22px] border border-line">
-            <Image src="/images/rozvoz-zavoz.jpg" alt="Vozík naložený krabicami s hygienickým tovarom pripravený na rozvoz" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
-            <div className="absolute inset-x-0 bottom-0 flex items-center gap-2.5 bg-gradient-to-t from-brand-deep/85 to-transparent p-6 pt-14">
-              <span className="dot-mint !bg-mint" style={{ boxShadow: "0 0 0 3px rgba(143,224,205,.2)" }} />
-              <span className="text-[15px] font-semibold text-white">Pravidelný závoz priamo na prevádzku</span>
+            <Image src="/images/rozvoz-zavoz.jpg" alt="Vozík naložený krabicami s hygienickým tovarom pripravený na rozvoz" fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" style={{ objectPosition: "72% center" }} />
+            <div className="absolute inset-0" aria-hidden="true" style={{ background: "linear-gradient(90deg, rgba(11,24,20,0.92) 0%, rgba(11,24,20,0.62) 32%, rgba(11,24,20,0.1) 62%, rgba(11,24,20,0) 100%)" }} />
+            <div className="absolute inset-0 flex flex-col justify-center gap-4 p-[clamp(26px,3.4vw,46px)]">
+              <span className="eyebrow eyebrow-dark">Vlastný rozvoz</span>
+              <h3 className="font-display max-w-[300px] font-semibold text-white" style={{ fontSize: "clamp(23px,2.6vw,32px)", lineHeight: 1.08, letterSpacing: "-0.025em", textWrap: "balance" }}>Pravidelný závoz priamo na prevádzku</h3>
             </div>
           </div>
         </div>
