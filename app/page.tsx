@@ -17,12 +17,12 @@ export default function Home() {
       <SiteHeader />
       <main id="top">
         <HeroSection />
-        <BrandsSection />
         <SortimentSection />
         <DavkovaceSection />
         <PortalSection />
         <FaqSection />
         <CtaBand />
+        <BrandsSection />
       </main>
       <SiteFooter />
       <CookieBanner />

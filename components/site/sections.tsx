@@ -169,7 +169,7 @@ export function PageHero({ eyebrow: eb, title, subtitle }: { eyebrow: string; ti
 /* ═════════ BRANDS ═════════ */
 export function BrandsSection() {
   return (
-    <section className="border-b border-line bg-white" style={{ padding: "clamp(30px,4vw,44px) 0" }}>
+    <section className="border-t border-line bg-white" style={{ padding: "clamp(36px,5vw,56px) 0" }}>
       <div className={`${wrap} flex flex-col items-center gap-6`}>
         <span className="text-[11.5px] font-semibold uppercase tracking-[0.2em] text-muted-2">Dodávame overené značky</span>
         <div className="brand-marquee" role="img" aria-label="Dodávané značky: Tork, Kimberly-Clark, Katrin, Lotus, Vileda, Leifheit, Sanytol">
