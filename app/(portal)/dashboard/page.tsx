@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 const STATUS: Record<string, { label: string; cls: string }> = {
+  CAKA_SCHVALENIE: { label: "Čaká na schválenie", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
   PRIJATA: { label: "Prijatá", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
   POTVRDENA: { label: "Potvrdená", cls: "bg-[#eef2ff] text-[#3730a3]" },
   PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-[#eef2ff] text-[#3730a3]" },
@@ -41,22 +42,23 @@ export default async function DashboardPage() {
   const year = new Date().getFullYear();
   const today = new Date().toLocaleDateString("sk", { weekday: "long", day: "numeric", month: "long" });
 
-  let ordersYear = 0, active = 0, unpaid = 0;
+  let ordersYear = 0, active = 0, pendingApproval = 0, unpaid = 0;
   let recent: { id: string; number: string; status: string; total: unknown; createdAt: Date; _count: { items: number } }[] = [];
   let reorder: { id: string; n: string; i: string; unit: string; price: PricedLine }[] = [];
 
   if (companyId) {
     // správca vidí štatistiky celej firmy; bežný člen len svoje objednávky. Financie (neuhradené) sú len pre správcu.
     const oScope = isAdmin ? { companyId } : { companyId, createdById: user.id };
-    const [oy, ac, rec, unpaidAgg] = await Promise.all([
+    const [oy, ac, pa, rec, unpaidAgg] = await Promise.all([
       prisma.order.count({ where: { ...oScope, createdAt: { gte: new Date(year, 0, 1) } } }),
       prisma.order.count({ where: { ...oScope, status: { in: ["PRIJATA", "POTVRDENA", "PRIPRAVUJE", "NA_CESTE"] } } }),
+      prisma.order.count({ where: { ...oScope, status: "CAKA_SCHVALENIE" } }),
       prisma.order.findMany({ where: oScope, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, number: true, status: true, total: true, createdAt: true, _count: { select: { items: true } } } }),
       isAdmin
         ? prisma.invoice.aggregate({ where: { companyId, status: { in: ["PENDING", "OVERDUE"] } }, _sum: { total: true } })
         : Promise.resolve({ _sum: { total: null } as { total: number | null } }),
     ]);
-    ordersYear = oy; active = ac; recent = rec; unpaid = Number(unpaidAgg._sum.total ?? 0);
+    ordersYear = oy; active = ac; pendingApproval = pa; recent = rec; unpaid = Number(unpaidAgg._sum.total ?? 0);
 
     const recentItems = await prisma.orderItem.findMany({ where: { order: oScope }, orderBy: { id: "desc" }, take: 40, select: { productId: true } });
     const ids = [...new Set(recentItems.map((i) => i.productId).filter((x): x is string => !!x))].slice(0, 6);
@@ -104,6 +106,7 @@ export default async function DashboardPage() {
       <div className="grid gap-[clamp(14px,1.6vw,20px)]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))" }}>
         <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /></svg>} badge={year.toString()} value={String(ordersYear)} label={`Objednávok v ${year}`} />
         <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h11v9H3z" /><path d="M14 9h3.5l3 3v3H14z" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17.5" cy="17.5" r="1.6" /></svg>} badge={active > 0 ? "prebieha" : undefined} badgeCls="bg-[#eef2ff] text-[#3730a3]" value={String(active)} label="Aktívne objednávky" />
+        {pendingApproval > 0 && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>} badge={isAdmin ? "na schválenie" : "čaká"} badgeCls="bg-[#fdf6e7] text-[#8a5a00]" value={String(pendingApproval)} label="Čaká na schválenie" />}
         {isAdmin && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 9h6M9 13h4" /></svg>} value={eur(unpaid)} badge={unpaid > 0 ? "neuhradené" : undefined} badgeCls="bg-[#fdf6e7] text-[#8a5a00]" label="Čaká na úhradu" />}
         {isAdmin && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V7H4v10h9" /><path d="M16 3v4M8 3v4" /></svg>} badge={tierCode ? `úroveň ${tierCode}` : undefined} value={tierCode ? tierCode : "—"} label="Vaša cenová úroveň" />}
       </div>

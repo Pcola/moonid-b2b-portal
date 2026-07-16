@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-type Props = { companyName: string; userName: string | null; email: string; tierCode: string | null; cartCount: number; isAdmin: boolean; children: React.ReactNode };
+type Props = { companyName: string; userName: string | null; email: string; tierCode: string | null; cartCount: number; pendingApproval: number; isAdmin: boolean; children: React.ReactNode };
 
 // href-y viditeľné len pre správcu firmy (bežný člen ich v navigácii nemá)
 const ADMIN_ONLY = new Set(["/faktury", "/pouzivatelia"]);
@@ -57,7 +57,7 @@ function Icon({ children }: { children: React.ReactNode }) {
  * blur topbar s vyhľadávaním a košíkom. Jednotný jazyk s verejným webom (mint/green,
  * Bricolage display, hairlines).
  */
-export function PortalShell({ companyName, userName, email, tierCode, cartCount, isAdmin, children }: Props) {
+export function PortalShell({ companyName, userName, email, tierCode, cartCount, pendingApproval, isAdmin, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -108,6 +108,9 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
                   className={`pnav-item flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[10px] text-[15px] transition-colors duration-150 ${active ? "bg-mintbg font-semibold text-brand" : "font-medium text-muted-3 hover:bg-cream hover:text-ink"}`}>
                   <span className={active ? "text-mint-ink" : "text-muted-2"}><Icon>{n.icon}</Icon></span>
                   {n.label}
+                  {n.href === "/objednavky" && pendingApproval > 0 && (
+                    <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#9a6410] px-1.5 text-[11px] font-bold text-white" title="Čaká na schválenie">{pendingApproval}</span>
+                  )}
                 </Link>
               );
             })}
