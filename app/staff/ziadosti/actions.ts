@@ -49,13 +49,12 @@ export async function approveRequest(
     authId = gen.user.id;
     inviteLink = gen.properties?.action_link ?? null;
   } else {
-    // konto už existuje → nájdi a vygeneruj recovery odkaz
-    const list = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const found = list.data.users.find((u) => u.email?.toLowerCase() === req.email.toLowerCase());
-    if (!found) return { ok: false, error: "Nepodarilo sa vytvoriť konto: " + (genErr?.message ?? "neznáma chyba") };
-    authId = found.id;
-    const { data: rec } = await admin.auth.admin.generateLink({ type: "recovery", email: req.email, options: { redirectTo } });
-    inviteLink = rec?.properties?.action_link ?? null;
+    // konto už existuje → recovery odkaz; authId vezmeme priamo z jeho odpovede
+    // (bez listUsers({perPage:1000}), ktorý by nad 1000 účtov ticho nenašiel usera).
+    const { data: rec, error: recErr } = await admin.auth.admin.generateLink({ type: "recovery", email: req.email, options: { redirectTo } });
+    if (!rec?.user) return { ok: false, error: "Nepodarilo sa nájsť/vytvoriť konto: " + (recErr?.message ?? genErr?.message ?? "neznáma chyba") };
+    authId = rec.user.id;
+    inviteLink = rec.properties?.action_link ?? null;
   }
 
   await prisma.user.upsert({

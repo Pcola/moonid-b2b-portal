@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { reportError } from "@/lib/observability";
 import { evaluateSession, sessionIdFromJwt, SESSION_COOKIE } from "@/lib/session-timeout";
 
 /** App-layer timeout relácie aj MIMO middleware (API routes, server actions, RSC) —
@@ -57,7 +58,10 @@ const ENFORCE_MFA = process.env.MFA_ENFORCE !== "off";
 /** MFA stav privilegovaného účtu:
  *  - enrolled: má aspoň jeden OVERENÝ TOTP faktor (listFactors().totp = verified)
  *  - needsChallenge: má faktor, ale relácia je ešte AAL1 (musí prejsť /mfa výzvou)
- *  Fail-open na chybe MFA API — výpadok nezablokuje prístup (a nezamkne admina). */
+ *  Fail-CLOSED na druhom faktore: pri chybe MFA API pošli na /mfa výzvu, nie prepustiť AAL1
+ *  reláciu. /mfa pri chybe getAAL NErobí redirect späť (žiadny loop); trvalý výpadok rieši
+ *  escape-hatch MFA_ENFORCE=off. enrolled=true, aby sme (možno zaregistrovaného) usera
+ *  nehnali do /mfa/setup. */
 async function mfaStatus(): Promise<{ enrolled: boolean; needsChallenge: boolean }> {
   try {
     const supabase = await createClient();
@@ -66,8 +70,9 @@ async function mfaStatus(): Promise<{ enrolled: boolean; needsChallenge: boolean
     const { data: factors } = await supabase.auth.mfa.listFactors();
     const enrolled = (factors?.totp?.length ?? 0) > 0;
     return { enrolled, needsChallenge };
-  } catch {
-    return { enrolled: true, needsChallenge: false };
+  } catch (e) {
+    reportError("mfa.status", e, {});
+    return { enrolled: true, needsChallenge: true };
   }
 }
 

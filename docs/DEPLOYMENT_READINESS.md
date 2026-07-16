@@ -37,13 +37,14 @@ Auth, tenant izolácia/IDOR, server-side cenotvorba, objednávkový tok end-to-e
 - [x] **(JA)** `postinstall: prisma generate` + `build: prisma generate && next build` (`package.json`)
 - [x] **(JA)** `.env.example`: doplnené `RESEND_FROM`, `NEXT_PUBLIC_SITE_URL`; odstránené stale `STAFF_USER/STAFF_PASS/SYNC_AGENT_TOKEN`; opravený región hostu
 - [ ] **(TY)** Nastaviť na Verceli (Production) všetky env: `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, `NEXT_PUBLIC_SITE_URL`
-- [ ] **(TY)** Overiť, že build/CI beží `prisma migrate deploy`
+- [x] **(JA)** `prisma migrate deploy` vo `vercel.json` buildCommand — **(TY)** overiť, že Vercel má `DIRECT_URL` (priame spojenie, nie pooler) na aplikovanie migrácií pri builde
 
 ### WS2 — Supabase Auth produkčná konfigurácia + prvé staff konto · effort S
 - [ ] **(TY)** Auth → URL Configuration: Site URL + Redirect URLs (`<origin>/auth/callback`, produkčná URL)
 - [ ] **(TY)** Vytvoriť STAFF/ADMIN konto a **zmeniť** hardcoded heslo `Moonid2026!` (`scripts/auth/seed-auth.ts`)
 - [ ] **(TY)** Custom SMTP (alebo Resend SMTP) pre Supabase Auth e-maily + SK šablóny
-- [ ] **(TY)** Heslová politika (min dĺžka, leaked-password protection)
+- [ ] **(TY)** Heslová politika **server-side** (Auth → Policies): min. dĺžka **12** + **Leaked password protection** (HIBP) ZAP — klient (`set-password-form`, `account-card`) to už kontroluje, ale bez server-side vynútenia by priame volanie Supabase Auth prijalo slabé/uniknuté heslo (gap-scan P2)
+- [ ] **(TY)** Overiť **rate-limity Supabase Auth** (Auth → Rate Limits) — app-vrstva `loginGate`/lockout je best-effort pred klientskym `signInWithPassword`; reálnou brzdou brute-force je vstavaný limit Supabase (Free default býva voľný) (gap-scan P2)
 
 ### WS3 — E-mail infraštruktúra · effort M
 - [ ] **(TY)** Overiť doménu `moonid.sk` v Resend (SPF/DKIM/DMARC)

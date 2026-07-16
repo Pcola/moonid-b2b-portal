@@ -5,6 +5,8 @@ export const PRODUCT_BUCKET = "products";
 
 // Anti-SSRF: re-hostovať sa smie len z dôveryhodného zdroja (dodávateľský feed).
 const ALLOWED_SOURCE_HOSTS = new Set(["www.partner.humed.sk"]);
+// Strop veľkosti sťahovaného obrázka (parita s app/api/img) — ochrana pred memory exhaustion.
+const MAX_BYTES = 10 * 1024 * 1024;
 
 function extFromContentType(ct: string | null): string {
   if (!ct) return "jpg";
@@ -38,7 +40,10 @@ export async function rehostImage(
     const ct = res.headers.get("content-type");
     // žiadne SVG — vo verejnom buckete by <script> v SVG bol stored-XSS vektor
     if (ct && /svg/i.test(ct)) return null;
+    const declared = Number(res.headers.get("content-length"));
+    if (Number.isFinite(declared) && declared > MAX_BYTES) return null;
     const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.byteLength > MAX_BYTES) return null; // aj keď hlavička klamala/chýbala
     const path = `${key}.${extFromContentType(ct)}`;
     const { error } = await supabase.storage
       .from(PRODUCT_BUCKET)
