@@ -26,6 +26,7 @@ const SECTIONS: Section[] = [
     title: "Objednávanie",
     items: [
       { q: "Ako objednávam?", a: <>V <Link href="/katalog" className="font-semibold text-brand underline underline-offset-2">katalógu</Link> pridáte produkty do košíka a odošlete objednávku. Bez platby vopred — platíte až faktúrou.</> },
+      { q: "Ako prebieha objednávka krok za krokom?", a: <>Výber položiek do košíka → kontrola a úprava obsahu košíka → voľba dopravy a platby → odoslanie. Až do odoslania môžete košík ľubovoľne upraviť. Odoslanie je záväzné; zmluva vzniká naším potvrdením (e-mailom) a objednávku archivujeme. Úplné podmienky sú v <Link href="/obchodne-podmienky" className="font-semibold text-brand underline underline-offset-2">obchodných podmienkach</Link>.</> },
       { q: "Aké ceny vidím?", a: <>Vidíte svoje dohodnuté ceny podľa vašej cenovej úrovne — zobrazia sa až po prihlásení. Na verejnom katalógu ceny zámerne nie sú.</> },
       { q: "Čo znamená produkt na vyžiadanie?", a: <>Cenu alebo dostupnosť riešime individuálne (napr. dotované dávkovače). Napíšte nám a pripravíme ponuku.</> },
       { q: "Môžem zopakovať predošlú objednávku?", a: <>Áno. Pri každej objednávke a na nástenke je tlačidlo „Objednať znova" — položky sa pridajú do košíka (nedostupné preskočí).</> },
@@ -43,7 +44,7 @@ const SECTIONS: Section[] = [
   {
     title: "Reklamácie a údaje",
     items: [
-      { q: "Reklamácia alebo vrátenie tovaru?", a: <>Napíšte nám na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand underline underline-offset-2">moonid@moonid.sk</a> alebo zavolajte na 0919 216 908. Postup nájdete aj v <Link href="/obchodne-podmienky#reklamacie" className="font-semibold text-brand underline underline-offset-2">reklamačných podmienkach</Link>.</> },
+      { q: "Reklamácia alebo vada tovaru?", a: <>Napíšte nám na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand underline underline-offset-2">moonid@moonid.sk</a> alebo zavolajte na 0919 216 908. Postup nájdete aj v <Link href="/obchodne-podmienky#reklamacie" className="font-semibold text-brand underline underline-offset-2">reklamačných podmienkach</Link>. Vrátenie či výmena tovaru bez vady sú v B2B možné len po dohode.</> },
       { q: "Ako naložím so svojimi údajmi (GDPR)?", a: <>Po prihlásení v <Link href="/nastavenia" className="font-semibold text-brand underline underline-offset-2">Nastaveniach</Link> si môžete stiahnuť export svojich údajov alebo požiadať o výmaz. Viac v <Link href="/ochrana-osobnych-udajov" className="font-semibold text-brand underline underline-offset-2">ochrane osobných údajov</Link>.</> },
     ],
   },
@@ -57,6 +58,7 @@ export default function PomocPage() {
         <span className="eyebrow">Podpora</span>
         <h1 className="t-h1 mt-4 text-ink" style={{ fontSize: "clamp(30px,4vw,48px)" }}>Pomoc a časté otázky</h1>
         <p className="mt-2 text-[15.5px] leading-relaxed text-muted">Odpovede na najčastejšie otázky o portáli, objednávaní a dodaní. Nenašli ste odpoveď? Napíšte na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand underline underline-offset-2">moonid@moonid.sk</a> alebo zavolajte na <a href="tel:+421919216908" className="font-semibold text-brand">0919 216 908</a>.</p>
+        <p className="mt-4 rounded-xl border border-line bg-[#f6f9f8] px-4 py-3 text-[13.5px] leading-relaxed text-muted-3">Portál Moonid je určený <strong className="text-ink">výhradne podnikateľom (B2B)</strong> — predaj sa spravuje Obchodným zákonníkom, nie spotrebiteľským právom. Podrobnosti v <Link href="/obchodne-podmienky" className="font-semibold text-brand underline underline-offset-2">obchodných podmienkach</Link>.</p>
 
         <div className="mt-10 flex flex-col gap-10">
           {SECTIONS.map((s) => (

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function OchranaOsobnychUdajov() {
   return (
-    <LegalPage title="Ochrana osobných údajov" updated="30. 6. 2026">
+    <LegalPage title="Ochrana osobných údajov" updated="16. 7. 2026">
       <P>
         Tieto zásady popisujú, ako spoločnosť <strong>Moonid s.r.o.</strong>, so sídlom Hlavná 39/78, 941 43 Dolný Ohaj,
         IČO 50&nbsp;934&nbsp;660, zapísaná v Obchodnom registri Okresného súdu Nitra, oddiel Sro, vložka č. 43461/N
@@ -23,6 +23,12 @@ export default function OchranaOsobnychUdajov() {
         <li>Údaje o objednávkach a komunikácii (obsah dopytu, história objednávok).</li>
         <li>Technické údaje nevyhnutné na prevádzku portálu (prihlasovacia identita, nevyhnutné cookies).</li>
       </UL>
+      <P>
+        Údaje získavame spravidla <strong>priamo od dotknutej osoby</strong> (pri registrácii, objednávke či komunikácii).
+        V prípade kontaktných osôb odberateľa (napr. poverený zamestnanec) môžeme údaje získať aj sprostredkovane od
+        odberateľa, v ktorého mene osoba koná. Poskytnutie identifikačných a kontaktných údajov potrebných na uzavretie
+        a plnenie zmluvy je <strong>zmluvnou požiadavkou</strong> — bez nich nevieme objednávku vybaviť ani viesť B2B účet.
+      </P>
 
       <H2>Účely a právne základy spracúvania</H2>
       <UL>
@@ -43,7 +49,23 @@ export default function OchranaOsobnychUdajov() {
         <li><strong>Resend</strong> — odosielanie transakčných e-mailov (potvrdenia objednávok, notifikácie).</li>
         <li><strong>Sentry</strong> — monitorovanie chýb a stability; osobné údaje sa pred odoslaním odstraňujú (anonymizujú).</li>
       </UL>
-      <P>Účtovné a daňové doklady spracúvame v účtovnom systéme Pohoda (Stormware). Tam, kde sprostredkovateľ spracúva údaje mimo EÚ, je prenos krytý štandardnými zmluvnými doložkami (SCC) podľa čl. 46 GDPR. Aktuálny zoznam sprostredkovateľov vám na požiadanie poskytneme na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand hover:text-brand-2">moonid@moonid.sk</a>.</P>
+      <P>Účtovné a daňové doklady spracúvame v účtovnom systéme Pohoda (Stormware). Aktuálny zoznam sprostredkovateľov vám na požiadanie poskytneme na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand hover:text-brand-2">moonid@moonid.sk</a>.</P>
+
+      <H2>Prenos do tretích krajín</H2>
+      <P>
+        Primárne hostovanie údajov (Supabase, Vercel) prebieha v <strong>Európskej únii (Frankfurt)</strong>.
+        Sprostredkovatelia <strong>Resend</strong> (odosielanie e-mailov) a <strong>Sentry</strong> (monitorovanie chýb)
+        sú spoločnosti so sídlom v <strong>USA</strong>, kde môže dochádzať k spracúvaniu údajov. Tento prenos je krytý
+        <strong> štandardnými zmluvnými doložkami (SCC)</strong> podľa čl. 46 GDPR, prípadne certifikáciou v rámci
+        <strong> EU–US Data Privacy Framework</strong>. Do Sentry sa navyše osobné údaje pred odoslaním odstraňujú
+        (anonymizujú).
+      </P>
+
+      <H2>Automatizované rozhodovanie a profilovanie</H2>
+      <P>
+        Nevykonávame <strong>automatizované rozhodovanie s právnym alebo obdobne významným účinkom ani profilovanie</strong>{" "}
+        v zmysle čl. 22 GDPR. Vaše údaje nepoužívame na automatizované hodnotenie osobnosti, správania či bonity.
+      </P>
 
       <H2>Vaše práva</H2>
       <UL>
@@ -55,11 +77,21 @@ export default function OchranaOsobnychUdajov() {
         <li>právo podať sťažnosť na Úrad na ochranu osobných údajov SR (dataprotection.gov.sk).</li>
       </UL>
 
-      <H2>Kontakt</H2>
+      <H2>Kontakt a zodpovedná osoba</H2>
       <P>
-        Vo veciach ochrany osobných údajov nás kontaktujte na{" "}
+        Prevádzkovateľ nemá zákonnú povinnosť určiť zodpovednú osobu (DPO) a neurčil ju. Vo veciach ochrany osobných
+        údajov a uplatnenia práv nás kontaktujte na{" "}
         <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand hover:text-brand-2">moonid@moonid.sk</a>{" "}
         alebo telefonicky na 0919&nbsp;216&nbsp;908.
+      </P>
+      <P>
+        Súvisiace dokumenty:{" "}
+        <a href="/cookies" className="font-semibold text-brand hover:text-brand-2">Zásady používania cookies</a>{" "}
+        a <a href="/obchodne-podmienky" className="font-semibold text-brand hover:text-brand-2">Obchodné podmienky</a>.
+      </P>
+      <P className="text-[13px] text-muted-3">
+        Tieto zásady môžeme aktualizovať; platí vždy znenie zverejnené na tomto webe. Dátum poslednej aktualizácie je
+        uvedený v hlavičke stránky.
       </P>
     </LegalPage>
   );

@@ -24,8 +24,8 @@ export function H2({ id, children }: { id?: string; children: ReactNode }) {
   return <h2 id={id} className="mt-6 scroll-mt-24 text-[20px] font-bold tracking-[-0.01em] text-ink">{children}</h2>;
 }
 
-export function P({ children }: { children: ReactNode }) {
-  return <p>{children}</p>;
+export function P({ children, className }: { children: ReactNode; className?: string }) {
+  return <p className={className}>{children}</p>;
 }
 
 export function UL({ children }: { children: ReactNode }) {
