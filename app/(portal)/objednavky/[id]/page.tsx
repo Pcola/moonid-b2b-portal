@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { startRepeatOrder } from "@/app/(portal)/kosik/actions";
+import { CancelOrderButton } from "./cancel-order-button";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávka — Moonid portál", robots: { index: false, follow: false } };
@@ -30,6 +31,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   // bežný člen vidí len vlastnú objednávku alebo tú, ktorú má schvaľovať; správca firmy všetky
   const canView = user.role === "CUSTOMER_ADMIN" || order.createdById === user.id || order.createdBy.approverId === user.id;
   if (!canView) notFound();
+  // zákazník smie zrušiť len vlastnú (alebo správca firmy hociktorú) a len kým je PRIJATA
+  const canCancel = order.status === "PRIJATA" && (user.role === "CUSTOMER_ADMIN" || order.createdById === user.id);
 
   return (
     <div className="mx-auto max-w-[820px]">
@@ -40,13 +43,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <span className="rounded-full bg-cream px-2.5 py-1 text-[12.5px] font-semibold text-brand">{STATUS[order.status] ?? order.status}</span>
           <span className="text-[13px] text-muted-2">{new Date(order.createdAt).toLocaleString("sk")}</span>
         </div>
-        <form action={startRepeatOrder.bind(null, id)}>
-          <button type="submit" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
-            Opakovať objednávku
-          </button>
-        </form>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {canCancel && <CancelOrderButton orderId={id} />}
+          <form action={startRepeatOrder.bind(null, id)}>
+            <button type="submit" className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 2v6h6" /><path d="M3.5 8a9 9 0 1 0 2.3-3.3L3 8" /></svg>
+              Opakovať objednávku
+            </button>
+          </form>
+        </div>
       </div>
+      {canCancel && <p className="mt-2 text-[13px] text-muted-2">Objednávku môžete zrušiť, kým ju nezačneme spracúvať. Po potvrdení nás kontaktujte na 0919 216 908.</p>}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-white">
         <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-line bg-cream/60 px-5 py-2.5 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">

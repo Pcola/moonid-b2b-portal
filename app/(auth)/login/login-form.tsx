@@ -22,6 +22,7 @@ export function LoginForm() {
         : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState<string | null>(initialErr);
   const [loading, setLoading] = useState(false);
 
@@ -62,7 +63,17 @@ export function LoginForm() {
       </label>
       <label className={labelCls}>
         Heslo
-        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" className={inputCls} aria-invalid={!!err} aria-describedby={err ? "login-error" : undefined} />
+        <div className="relative">
+          <input type={showPw ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" className={`${inputCls} w-full pr-11`} aria-invalid={!!err} aria-describedby={err ? "login-error" : undefined} />
+          <button type="button" onClick={() => setShowPw((v) => !v)} aria-pressed={showPw} aria-label={showPw ? "Skryť heslo" : "Zobraziť heslo"}
+            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-muted-2 transition-colors hover:text-ink">
+            {showPw ? (
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9.9 4.2A9.5 9.5 0 0 1 12 4c6.5 0 10 7 10 7a15 15 0 0 1-2.6 3.3M6.6 6.6A15 15 0 0 0 2 11s3.5 7 10 7a9.5 9.5 0 0 0 3.4-.6" /><path d="M3 3l18 18" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /></svg>
+            ) : (
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>
+            )}
+          </button>
+        </div>
       </label>
       <div className="flex items-center justify-between">
         <label className="flex cursor-pointer items-center gap-2.5 text-[14.5px] text-muted-3">
