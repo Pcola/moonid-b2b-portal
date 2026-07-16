@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/lib/audit";
 
@@ -29,10 +29,10 @@ function csvResponse(body: string, filename: string): NextResponse {
 }
 
 export async function GET(req: Request) {
-  const user = await getCurrentUser();
-  if (!user || (user.role !== "STAFF" && user.role !== "ADMIN")) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  // requireStaff = auth + active + STAFF/ADMIN + MFA gate (enrolment aj AAL2 výzva).
+  // Middleware matcher /api vynecháva, takže autorizáciu MUSÍ spraviť route sama —
+  // inline role-check by obišiel MFA (únik IČO/DIČ/splatnosť celej zákazníckej bázy).
+  const user = await requireStaff();
   const type = new URL(req.url).searchParams.get("type");
   const today = day(new Date());
 

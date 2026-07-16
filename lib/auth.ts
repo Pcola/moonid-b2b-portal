@@ -48,16 +48,35 @@ function isStaff(role: string) {
   return role === "STAFF" || role === "ADMIN";
 }
 
-/** MFA gate: true ak má user overený TOTP faktor, ale aktuálna relácia ešte nie je AAL2
- *  (musí prejsť /mfa výzvou). Fail-open — chyba kontroly nezablokuje prístup. */
-async function needsMfaChallenge(): Promise<boolean> {
+// Escape-hatch: MFA sa pre staff/admin vynucuje (enrolment) štandardne. Ak by vynútenie
+// niekedy zamklo prístup (napr. MFA toggle v Supabase omylom vypnutý → nikto sa nevie
+// zaregistrovať), nastav vo Vercel env MFA_ENFORCE=off a redeploy → ostane len AAL2 výzva
+// pre už-zaregistrovaných, povinný enrolment sa dočasne nevynúti.
+const ENFORCE_MFA = process.env.MFA_ENFORCE !== "off";
+
+/** MFA stav privilegovaného účtu:
+ *  - enrolled: má aspoň jeden OVERENÝ TOTP faktor (listFactors().totp = verified)
+ *  - needsChallenge: má faktor, ale relácia je ešte AAL1 (musí prejsť /mfa výzvou)
+ *  Fail-open na chybe MFA API — výpadok nezablokuje prístup (a nezamkne admina). */
+async function mfaStatus(): Promise<{ enrolled: boolean; needsChallenge: boolean }> {
   try {
     const supabase = await createClient();
-    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    return data?.nextLevel === "aal2" && data.currentLevel === "aal1";
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const needsChallenge = aal?.nextLevel === "aal2" && aal.currentLevel === "aal1";
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const enrolled = (factors?.totp?.length ?? 0) > 0;
+    return { enrolled, needsChallenge };
   } catch {
-    return false;
+    return { enrolled: true, needsChallenge: false };
   }
+}
+
+/** Vynúti MFA pre privilegovaný účet: existujúci faktor + AAL1 → challenge; žiadny faktor
+ *  → povinný enrolment. Volať až po overení staff/admin role. */
+async function enforceStaffMfa(): Promise<void> {
+  const mfa = await mfaStatus();
+  if (mfa.needsChallenge) redirect("/mfa");
+  if (ENFORCE_MFA && !mfa.enrolled) redirect("/mfa/setup");
 }
 
 /** Vyžaduje prihláseného zákazníka (alebo staff). Inak redirect. */
@@ -69,22 +88,22 @@ export async function requireUser(): Promise<SessionUser> {
   return user;
 }
 
-/** Vyžaduje STAFF/ADMIN. */
+/** Vyžaduje STAFF/ADMIN + vynútené 2FA (enrolment aj AAL2 výzva). */
 export async function requireStaff(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1"); // deaktivovaný staff nesmie prejsť
   if (!isStaff(user.role)) redirect("/dashboard");
-  if (await needsMfaChallenge()) redirect("/mfa"); // enrolovaný faktor + AAL1 → dokončiť MFA výzvu
+  await enforceStaffMfa();
   return user;
 }
 
-/** Vyžaduje ADMIN. */
+/** Vyžaduje ADMIN + vynútené 2FA. */
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1");
   if (user.role !== "ADMIN") redirect("/dashboard");
-  if (await needsMfaChallenge()) redirect("/mfa");
+  await enforceStaffMfa();
   return user;
 }

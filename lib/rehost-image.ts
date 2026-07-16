@@ -31,8 +31,10 @@ export async function rehostImage(
     // len https + dôveryhodný host (anti-SSRF: žiadne interné/link-local ciele)
     if (u.protocol !== "https:" || !ALLOWED_SOURCE_HOSTS.has(u.hostname)) return null;
 
-    const res = await fetch(u.toString());
-    if (!res.ok) return null;
+    // redirect:"manual" — 302 z dôveryhodného hosta (alebo open-redirect na ňom)
+    // na interné/link-local ciele (169.254.169.254) sa NEnasleduje. 3xx → !res.ok → null.
+    const res = await fetch(u.toString(), { redirect: "manual" });
+    if (!res.ok || res.status < 200 || res.status >= 300) return null;
     const ct = res.headers.get("content-type");
     // žiadne SVG — vo verejnom buckete by <script> v SVG bol stored-XSS vektor
     if (ct && /svg/i.test(ct)) return null;
