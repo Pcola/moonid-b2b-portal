@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { addToCart } from "../../kosik/actions";
+import { requestQuote } from "../actions";
 import { useToast } from "@/components/portal/toast";
 import { ProductImg } from "@/components/product-img";
 
@@ -18,6 +19,8 @@ export function ProductDetail({ title, category, brand, description, specs, vari
   const [qty, setQty] = useState(1);
   const [pending, start] = useTransition();
   const [added, setAdded] = useState(false);
+  const [quotePending, startQuote] = useTransition();
+  const [quoted, setQuoted] = useState(false);
   const toast = useToast();
 
   const v = variants.find((x) => x.id === sel) ?? variants[0];
@@ -27,6 +30,12 @@ export function ProductDetail({ title, category, brand, description, specs, vari
   const add = () => start(async () => {
     const r = await addToCart(v.id, qty);
     if (r.ok) { setAdded(true); toast("Pridané do košíka"); setTimeout(() => setAdded(false), 1600); }
+  });
+
+  const askQuote = () => startQuote(async () => {
+    const r = await requestQuote(v.id);
+    if (r.ok) { setQuoted(true); toast("Dopyt odoslaný — ozveme sa s cenovou ponukou"); }
+    else toast(r.error ?? "Dopyt sa nepodarilo odoslať");
   });
 
   return (
@@ -95,7 +104,9 @@ export function ProductDetail({ title, category, brand, description, specs, vari
               </button>
             </div>
           ) : (
-            <Link href="/dashboard" className="inline-flex h-11 w-fit items-center justify-center rounded-[10px] border border-line bg-white px-6 text-[15px] font-semibold text-brand transition hover:border-mint-2">Vyžiadať cenu</Link>
+            <button type="button" onClick={askQuote} disabled={quotePending || quoted} className="inline-flex h-11 w-fit items-center justify-center rounded-[10px] border border-line bg-white px-6 text-[15px] font-semibold text-brand transition hover:border-mint-2 disabled:opacity-60">
+              {quoted ? "Dopyt odoslaný ✓" : quotePending ? "Odosielam…" : "Vyžiadať cenu"}
+            </button>
           )}
 
           {description && <p className="text-[14.5px] leading-relaxed text-muted-3">{description}</p>}

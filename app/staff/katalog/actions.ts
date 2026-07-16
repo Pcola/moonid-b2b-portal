@@ -5,12 +5,13 @@ import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rehostImage, PRODUCT_BUCKET } from "@/lib/rehost-image";
+import { writeAudit } from "@/lib/audit";
 
 // Copy-on-confirm: pri potvrdení zhody sa obsah zdroja JEDNORAZOVO skopíruje do Product
 // (len ak je pole prázdne — manuálne/existujúce hodnoty vyhrávajú). Re-import feedu
 // Product už neprepíše. Žiadny nočný projekčný engine.
 export async function confirmMatch(sourceId: string) {
-  await requireStaff(); // server action si rolu MUSÍ overiť sama (layout chráni len render)
+  const staff = await requireStaff(); // server action si rolu MUSÍ overiť sama (layout chráni len render)
   const src = await prisma.productSource.findUnique({
     where: { id: sourceId },
     include: { product: { include: { media: true } } },
@@ -42,22 +43,18 @@ export async function confirmMatch(sourceId: string) {
     where: { id: sourceId },
     data: { matchStatus: "CONFIRMED", matchedAt: new Date() },
   });
+  await writeAudit({ userId: staff.id, action: "CATALOG_MATCH_CONFIRM", entity: "ProductSource", entityId: sourceId, meta: { productId: src.productId } });
   revalidatePath("/staff/katalog");
 }
 
 // REJECT necháva productId vyplnené → matcher nenavrhne tú istú dvojicu znova.
 export async function rejectMatch(sourceId: string) {
-  await requireStaff();
+  const staff = await requireStaff();
   await prisma.productSource.update({
     where: { id: sourceId },
     data: { matchStatus: "REJECTED", matchedAt: new Date() },
   });
-  revalidatePath("/staff/katalog");
-}
-
-export async function togglePublish(productId: string, value: boolean) {
-  await requireStaff();
-  await prisma.product.update({ where: { id: productId }, data: { isPublished: value } });
+  await writeAudit({ userId: staff.id, action: "CATALOG_MATCH_REJECT", entity: "ProductSource", entityId: sourceId });
   revalidatePath("/staff/katalog");
 }
 
@@ -85,13 +82,14 @@ export async function searchPohodaProducts(q: string): Promise<{ id: string; sku
 // Manuálne napárovanie feed položky na konkrétny Pohoda produkt + potvrdenie
 // (skopíruje obrázok do Storage + popis cez confirmMatch). matchMethod=MANUAL.
 export async function manualPair(sourceId: string, productId: string): Promise<{ ok: boolean; error?: string }> {
-  await requireStaff();
+  const staff = await requireStaff();
   const prod = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
   if (!prod) return { ok: false, error: "Vybraný Pohoda produkt neexistuje." };
   await prisma.productSource.update({
     where: { id: sourceId },
     data: { productId, matchMethod: "MANUAL", matchScore: null },
   });
+  await writeAudit({ userId: staff.id, action: "CATALOG_MANUAL_PAIR", entity: "ProductSource", entityId: sourceId, meta: { productId } });
   await confirmMatch(sourceId); // copy-on-confirm: obrázok (re-host) + popis + CONFIRMED
   return { ok: true };
 }
@@ -104,7 +102,7 @@ function slugify(s: string): string {
 // Manuálne pridanie produktu (origin=MANUAL → Pohoda reconcile ho nearchivuje).
 // Obrázok sa nahráva priamo do vlastného Storage (žiadna externá URL).
 export async function createProduct(formData: FormData): Promise<{ ok: boolean; error?: string; id?: string }> {
-  await requireStaff();
+  const staff = await requireStaff();
 
   const name = String(formData.get("name") ?? "").trim();
   const sku = String(formData.get("sku") ?? "").trim();
@@ -158,6 +156,7 @@ export async function createProduct(formData: FormData): Promise<{ ok: boolean; 
     }
   }
 
+  await writeAudit({ userId: staff.id, action: "PRODUCT_CREATE", entity: "Product", entityId: product.id, meta: { sku } });
   revalidatePath("/staff/katalog");
   revalidatePath("/katalog");
   revalidatePath("/produkty");

@@ -1,8 +1,10 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { confirmMatch, rejectMatch, togglePublish } from "./actions";
+import { confirmMatch, rejectMatch } from "./actions";
+import { setProductPublished } from "../produkty/actions";
 
 type Item = {
   id: string;
@@ -39,6 +41,7 @@ function Chip({ label, value, tone = "neutral" }: { label: string; value: number
 export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
   const [pending, start] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const router = useRouter();
 
   const run = (id: string, fn: (id: string) => Promise<void>) => {
     setBusyId(id);
@@ -47,7 +50,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
 
   const runPublish = (rowId: string, productId: string, value: boolean) => {
     setBusyId(rowId);
-    start(async () => { await togglePublish(productId, value); setBusyId(null); });
+    start(async () => { await setProductPublished(productId, value); setBusyId(null); router.refresh(); });
   };
 
   return (

@@ -275,7 +275,9 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   const vat = sumMoney([...lineVats, charges.extrasVat]);
   const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
-  const order = await prisma.$transaction(async (tx) => {
+  let order: { id: string; number: string } | null = null;
+  try {
+    order = await prisma.$transaction(async (tx) => {
     // delete-first guard: súbežná požiadavka (2 taby/dvojklik) — ak košík už bol spracovaný,
     // deleteMany vráti 0 (riadky sú zamknuté/zmazané) → neduplikujeme objednávku.
     const del = await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -296,7 +298,11 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
       },
       select: { id: true, number: true },
     });
-  });
+    });
+  } catch (e) {
+    reportError("order.create", e, { companyId: user.companyId });
+    return { ok: false, error: "Objednávku sa nepodarilo vytvoriť. Skúste to znova." };
+  }
   if (!order) return { ok: false, error: "Košík bol medzičasom spracovaný — skontrolujte sekciu Objednávky." };
 
   await writeAudit({ userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } });

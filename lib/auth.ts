@@ -84,6 +84,9 @@ export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1");
+  // Deaktivovaná firma (offboarding) — nesmie prihlásiť ani objednávať. getCurrentUser ťahá
+  // company cez include (vrátane active); staff bez firmy (company null) sa netýka.
+  if (user.company && !user.company.active) redirect("/login?disabled=1");
   if (!user.companyId && !isStaff(user.role)) redirect("/cakajuce");
   return user;
 }

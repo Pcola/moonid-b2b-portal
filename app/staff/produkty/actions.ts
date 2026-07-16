@@ -137,7 +137,7 @@ export async function setProductPublished(id: string, value: boolean): Promise<{
 
 /** Nahrá/nahradí hlavný obrázok produktu (do vlastného Storage; nikdy externá URL). */
 export async function updateProductImage(id: string, formData: FormData): Promise<{ ok: boolean; error?: string; url?: string }> {
-  await requireStaff();
+  const staff = await requireStaff();
   if (!ID.safeParse(id).success) return { ok: false, error: "Neplatný vstup." };
   const product = await prisma.product.findUnique({ where: { id }, select: { id: true, name: true, nameDisplay: true } });
   if (!product) return { ok: false, error: "Produkt neexistuje." };
@@ -161,6 +161,7 @@ export async function updateProductImage(id: string, formData: FormData): Promis
   // nahradí primárny obrázok
   await prisma.productMedia.deleteMany({ where: { productId: id, isPrimary: true } });
   await prisma.productMedia.create({ data: { productId: id, storagePath: url, isPrimary: true, alt: product.nameDisplay || product.name } });
+  await writeAudit({ userId: staff.id, action: "PRODUCT_IMAGE_UPDATE", entity: "Product", entityId: id });
   revalidate(id);
   return { ok: true, url };
 }
