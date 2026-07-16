@@ -75,11 +75,7 @@ export function LoginForm() {
           </button>
         </div>
       </label>
-      <div className="flex items-center justify-between">
-        <label className="flex cursor-pointer items-center gap-2.5 text-[14.5px] text-muted-3">
-          <input type="checkbox" defaultChecked className="h-4 w-4" style={{ accentColor: "#163f38" }} />
-          Zapamätať si ma
-        </label>
+      <div className="flex items-center justify-end">
         <a href="/zabudnute-heslo" className="text-[14px] font-semibold text-brand transition hover:text-brand-2">Zabudli ste heslo?</a>
       </div>
       <button type="submit" disabled={loading}

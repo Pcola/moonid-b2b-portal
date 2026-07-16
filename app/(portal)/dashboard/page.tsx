@@ -7,6 +7,7 @@ import { ProductImg } from "@/components/product-img";
 import { startRepeat } from "../kosik/actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Prehľad — Moonid B2B portál", robots: { index: false, follow: false } };
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 const STATUS: Record<string, { label: string; cls: string }> = {

@@ -46,6 +46,19 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
   }
   const clearAll = () => { setQ(""); setBrandQ(""); router.push(pathname); };
 
+  // URL pre stránku (rovnaká logika ako go(), ale ako href) — aby paginácia bola
+  // skutočné <a href> a crawler sa dostal na stranu 2+ (SEO, nie len JS button).
+  function hrefForPage(p: number) {
+    const merged: Record<string, string> = { ...active, page: String(p) };
+    const usp = new URLSearchParams();
+    for (const [k, v] of Object.entries(merged)) {
+      if (!v || v === "rec" || (k === "page" && v === "1")) continue;
+      usp.set(k, v);
+    }
+    const qs = usp.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }
+
   const chips: { key: string; label: string }[] = [];
   if (active.q) chips.push({ key: "q", label: `„${active.q}"` });
   if (active.cat) chips.push({ key: "cat", label: active.cat });
@@ -177,9 +190,13 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
 
           {pages > 1 && (
             <div className="mt-12 flex items-center justify-center gap-3">
-              <button type="button" disabled={page <= 1} onClick={() => go({ page: page - 1 })} className="rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink transition hover:border-brand/40 disabled:opacity-40">‹ Späť</button>
+              {page > 1
+                ? <Link href={hrefForPage(page - 1)} rel="prev" className="rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink transition hover:border-brand/40">‹ Späť</Link>
+                : <span aria-disabled="true" className="cursor-default rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink opacity-40">‹ Späť</span>}
               <span className="text-[14px] text-muted">Strana <span className="font-semibold text-ink">{page}</span> z {pages}</span>
-              <button type="button" disabled={page >= pages} onClick={() => go({ page: page + 1 })} className="rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink transition hover:border-brand/40 disabled:opacity-40">Ďalej ›</button>
+              {page < pages
+                ? <Link href={hrefForPage(page + 1)} rel="next" className="rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink transition hover:border-brand/40">Ďalej ›</Link>
+                : <span aria-disabled="true" className="cursor-default rounded-[11px] border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink opacity-40">Ďalej ›</span>}
             </div>
           )}
         </div>

@@ -38,6 +38,12 @@ export const metadata: Metadata = {
     description: DESC,
     images: [{ url: "/images/hero-still-life.jpg", width: 1200, height: 630, alt: "Moonid — hygiena a čistenie pre prevádzky" }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Moonid s.r.o. — hygiena, čistenie a vybavenie pre vašu prevádzku",
+    description: DESC,
+    images: ["/images/hero-still-life.jpg"],
+  },
 };
 
 const businessLd = {

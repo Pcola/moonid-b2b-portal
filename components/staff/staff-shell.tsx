@@ -76,7 +76,7 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
 ];
 
 function Icon({ children }: { children: React.ReactNode }) {
-  return <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
+  return <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
 }
 
 export function StaffShell({ name, role, newOrders, newRequests, newInquiries, children }: Props) {
@@ -133,7 +133,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           <div className="truncate text-[11.5px] text-[#7fa199]">{roleLabel}</div>
         </div>
         <form action="/auth/logout" method="post">
-          <button type="submit" title="Odhlásiť sa" className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7fa199] transition hover:bg-white/10 hover:text-white">
+          <button type="submit" aria-label="Odhlásiť sa" title="Odhlásiť sa" className="flex h-8 w-8 items-center justify-center rounded-lg text-[#7fa199] transition hover:bg-white/10 hover:text-white">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
           </button>
         </form>
@@ -143,6 +143,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
 
   return (
     <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[248px_1fr]">
+      <a href="#obsah" className="skip-link">Preskočiť na obsah</a>
       <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
 
       {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 lg:hidden" onClick={() => setOpen(false)} />}
@@ -166,7 +167,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main id="obsah" className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

@@ -16,6 +16,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/produkty`, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE}/o-nas`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/kontakt`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE}/pomoc`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${BASE}/registracia`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/ochrana-osobnych-udajov`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE}/cookies`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${BASE}/obchodne-podmienky`, changeFrequency: "yearly", priority: 0.2 },
