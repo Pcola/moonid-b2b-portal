@@ -22,6 +22,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     select: {
       number: true, status: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, hasBackorder: true, createdAt: true,
       deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true,
+      deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
       createdById: true, createdBy: { select: { approverId: true } },
       items: { select: { id: true, skuSnapshot: true, nameSnapshot: true, unitPriceSnapshot: true, qty: true, lineTotal: true, fulfillment: true } },
       events: { where: { source: "PORTAL" }, orderBy: { occurredAt: "asc" }, select: { status: true, occurredAt: true } },
@@ -82,7 +83,18 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       {(order.deliveryMethodLabel || order.paymentMethodLabel) && (
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          {order.deliveryMethodLabel && <div className="rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Doprava</div><p className="mt-1 text-[14px] text-ink">{order.deliveryMethodLabel}</p></div>}
+          {order.deliveryMethodLabel && (
+            <div className="rounded-xl border border-line bg-white p-4">
+              <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Doprava</div>
+              <p className="mt-1 text-[14px] text-ink">{order.deliveryMethodLabel}</p>
+              {order.deliveryLocation && (
+                <p className="mt-1 text-[13px] text-muted-3">
+                  {[order.deliveryLocation.street, [order.deliveryLocation.zip, order.deliveryLocation.city].filter(Boolean).join(" ")].filter(Boolean).join(", ")}
+                  {order.deliveryLocation.label ? ` · ${order.deliveryLocation.label}` : ""}
+                </p>
+              )}
+            </div>
+          )}
           {order.paymentMethodLabel && <div className="rounded-xl border border-line bg-white p-4"><div className="text-[12px] font-semibold uppercase tracking-wide text-muted-2">Platba</div><p className="mt-1 text-[14px] text-ink">{order.paymentMethodLabel}</p></div>}
         </div>
       )}
