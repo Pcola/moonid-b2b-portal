@@ -58,7 +58,8 @@ export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-line bg-white [scrollbar-width:thin]">
+       <div className="min-w-[720px]">
         <div className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
           <span>Číslo</span><span>Zákazník</span><span>Dátum</span><span>Úroveň</span><span>Stav</span><span className="text-right">Suma</span>
         </div>
@@ -80,6 +81,7 @@ export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: {
             </Link>
           );
         })}
+       </div>
       </div>
 
       {capped && (

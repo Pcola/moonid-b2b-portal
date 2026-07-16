@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 
 const schema = z.object({
@@ -14,7 +14,7 @@ const schema = z.object({
 /** Upraví cenovú úroveň (názov + %). POZOR: mení ceny VŠETKÝCH zákazníkov na tejto úrovni
  *  (cena = basePrice × (1 − discountPct)). Len STAFF; zmena ide do auditu. */
 export async function updateTier(code: string, input: { name: string; discountPct: number }): Promise<{ ok: boolean; error?: string }> {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const c = String(code ?? "").trim().slice(0, 20);
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Neplatný vstup." };
@@ -41,7 +41,7 @@ const createSchema = z.object({
 /** Vytvorí novú cenovú úroveň (napr. bespoke „VIP −25 %" pre konkrétneho zákazníka).
  *  Pricing sa resolvuje po tieroch → žiadna zmena money-path, len nová úroveň na priradenie. */
 export async function createTier(input: z.input<typeof createSchema>): Promise<{ ok: boolean; error?: string; code?: string }> {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const parsed = createSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Neplatný vstup." };
   const code = parsed.data.code.toUpperCase();
@@ -56,7 +56,7 @@ export async function createTier(input: z.input<typeof createSchema>): Promise<{
 
 /** Zmaže cenovú úroveň — iba ak ju nemá priradený žiadny zákazník ani individuálne ceny. */
 export async function deleteTier(code: string): Promise<{ ok: boolean; error?: string }> {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const c = String(code ?? "").trim().slice(0, 20);
   const tier = await prisma.priceTier.findUnique({ where: { code: c }, select: { id: true, _count: { select: { companies: true } } } });
   if (!tier) return { ok: false, error: "Úroveň neexistuje." };

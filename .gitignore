@@ -46,3 +46,10 @@ next-env.d.ts
 
 # lokálne dátové exporty z Pohody (biznis dáta — nepatria do gitu)
 /data/
+
+# python build artefakty (adhoc enrich/EAN skripty)
+__pycache__/
+*.pyc
+
+# .NET publish výstup (agent) — binárky nepatria do gitu
+/agent/publish-fd/
