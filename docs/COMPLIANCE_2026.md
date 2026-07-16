@@ -15,7 +15,7 @@
 - Oznamovanie porušení do 72 h.
 
 ### ⚠️ EAA — European Accessibility Act (prístupnosť) — PRE MOONID PRAVDEPODOBNE NEPOVINNÝ
-- Smernica (EÚ) 2019/882, SK transpozícia zák. **351/2015 Z. z.**, účinná od **28. 6. 2025**.
+- Smernica (EÚ) 2019/882, SK transpozícia zák. **351/2022 Z. z.** o prístupnosti výrobkov a služieb, účinná od **28. 6. 2025**.
 - **Rozsah = e-commerce služby SPOTREBITEĽOM (B2C).** Moonid predáva výlučne podnikateľom na IČO,
   objednávanie je za prihlásením — pravdepodobne mimo spotrebiteľského rozsahu EAA.
 - **Výnimka pre mikropodnik:** poskytovatelia služieb, ktorí sú **mikropodnikom** (< 10 zamestnancov
