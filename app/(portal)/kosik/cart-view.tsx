@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import type { CartDetail } from "@/lib/cart";
 import { setQty, removeItem, createOrder } from "./actions";
@@ -8,6 +8,34 @@ import { ProductImg } from "@/components/product-img";
 import { sumMoney2, vatOf2 } from "@/lib/money-client";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
+
+/** Množstvo v košíku: −/+ stepper + zapisovateľné pole (50 ks netreba naklikať).
+ *  Commit na blur/Enter; lokálny stav sa syncuje po serverovej revalidácii (qty prop). */
+function CartQty({ qty, disabled, onCommit }: { qty: number; disabled: boolean; onCommit: (n: number) => void }) {
+  const [val, setVal] = useState(String(qty));
+  useEffect(() => { setVal(String(qty)); }, [qty]);
+  const commit = (n: number) => {
+    const c = Math.max(1, Math.min(9999, Math.floor(n) || 1));
+    setVal(String(c));
+    if (c !== qty) onCommit(c);
+  };
+  return (
+    <div className="flex items-center rounded-[9px] border border-line">
+      <button aria-label="Znížiť množstvo" onClick={() => commit(qty - 1)} disabled={disabled} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">−</button>
+      <input
+        aria-label="Množstvo"
+        inputMode="numeric"
+        value={val}
+        onChange={(e) => setVal(e.target.value.replace(/[^0-9]/g, ""))}
+        onBlur={() => commit(Number(val))}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+        disabled={disabled}
+        className="w-11 border-x border-line bg-transparent py-1.5 text-center text-[14px] tabular-nums text-ink outline-none focus:bg-mintbg/30 disabled:opacity-50"
+      />
+      <button aria-label="Zvýšiť množstvo" onClick={() => commit(qty + 1)} disabled={disabled} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">+</button>
+    </div>
+  );
+}
 
 type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null };
 type Billing = { name: string; ico: string; address: string | null; city: string | null };
@@ -109,23 +137,21 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         {/* Položky */}
         <div className="flex flex-col gap-3">
           {cart.items.map((it) => (
-            <div key={it.id} className="flex items-center gap-4 rounded-xl border border-line bg-white p-3.5">
+            <div key={it.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-white p-3.5 sm:flex-nowrap">
               <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa] p-1.5">
                 <ProductImg src={it.i} alt={it.n} sizes="64px" iconSize={26} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[14.5px] font-medium text-ink">{it.n}</div>
+                <div className="text-[14.5px] font-medium leading-snug text-ink">{it.n}</div>
                 <div className="text-[12.5px] text-muted-2">{it.price.kind === "PRICE" ? `${eur(it.price.net)} / ${it.unit} bez DPH` : "Cena na vyžiadanie"}</div>
               </div>
-              <div className="flex items-center rounded-[9px] border border-line">
-                <button aria-label="Znížiť množstvo" onClick={() => start(async () => { await setQty(it.id, it.qty - 1); })} disabled={pending} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">−</button>
-                <span className="min-w-[34px] text-center text-[14px] tabular-nums text-ink">{it.qty}</span>
-                <button aria-label="Zvýšiť množstvo" onClick={() => start(async () => { await setQty(it.id, it.qty + 1); })} disabled={pending} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">+</button>
+              <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
+                <CartQty qty={it.qty} disabled={pending} onCommit={(n) => start(async () => { await setQty(it.id, n); })} />
+                <div className="text-right text-[14.5px] font-semibold text-ink sm:w-[92px]">{it.lineNet != null ? eur(it.lineNet) : "—"}</div>
+                <button aria-label="Odobrať položku" onClick={() => start(async () => { await removeItem(it.id); })} disabled={pending} title="Odobrať" className="flex-none text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+                </button>
               </div>
-              <div className="w-[92px] text-right text-[14.5px] font-semibold text-ink">{it.lineNet != null ? eur(it.lineNet) : "—"}</div>
-              <button aria-label="Odobrať položku" onClick={() => start(async () => { await removeItem(it.id); })} disabled={pending} title="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
-              </button>
             </div>
           ))}
         </div>
@@ -182,17 +208,17 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
                       </div>
                     )}
                     {addrMode === "saved" && hasLocations ? (
-                      <select value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className={`${inp} w-full`}>
+                      <select aria-label="Uložená dodacia adresa" value={deliveryLocationId} onChange={(e) => setDeliveryLocationId(e.target.value)} className={`${inp} w-full`}>
                         {locations.map((l) => <option key={l.id} value={l.id}>{l.label}{[l.street, l.city].filter(Boolean).length ? ` — ${[l.street, l.city].filter(Boolean).join(", ")}` : ""}</option>)}
                       </select>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        <input value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" className={inp} />
+                        <input aria-label="Ulica a číslo" value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" className={inp} />
                         <div className="flex gap-2">
-                          <input value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" className={`${inp} flex-1`} />
-                          <input value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" className={`${inp} w-24`} />
+                          <input aria-label="Mesto" value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" className={`${inp} flex-1`} />
+                          <input aria-label="PSČ" value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" className={`${inp} w-24`} />
                         </div>
-                        <input value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Prevádzka centrum) — nepovinné" className={inp} />
+                        <input aria-label="Označenie adresy (nepovinné)" value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Prevádzka centrum) — nepovinné" className={inp} />
                       </div>
                     )}
                   </div>
@@ -250,8 +276,8 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
                 <button onClick={removeOnRequest} disabled={pending} className="mt-1.5 block font-semibold underline disabled:opacity-50">Odobrať položky na vyžiadanie</button>
               </div>
             )}
-            <input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="Objednávkové číslo / referencia (nepovinné)" className={`${inp} mt-3 w-full`} />
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-2 w-full`} />
+            <input aria-label="Objednávkové číslo alebo referencia (nepovinné)" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="Objednávkové číslo / referencia (nepovinné)" className={`${inp} mt-3 w-full`} />
+            <textarea aria-label="Poznámka k objednávke (nepovinné)" value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-2 w-full`} />
             {err && <p role="alert" className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
             <button onClick={order} disabled={pending || cart.hasOnRequest} className="mt-3 w-full rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
               {pending ? "Odosielam…" : "Odoslať objednávku"}

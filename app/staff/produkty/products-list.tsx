@@ -122,8 +122,8 @@ function PublishToggle({ id, published }: { id: string; published: boolean }) {
   }
   return (
     <button type="button" onClick={toggle} disabled={pending} title={published ? "Skryť z katalógu" : "Publikovať"}
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-[#ecfdf3] text-[#14633f] hover:bg-[#d6f5e4]" : "bg-[#f3f0ee] text-[#86827a] hover:bg-[#e9e5e1]"}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-[#14633f]" : "bg-[#86827a]"}`} />
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-[#ecfdf3] text-[#14633f] hover:bg-[#d6f5e4]" : "bg-[#f3f0ee] text-muted-2 hover:bg-[#e9e5e1]"}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-[#14633f]" : "bg-muted-2"}`} />
       {pending ? "…" : published ? "Publikované" : "Skryté"}
     </button>
   );

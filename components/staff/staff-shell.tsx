@@ -109,7 +109,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
       <nav className="flex flex-1 flex-col gap-4 overflow-y-auto [scrollbar-width:thin]">
         {NAV_GROUPS.map((g, gi) => (
           <div key={gi} className="flex flex-col gap-0.5">
-            {g.label && <span className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#5f7f78]">{g.label}</span>}
+            {g.label && <span className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8fb3ab]">{g.label}</span>}
             {g.items.map((n) => {
               const active = isActive(n.href, n.exact);
               const count = badgeFor(n.badge);
@@ -118,7 +118,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
                   className={`flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-[9px] text-[14.5px] font-medium transition-colors duration-150 ${active ? "bg-white/10 text-white" : "text-[#9fbab3] hover:bg-white/5 hover:text-white"}`}>
                   <Icon>{n.icon}</Icon>
                   <span className="flex-1">{n.label}</span>
-                  {count > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C8881A] px-1.5 text-[11px] font-bold text-white">{count}</span>}
+                  {count > 0 && <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#9a6410] px-1.5 text-[11px] font-bold text-white">{count}</span>}
                 </Link>
               );
             })}
@@ -161,7 +161,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/staff/objednavky?q=${encodeURIComponent(q.trim())}` : "/staff/objednavky"); }}>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hľadať objednávku, firmu…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none lg:w-[230px]" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať objednávku alebo firmu" placeholder="Hľadať objednávku, firmu…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none lg:w-[230px]" />
             </form>
           </div>
         </header>

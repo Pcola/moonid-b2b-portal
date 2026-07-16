@@ -101,7 +101,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
                       disabled={busy}
                       title={p.isPublished ? "Skryť z katalógu zákazníkov" : "Zverejniť v katalógu zákazníkov"}
                       className="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold transition disabled:opacity-50"
-                      style={p.isPublished ? { background: "#dcfce7", color: "#14532d" } : { background: "#f3f0ee", color: "#86827a" }}
+                      style={p.isPublished ? { background: "#dcfce7", color: "#14532d" } : { background: "#f3f0ee", color: "#6b675f" }}
                     >
                       {p.isPublished ? "● Publikovaný" : "○ Nepublikovaný"}
                     </button>

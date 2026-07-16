@@ -11,7 +11,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   PENDING: { label: "Čaká na úhradu", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
   PAID: { label: "Uhradená", cls: "bg-[#ecfdf3] text-[#14633f]" },
   OVERDUE: { label: "Po splatnosti", cls: "bg-[#fdeceb] text-[#9a3025]" },
-  CANCELLED: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-[#86827a]" },
+  CANCELLED: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-muted-2" },
 };
 
 function SummaryCard({ label, value, accent }: { label: string; value: string; accent?: string }) {

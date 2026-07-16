@@ -95,9 +95,9 @@ export function ProductDetail({ title, category, brand, description, specs, vari
           {canBuy ? (
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center rounded-[10px] border border-line bg-white">
-                <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">−</button>
-                <span className="w-10 text-center text-[15px] font-semibold tabular-nums text-ink">{qty}</span>
-                <button type="button" onClick={() => setQty((q) => Math.min(9999, q + 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">+</button>
+                <button type="button" aria-label="Znížiť množstvo" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">−</button>
+                <input aria-label="Množstvo" inputMode="numeric" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(9999, Math.floor(Number(e.target.value.replace(/[^0-9]/g, ""))) || 1)))} className="h-11 w-12 border-x border-line bg-transparent text-center text-[15px] font-semibold tabular-nums text-ink outline-none focus:bg-mintbg/30" />
+                <button type="button" aria-label="Zvýšiť množstvo" onClick={() => setQty((q) => Math.min(9999, q + 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">+</button>
               </div>
               <button type="button" onClick={add} disabled={pending} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-brand px-6 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
                 {added ? "Pridané do košíka ✓" : pending ? "…" : "Do košíka"}

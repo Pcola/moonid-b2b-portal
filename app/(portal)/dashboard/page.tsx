@@ -15,7 +15,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-[#eef2ff] text-[#3730a3]" },
   NA_CESTE: { label: "Na ceste", cls: "bg-[#eef2ff] text-[#3730a3]" },
   DORUCENA: { label: "Doručená", cls: "bg-[#ecfdf3] text-[#14633f]" },
-  STORNO: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-[#86827a]" },
+  STORNO: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-muted-2" },
 };
 
 function StatCard({ icon, badge, badgeCls, value, label }: { icon: React.ReactNode; badge?: string; badgeCls?: string; value: string; label: string }) {

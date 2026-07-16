@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ProductImg } from "@/components/product-img";
@@ -21,6 +21,16 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
   const [brandQ, setBrandQ] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const brandsShown = brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
+
+  // mobilný filter-drawer = modálny dialóg: Escape zatvára + zámok scrollu tela
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFiltersOpen(false); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [filtersOpen]);
 
   const pages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -59,7 +69,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
     <div className="flex flex-col gap-7">
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
+        <input aria-label="Hľadať v sortimente" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
           placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[15.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
@@ -86,7 +96,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
           {brands.length > 5 && (
             <div className="relative mb-2">
               <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-              <input value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-line bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
+              <input aria-label="Hľadať značku" value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-line bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
             </div>
           )}
           <div className="flex max-h-[210px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
@@ -116,7 +126,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
             <div className="flex items-center gap-2 text-[14px] text-muted">
               <span className="hidden sm:inline">Zoradiť</span>
               <div className="relative">
-                <select value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
+                <select aria-label="Zoradiť produkty" value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
                   <option value="rec">Odporúčané</option>
                   <option value="az">Názov A–Z</option>
                   <option value="za">Názov Z–A</option>
@@ -179,10 +189,10 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
       {filtersOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="absolute inset-0 bg-brand-deep/40" onClick={() => setFiltersOpen(false)} />
-          <div className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
+          <div role="dialog" aria-modal="true" aria-label="Filtre" className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <span className="text-[16px] font-semibold text-ink">Filtre</span>
-              <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
+              <button type="button" autoFocus onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>
