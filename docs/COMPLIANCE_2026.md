@@ -14,11 +14,18 @@
 - Minimalizácia dát, retenčné lehoty, šifrovanie.
 - Oznamovanie porušení do 72 h.
 
-### ☐ EAA — European Accessibility Act (prístupnosť)
-- Účinný od **28. 6. 2025** → v 2026 **povinný** pre digitálne služby (vrátane B2B e-commerce).
-- Cieľ: **WCAG 2.1 úroveň AA**.
-- Kontrast, klávesnicová ovládateľnosť, ARIA, čitateľné fonty, focus stavy, alt texty.
-- shadcn/ui (Radix) pomáha — má prístupnosť zabudovanú, ale treba testovať (axe, Lighthouse).
+### ⚠️ EAA — European Accessibility Act (prístupnosť) — PRE MOONID PRAVDEPODOBNE NEPOVINNÝ
+- Smernica (EÚ) 2019/882, SK transpozícia zák. **351/2015 Z. z.**, účinná od **28. 6. 2025**.
+- **Rozsah = e-commerce služby SPOTREBITEĽOM (B2C).** Moonid predáva výlučne podnikateľom na IČO,
+  objednávanie je za prihlásením — pravdepodobne mimo spotrebiteľského rozsahu EAA.
+- **Výnimka pre mikropodnik:** poskytovatelia služieb, ktorí sú **mikropodnikom** (< 10 zamestnancov
+  a ≤ 2 mil. € obrat), sú z povinností prístupnosti pre služby **vyňatí** (čl. 4 ods. 5 EAA). Moonid
+  je mikrodistribútor → výnimka sa uplatní.
+- **Záver:** EAA na Moonid v súčasnej podobe **pravdepodobne nie je záväzná povinnosť** (dva nezávislé
+  dôvody: čistý B2B + mikropodnik). **Ožila by** pri prechode na predaj spotrebiteľom (B2C). Pri takejto
+  zmene potvrdiť s právnikom.
+- **Napriek tomu WCAG 2.1 AA dodržiavame dobrovoľne** (dobrá prax, SEO, použiteľnosť) — web už spĺňa
+  kontrast AA, klávesnicu, ARIA, focus stavy, alt texty; overiť axe/Lighthouse v CI.
 
 ### ☐ Povinná e-fakturácia (ViDA + SK)
 - EÚ **VAT in the Digital Age (ViDA)** zavádza povinné štruktúrované e-faktúry.
@@ -101,6 +108,6 @@
 
 ### Zhrnutie priorít
 1. **GDPR + RLS + MFA** — základ, bez toho nespúšťať.
-2. **WCAG 2.1 AA (EAA)** — v 2026 zákonná povinnosť.
+2. **WCAG 2.1 AA** — pre Moonid (čistý B2B + mikropodnik) EAA pravdepodobne nepovinná; dodržiavame dobrovoľne.
 3. **E-faktúra EN 16931 / Peppol** — pripraviť na povinný režim.
 4. **TLS, security headers, audit log, zálohy** — hygiena, ktorá sa nevynecháva.

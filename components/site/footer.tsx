@@ -86,7 +86,7 @@ export function SiteFooter() {
 
         {/* bottom row */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3.5 border-t border-white/10 pt-[clamp(20px,2.4vw,28px)]">
-          <span className="text-[13.5px] text-[#6e908a]">IČO 50 934 660 · DIČ 2120530995 · IČ DPH SK2120530995 · © {new Date().getFullYear()} Moonid s.r.o.</span>
+          <span className="text-[13.5px] text-[#6e908a]">IČO 50 934 660 · DIČ 2120530995 · IČ DPH SK2120530995 · OR OS Nitra, odd. Sro, vl. č. 43461/N · © {new Date().getFullYear()} Moonid s.r.o.</span>
           <a href="#top" className="inline-flex items-center gap-2 text-[13px] font-medium tracking-wide text-[#88a8a1] transition hover:text-white">
             Späť hore
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>

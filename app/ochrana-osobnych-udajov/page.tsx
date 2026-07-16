@@ -12,7 +12,8 @@ export default function OchranaOsobnychUdajov() {
     <LegalPage title="Ochrana osobných údajov" updated="30. 6. 2026">
       <P>
         Tieto zásady popisujú, ako spoločnosť <strong>Moonid s.r.o.</strong>, so sídlom Hlavná 39/78, 941 43 Dolný Ohaj,
-        IČO 50&nbsp;934&nbsp;660, zapísaná v Obchodnom registri SR (ďalej len „prevádzkovateľ"), spracúva osobné údaje
+        IČO 50&nbsp;934&nbsp;660, zapísaná v Obchodnom registri Okresného súdu Nitra, oddiel Sro, vložka č. 43461/N
+        (ďalej len „prevádzkovateľ"), spracúva osobné údaje
         v súlade s Nariadením (EÚ) 2016/679 (GDPR) a zákonom č. 18/2018 Z. z. o ochrane osobných údajov.
       </P>
 
@@ -25,10 +26,10 @@ export default function OchranaOsobnychUdajov() {
 
       <H2>Účely a právne základy spracúvania</H2>
       <UL>
-        <li><strong>Plnenie zmluvy</strong> (čl. 6 ods. 1 písm. b GDPR) — vybavenie objednávky, dodanie tovaru, fakturácia, B2B portál.</li>
+        <li><strong>Plnenie zmluvy a predzmluvné opatrenia</strong> (čl. 6 ods. 1 písm. b GDPR) — vybavenie objednávky, dodanie tovaru, fakturácia, prevádzka B2B portálu a vybavenie Vášho dopytu či žiadosti o cenovú ponuku pred prípadným uzavretím zmluvy (na Vašu žiadosť).</li>
         <li><strong>Zákonná povinnosť</strong> (písm. c) — účtovné a daňové doklady.</li>
-        <li><strong>Oprávnený záujem</strong> (písm. f) — vybavenie dopytu, ochrana a bezpečnosť systémov.</li>
-        <li><strong>Súhlas</strong> (písm. a) — tam, kde ho výslovne udelíte (napr. zaslanie dopytu cez formulár).</li>
+        <li><strong>Oprávnený záujem</strong> (písm. f) — ochrana a bezpečnosť systémov, prevencia zneužitia a vedenie evidencie komunikácie.</li>
+        <li><strong>Súhlas</strong> (písm. a) — len tam, kde ho výslovne a dobrovoľne udelíte; jeho udelenie nikdy nie je podmienkou vybavenia objednávky ani dopytu a môžete ho kedykoľvek odvolať.</li>
       </UL>
 
       <H2>Doba uchovávania</H2>
