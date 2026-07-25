@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { CookieBanner } from "@/components/site/cookie-banner";
 import { ProductImg } from "@/components/product-img";
 import { safeJsonLd } from "@/lib/json-ld";
+import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
   };
 
   // BreadcrumbList — pomáha Google rich results aj AI extrakcii cesty (dáta z breadcrumb nav nižšie)
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.moonid.sk";
+  const base = SITE_URL;
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice } from "@/lib/pricing";
+import { isInStock, inStockWhere } from "@/lib/stock";
 import { PortalCatalog } from "./portal-catalog";
 import type { Prisma } from "@prisma/client";
 
@@ -28,7 +29,8 @@ function buildWhere(a: Active, exclude: string | null, catId: string | null, sub
   if (catId && exclude !== "cat") w.categoryId = catId;
   if (subId && exclude !== "sub") w.subcategoryId = subId;
   if (a.brand && exclude !== "brand") w.brand = a.brand;
-  if (a.stock === "1" && exclude !== "stock") w.isStocked = true;
+  // „len skladom" = to isté, čo tvrdí badge (vrátane veku skladových dát) — viď lib/stock.ts
+  if (a.stock === "1" && exclude !== "stock") Object.assign(w, inStockWhere());
   // cenový rozsah (priceMin/priceMax sú už prepočítané na basePrice cez tier zľavu)
   if ((priceMin != null || priceMax != null) && exclude !== "price") {
     const bp: Prisma.DecimalFilter = {};
@@ -81,7 +83,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
       where, orderBy, take: PAGE, skip: (page - 1) * PAGE,
       select: {
         id: true, slug: true, name: true, nameDisplay: true, unit: true,
-        basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true,
+        basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true, stockSyncedAt: true,
         category: { select: { name: true } },
         media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
         prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
@@ -93,7 +95,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     // počty VŠETKÝCH podkategórií (pre rozklikávací strom — nezávisle od vybranej hlavnej kategórie)
     prisma.product.groupBy({ by: ["subcategoryId"], where: { ...buildWhere(a, "cat", null, null, priceMin, priceMax), subcategoryId: { not: null } }, _count: { _all: true } }),
     prisma.product.groupBy({ by: ["brand"], where: { ...buildWhere(a, "brand", catId, subId, priceMin, priceMax), brand: { not: null } }, _count: { _all: true }, orderBy: { _count: { brand: "desc" } }, take: 60 }),
-    prisma.product.count({ where: { ...buildWhere(a, "stock", catId, subId, priceMin, priceMax), isStocked: true } }),
+    prisma.product.count({ where: { ...buildWhere(a, "stock", catId, subId, priceMin, priceMax), ...inStockWhere() } }),
   ]);
 
   // poskladáme strom: hlavné kategórie (s produktmi) + ich rozklikávacie podkategórie
@@ -132,7 +134,7 @@ export default async function KatalogPage({ searchParams }: { searchParams: Prom
     return {
       id: p.id, slug: p.slug ?? p.id, n: p.nameDisplay || p.name,
       i: p.media[0]?.storagePath ?? "", c: p.category?.name ?? "Ostatné", unit: p.unit,
-      stocked: p.isStocked && p.stockCache != null && Number(p.stockCache) > 0, fav: favSet.has(p.id), price,
+      stocked: isInStock(p), fav: favSet.has(p.id), price,
     };
   });
 

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice } from "@/lib/pricing";
+import { isInStock } from "@/lib/stock";
 import { ProductDetail } from "./product-detail";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export default async function PortalProductPage({ params }: { params: Promise<{ 
       descriptionLong: true, attributes: true, sku: true,
       category: { select: { name: true } },
       variantGroupId: true, variantGroup: { select: { name: true, primaryAxis: true, descriptionLong: true } },
-      basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true,
+      basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true, stockSyncedAt: true,
       media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
       prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
     },
@@ -33,12 +34,12 @@ export default async function PortalProductPage({ params }: { params: Promise<{ 
 
   const vSelect = {
     id: true, unit: true, variantLabel: true, variantSort: true,
-    basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true,
+    basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true, stockSyncedAt: true,
     media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
     prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
   } as const;
 
-  type Row = { id: string; unit: string; variantLabel: string | null; basePrice: unknown; vatRate: unknown; isSubsidized: boolean; isStocked: boolean; stockCache: unknown; media: { storagePath: string }[]; prices: { unitPriceNet: unknown }[] };
+  type Row = { id: string; unit: string; variantLabel: string | null; basePrice: unknown; vatRate: unknown; isSubsidized: boolean; isStocked: boolean; stockCache: unknown; stockSyncedAt: Date | null; media: { storagePath: string }[]; prices: { unitPriceNet: unknown }[] };
 
   const rows: Row[] | null = product.variantGroupId
     ? await prisma.product.findMany({ where: { variantGroupId: product.variantGroupId, isPublished: true }, orderBy: { variantSort: "asc" }, select: vSelect })
@@ -54,11 +55,11 @@ export default async function PortalProductPage({ params }: { params: Promise<{ 
     return {
       id: p.id, label: p.variantLabel ?? p.unit, img: p.media[0]?.storagePath ?? "", unit: p.unit,
       net: price.kind === "PRICE" ? price.net : null, gross: price.kind === "PRICE" ? price.gross : null,
-      stocked: p.isStocked && p.stockCache != null && Number(p.stockCache) > 0,
+      stocked: isInStock(p),
     };
   }
 
-  const selfRow: Row = { id: product.id, unit: product.unit, variantLabel: null, basePrice: product.basePrice, vatRate: product.vatRate, isSubsidized: product.isSubsidized, isStocked: product.isStocked, stockCache: product.stockCache, media: product.media, prices: product.prices };
+  const selfRow: Row = { id: product.id, unit: product.unit, variantLabel: null, basePrice: product.basePrice, vatRate: product.vatRate, isSubsidized: product.isSubsidized, isStocked: product.isStocked, stockCache: product.stockCache, stockSyncedAt: product.stockSyncedAt, media: product.media, prices: product.prices };
   const variants = rows && rows.length ? rows.map(toVariant) : [toVariant(selfRow)];
 
   // špecifikácie z atribútov + polí (bez interných kľúčov)

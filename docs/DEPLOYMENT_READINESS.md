@@ -41,7 +41,7 @@ Auth, tenant izolácia/IDOR, server-side cenotvorba, objednávkový tok end-to-e
 
 ### WS2 — Supabase Auth produkčná konfigurácia + prvé staff konto · effort S
 - [ ] **(TY)** Auth → URL Configuration: Site URL + Redirect URLs (`<origin>/auth/callback`, produkčná URL)
-- [ ] **(TY)** Vytvoriť STAFF/ADMIN konto a **zmeniť** hardcoded heslo `Moonid2026!` (`scripts/auth/seed-auth.ts`)
+- [ ] **(TY)** Vytvoriť ostré STAFF/ADMIN konto cez `scripts/auth/create-admin.ts` (generuje náhodné heslo) na **doručiteľnej** adrese a **zmeniť/zmazať** seed konto zo `scripts/auth/seed-auth.ts` (jeho heslo bolo do 25. 7. 2026 uvedené v tomto dokumente — považuj ho za kompromitované)
 - [ ] **(TY)** Custom SMTP (alebo Resend SMTP) pre Supabase Auth e-maily + SK šablóny
 - [ ] **(TY)** Heslová politika **server-side** (Auth → Policies): min. dĺžka **12** + **Leaked password protection** (HIBP) ZAP — klient (`set-password-form`, `account-card`) to už kontroluje, ale bez server-side vynútenia by priame volanie Supabase Auth prijalo slabé/uniknuté heslo (gap-scan P2)
 - [ ] **(TY)** Overiť **rate-limity Supabase Auth** (Auth → Rate Limits) — app-vrstva `loginGate`/lockout je best-effort pred klientskym `signInWithPassword`; reálnou brzdou brute-force je vstavaný limit Supabase (Free default býva voľný) (gap-scan P2)

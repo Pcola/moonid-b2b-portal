@@ -1,4 +1,3 @@
 Contact: mailto:moonid@moonid.sk
 Expires: 2027-06-30T00:00:00.000Z
 Preferred-Languages: sk, en
-Canonical: https://www.moonid.sk/.well-known/security.txt

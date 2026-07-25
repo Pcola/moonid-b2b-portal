@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice } from "@/lib/pricing";
+import { isInStock } from "@/lib/stock";
 import { FavoriteButton } from "@/components/portal/favorite-button";
 import { QuickAddButton } from "@/components/portal/quick-add-button";
 import { ProductImg } from "@/components/product-img";
@@ -28,7 +29,7 @@ export default async function OblubenePage() {
       product: {
         select: {
           id: true, slug: true, name: true, nameDisplay: true, unit: true,
-          basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true,
+          basePrice: true, vatRate: true, isSubsidized: true, isStocked: true, stockCache: true, stockSyncedAt: true,
           category: { select: { name: true } },
           media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
           prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
@@ -48,7 +49,7 @@ export default async function OblubenePage() {
     return {
       id: p.id, slug: p.slug ?? p.id, n: p.nameDisplay || p.name, i: p.media[0]?.storagePath ?? "",
       c: p.category?.name ?? "Ostatné", unit: p.unit,
-      stocked: p.isStocked && p.stockCache != null && Number(p.stockCache) > 0, price,
+      stocked: isInStock(p), price,
     };
   });
 

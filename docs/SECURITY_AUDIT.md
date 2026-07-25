@@ -27,7 +27,7 @@
 |---|---|---|
 | 1 | **Faktúra PDF priamy odkaz** na `pdfStoragePath` → možný IDOR únik dokladov, ak je bucket verejný | kód + infra |
 | 2 | **Login bez rate-limitu/lockoutu** → neobmedzený brute-force (Supabase rate-limit + CAPTCHA hneď) | config + kód |
-| 3 | **Seed `Moonid2026!` + `.test` účty** → guard proti spusteniu v produkcii | proces/kód |
+| 3 | **Seed heslo (viď `scripts/auth/seed-auth.ts`) + `.test` účty** → guard proti spusteniu v produkcii | proces/kód |
 | 4 | **Sessions sa neinvalidujú** pri zmene hesla/deaktivácii (global signOut) | kód |
 
 ### P1 — pred VEREJNÝM spustením

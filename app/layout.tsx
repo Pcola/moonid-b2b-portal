@@ -3,6 +3,7 @@ import { Hanken_Grotesk, Bricolage_Grotesque } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { safeJsonLd } from "@/lib/json-ld";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const sans = Hanken_Grotesk({
@@ -24,7 +25,7 @@ const DESC =
   "B2B dodávateľ hygieny, čistiacich prostriedkov, papierového programu, dávkovačov, gastro a kancelárskych potrieb — aj hotelová kozmetika a vybavenie. Vlastný rozvoz v okrese Nové Zámky a Nitrianskom kraji, faktúra so splatnosťou.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.moonid.sk"),
+  metadataBase: new URL(SITE_URL),
   title: "Moonid s.r.o. — hygiena, čistenie a vybavenie | rozvoz Nové Zámky a Nitriansky kraj",
   description: DESC,
   alternates: { canonical: "/" },
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "sk_SK",
     siteName: "Moonid s.r.o.",
-    url: "https://www.moonid.sk/",
+    url: `${SITE_URL}/`,
     title: "Moonid s.r.o. — hygiena, čistenie a vybavenie pre vašu prevádzku",
     description: DESC,
     images: [{ url: "/images/hero-still-life.jpg", width: 1200, height: 630, alt: "Moonid — hygiena a čistenie pre prevádzky" }],
@@ -49,13 +50,13 @@ export const metadata: Metadata = {
 const businessLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "@id": "https://www.moonid.sk/#business",
+  "@id": `${SITE_URL}/#business`,
   name: "Moonid s.r.o.",
   legalName: "Moonid s.r.o.",
   description: DESC,
-  url: "https://www.moonid.sk/",
-  logo: "https://www.moonid.sk/icon.svg",
-  image: "https://www.moonid.sk/images/hero-still-life.jpg",
+  url: `${SITE_URL}/`,
+  logo: `${SITE_URL}/icon.svg`,
+  image: `${SITE_URL}/images/hero-still-life.jpg`,
   telephone: "+421919216908",
   email: "moonid@moonid.sk",
   priceRange: "€€",

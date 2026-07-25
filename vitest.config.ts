@@ -8,6 +8,8 @@ export default defineConfig({
     hookTimeout: 40000,
     // testy zdieľajú DB → bežia sekvenčne (žiadny súbeh medzi súbormi)
     fileParallelism: false,
+    // guard: integračné testy nesmú bežať proti produkčnej DB (mažú dáta) — viď tests/_setup/db-guard.ts
+    setupFiles: ["./tests/_setup/db-guard.ts"],
   },
   // mapuj @/ na koreň projektu (rovnako ako tsconfig paths) + stub "server-only" pre node testy
   resolve: {

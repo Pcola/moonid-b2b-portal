@@ -1,11 +1,13 @@
 // llms.txt — machine-readable sumár pre LLM agentov / AI vyhľadávače (llmstxt.org).
 // Odvodené od firemných údajov; URL z NEXT_PUBLIC_SITE_URL (konzistentné s canonical/OG).
 
+import { SITE_URL } from "@/lib/site-url";
+
 export const dynamic = "force-static";
 export const revalidate = 86400;
 
 export function GET() {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.moonid.sk").replace(/\/$/, "");
+  const base = SITE_URL;
   const body = `# Moonid s.r.o.
 
 > B2B veľkoobchodný dodávateľ hygieny, čistiacich prostriedkov, papierového programu, dávkovačov, gastro a kancelárskych potrieb pre prevádzky — vrátane hotelovej kozmetiky a vybavenia. Vlastný rozvoz v okrese Nové Zámky a Nitrianskom kraji, predaj na faktúru so splatnosťou (bez platby vopred).

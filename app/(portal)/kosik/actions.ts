@@ -10,6 +10,7 @@ import { emailNewOrderToStaff, emailOrderConfirmation, emailApprovalRequest } fr
 import { writeAudit } from "@/lib/audit";
 import { reportError } from "@/lib/observability";
 import { resolveOrderCharges } from "@/lib/store-config";
+import { isInStock } from "@/lib/stock";
 import { lineTotal as moneyLine, lineVat, sumMoney } from "@/lib/money";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
@@ -234,7 +235,6 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
 
   const now = new Date();
   const year = now.getFullYear();
-  const FRESH_MS = 48 * 3600 * 1000;
 
   type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
@@ -254,8 +254,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
     if (price.kind !== "PRICE") {
       return { ok: false, error: `Položka „${p.nameDisplay || p.name}" je na vyžiadanie — odoberte ju z košíka alebo nás kontaktujte.` };
     }
-    const fresh = !!p.stockSyncedAt && now.getTime() - p.stockSyncedAt.getTime() < FRESH_MS;
-    const inStock = p.isStocked && p.stockCache != null && Number(p.stockCache) >= qty && fresh;
+    const inStock = isInStock(p, qty, now.getTime()); // rovnaká podmienka ako badge v katalógu (lib/stock.ts)
     if (!inStock) hasBackorder = true;
     const lineTotal = moneyLine(price.net, qty);
     lineVats.push(lineVat(price.net, price.gross, qty));
@@ -473,7 +472,6 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
 
   const now = new Date();
   const year = now.getFullYear();
-  const FRESH_MS = 48 * 3600 * 1000;
   type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
   const lineVats: number[] = [];
@@ -490,8 +488,7 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
       discountPct,
     });
     if (price.kind !== "PRICE") continue; // na vyžiadanie → vynechá
-    const fresh = !!p.stockSyncedAt && now.getTime() - p.stockSyncedAt.getTime() < FRESH_MS;
-    const inStock = p.isStocked && p.stockCache != null && Number(p.stockCache) >= qty && fresh;
+    const inStock = isInStock(p, qty, now.getTime()); // rovnaká podmienka ako badge v katalógu (lib/stock.ts)
     if (!inStock) hasBackorder = true;
     const lineTotal = moneyLine(price.net, qty);
     lineVats.push(lineVat(price.net, price.gross, qty));
