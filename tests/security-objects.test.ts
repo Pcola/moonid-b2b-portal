@@ -36,9 +36,18 @@ describe("reprodukovateľné DB bezpečnostné objekty", () => {
           SELECT 1 FROM aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) acl
            WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
         ) AS public_execute,
-        has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_execute,
-        has_function_privilege('authenticated', p.oid, 'EXECUTE') AS authenticated_execute,
-        has_function_privilege('service_role', p.oid, 'EXECUTE') AS service_role_execute,
+        COALESCE((
+          SELECT has_function_privilege(r.oid, p.oid, 'EXECUTE')
+          FROM pg_roles r WHERE r.rolname = 'anon'
+        ), false) AS anon_execute,
+        COALESCE((
+          SELECT has_function_privilege(r.oid, p.oid, 'EXECUTE')
+          FROM pg_roles r WHERE r.rolname = 'authenticated'
+        ), false) AS authenticated_execute,
+        COALESCE((
+          SELECT has_function_privilege(r.oid, p.oid, 'EXECUTE')
+          FROM pg_roles r WHERE r.rolname = 'service_role'
+        ), false) AS service_role_execute,
         has_function_privilege('pohoda_agent', p.oid, 'EXECUTE') AS agent_execute
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
