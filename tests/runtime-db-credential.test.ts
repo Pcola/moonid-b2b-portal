@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { parseStagingRuntimeCredential } from "../scripts/security/runtime-db-credential";
 
+const testPassword = "x".repeat(40);
 const validUrl =
-  "postgresql://moonid_app_staging.booeaeyyyitlmuxixjfy:abcdefghijklmnopqrstuvwxyz0123456789_-@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslmode=require";
+  `postgresql://moonid_app_staging.booeaeyyyitlmuxixjfy:${testPassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslmode=require`;
 
 describe("staging runtime database credential", () => {
   it("accepts only the expected least-privilege transaction-pooler URL", () => {
     expect(parseStagingRuntimeCredential(validUrl)).toEqual({
-      password: "abcdefghijklmnopqrstuvwxyz0123456789_-",
+      password: testPassword,
       role: "moonid_app_staging",
     });
   });
@@ -26,11 +27,11 @@ describe("staging runtime database credential", () => {
 
   it("decodes a percent-encoded password without logging or returning the URL", () => {
     const encoded = validUrl.replace(
-      "abcdefghijklmnopqrstuvwxyz0123456789_-",
-      "abcdefghijklmnopqrstuvwxyz012345%40%23%3F_-",
+      testPassword,
+      `${"y".repeat(32)}%40%23%3F_-`,
     );
     expect(parseStagingRuntimeCredential(encoded).password).toBe(
-      "abcdefghijklmnopqrstuvwxyz012345@#?_-",
+      `${"y".repeat(32)}@#?_-`,
     );
   });
 });

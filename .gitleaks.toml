@@ -5,9 +5,13 @@ title = "moonid gitleaks"
 useDefault = true
 
 [allowlist]
-description = "Ignoruj lockfile integrity hashe a príkladové (placeholder) env súbory"
+description = "Ignoruj lockfile integrity hashe, placeholder env súbory a jeden historický syntetický testovací reťazec"
 paths = [
   '''package-lock\.json''',
   '''.*\.example$''',
   '''.*\.example\.[^/]*$''',
+]
+regexes = [
+  # Nejde o credential: bol vytvorený ako deterministické abc... testovacie heslo v commite 32e3818.
+  '''abcdefghijklmnopqrstuvwxyz0123456789_-''',
 ]
