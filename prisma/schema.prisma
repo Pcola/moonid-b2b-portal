@@ -490,8 +490,8 @@ model Cart {
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
 
-  @@unique([companyId]) // 1 košík na firmu — getOrCreateCart je atomický upsert; bráni súbežnej duplicite (tichá strata položiek)
-  @@index([createdById])
+  @@unique([createdById]) // 1 súkromný košík na používateľa; kolegovia si navzájom nemenia položky
+  @@index([companyId])
 }
 
 model CartItem {
@@ -590,6 +590,17 @@ model Order {
   paymentMethodCode     String?
   paymentMethodLabel    String?
   paymentSurcharge      Decimal            @default(0) @db.Decimal(12, 4)
+  // Nezmeniteľný obchodný/zmluvný snapshot. Nullable iba kvôli historickým objednávkam
+  // vytvoreným pred migráciou; všetky nové portálové objednávky ho vypĺňajú povinne v kóde.
+  currency              String             @default("EUR") @db.Char(3)
+  sellerSnapshot        Json?
+  buyerSnapshot         Json?
+  deliveryAddressSnapshot Json?
+  termsVersion          String?
+  termsSha256           String?
+  termsUrl              String?
+  termsSnapshot         String?            @db.Text
+  termsAcknowledgedAt   DateTime?
   items                 OrderItem[]
   events                OrderStatusEvent[]
   invoice               Invoice?

@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { searchPohodaProducts, manualPair, rejectMatch } from "../actions";
+import { ProductImg } from "@/components/product-img";
 
 type Item = {
   id: string;
@@ -27,10 +28,10 @@ function PairingRow({ item }: { item: Item }) {
   const [done, setDone] = useState<null | "paired" | "rejected">(null);
 
   useEffect(() => {
-    if (selected || q.trim().length < 2) { setResults([]); return; }
+    if (selected || q.trim().length < 2) return;
     let alive = true;
-    setSearching(true);
     const t = setTimeout(async () => {
+      setSearching(true);
       const r = await searchPohodaProducts(q);
       if (alive) { setResults(r); setSearching(false); }
     }, 350);
@@ -63,7 +64,7 @@ function PairingRow({ item }: { item: Item }) {
       {/* HUMED feed položka */}
       <div className="flex gap-3">
         <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-cream">
-          {item.imageUrl ? <img src={`/api/img?id=${item.id}`} alt="" loading="lazy" className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
+          {item.imageUrl ? <ProductImg src={`/api/img?id=${item.id}`} alt={item.title ?? "Feed produkt"} sizes="64px" iconSize={24} /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
         </div>
         <div className="min-w-0">
           <div className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-2">Feed · {item.externalSku ?? "—"}{item.brand ? ` · ${item.brand}` : ""}</div>
@@ -86,7 +87,7 @@ function PairingRow({ item }: { item: Item }) {
               placeholder="Hľadať Pohoda produkt (názov/SKU)…"
               className="w-full rounded-lg border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand"
             />
-            {(searching || results.length > 0) && (
+            {q.trim().length >= 2 && (searching || results.length > 0) && (
               <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-line bg-white shadow-lg">
                 {searching && <div className="px-3 py-2 text-[13px] text-muted-2">Hľadám…</div>}
                 {!searching && results.length === 0 && <div className="px-3 py-2 text-[13px] text-muted-2">Žiadne výsledky.</div>}

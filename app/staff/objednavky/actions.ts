@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { nextStatus, canCancel, type OrderStatus } from "@/lib/orders/transition";
 import { emailOrderStatus } from "@/lib/email";
-import { writeAudit } from "@/lib/audit";
+import { auditRequestContext, writeAuditRequired } from "@/lib/audit";
 import { SHIPPING_VAT_RATE } from "@/lib/store-config";
 import { dec, round2, lineTotal, lineVat, sumMoney, vatOf } from "@/lib/money";
 import { z } from "zod";
@@ -22,25 +22,26 @@ function revalidate(orderId: string) {
 export async function advanceOrder(orderId: string): Promise<{ ok: boolean; error?: string; status?: OrderStatus }> {
   const staff = await requireStaff();
   if (!ID.safeParse(orderId).success) return { ok: false, error: "Neplatný vstup." };
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, status: true, number: true, createdBy: { select: { email: true } } } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, status: true, number: true, companyId: true, createdBy: { select: { email: true } } } });
   if (!order) return { ok: false, error: "Objednávka neexistuje." };
 
   const from = order.status as OrderStatus;
   const to = nextStatus(from);
   if (!to) return { ok: false, error: "Objednávka je už vo finálnom stave." };
 
-  let raced = false;
-  await prisma.$transaction(async (tx) => {
+  const auditCtx = await auditRequestContext();
+  const changed = await prisma.$transaction(async (tx) => {
     // optimistic lock: posuň len ak je stav STÁLE 'from' (anti dvojklik / súbeh 2 staffov)
     const res = await tx.order.updateMany({
       where: { id: order.id, status: from },
       data: { status: to, ...(to === "POTVRDENA" ? { confirmedAt: new Date() } : {}) },
     });
-    if (res.count === 0) { raced = true; return; }
+    if (res.count === 0) return false;
     await tx.orderStatusEvent.create({ data: { orderId: order.id, status: to, source: "PORTAL", changedById: staff.id } });
+    await writeAuditRequired(tx, { userId: staff.id, companyId: order.companyId, action: "ORDER_STATUS", entity: "Order", entityId: order.id, meta: { number: order.number, from, to } }, auditCtx);
+    return true;
   });
-  if (raced) return { ok: false, error: "Stav objednávky sa medzitým zmenil — obnovte stránku." };
-  await writeAudit({ userId: staff.id, action: "ORDER_STATUS", entity: "Order", entityId: order.id, meta: { number: order.number, from, to } });
+  if (!changed) return { ok: false, error: "Stav objednávky sa medzitým zmenil — obnovte stránku." };
   if (order.createdBy?.email) await emailOrderStatus({ to: order.createdBy.email, number: order.number, status: to });
   revalidate(order.id);
   return { ok: true, status: to };
@@ -51,20 +52,21 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ o
   const staff = await requireStaff();
   if (!ID.safeParse(orderId).success) return { ok: false, error: "Neplatný vstup." };
   const cleanReason = reason?.trim().slice(0, 500) || null;
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, status: true, number: true, createdBy: { select: { email: true } } } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, status: true, number: true, companyId: true, createdBy: { select: { email: true } } } });
   if (!order) return { ok: false, error: "Objednávka neexistuje." };
 
   const from = order.status as OrderStatus;
   if (!canCancel(from)) return { ok: false, error: "Túto objednávku už nemožno stornovať." };
 
-  let raced = false;
-  await prisma.$transaction(async (tx) => {
+  const auditCtx = await auditRequestContext();
+  const changed = await prisma.$transaction(async (tx) => {
     const res = await tx.order.updateMany({ where: { id: order.id, status: from }, data: { status: "STORNO" } });
-    if (res.count === 0) { raced = true; return; }
+    if (res.count === 0) return false;
     await tx.orderStatusEvent.create({ data: { orderId: order.id, status: "STORNO", source: "PORTAL", changedById: staff.id, note: cleanReason } });
+    await writeAuditRequired(tx, { userId: staff.id, companyId: order.companyId, action: "ORDER_CANCEL", entity: "Order", entityId: order.id, meta: { number: order.number, from, reason: cleanReason } }, auditCtx);
+    return true;
   });
-  if (raced) return { ok: false, error: "Stav objednávky sa medzitým zmenil — obnovte stránku." };
-  await writeAudit({ userId: staff.id, action: "ORDER_CANCEL", entity: "Order", entityId: order.id, meta: { number: order.number, from, reason: cleanReason } });
+  if (!changed) return { ok: false, error: "Stav objednávky sa medzitým zmenil — obnovte stránku." };
   if (order.createdBy?.email) await emailOrderStatus({ to: order.createdBy.email, number: order.number, status: "STORNO", note: cleanReason });
   revalidate(order.id);
   return { ok: true };
@@ -133,16 +135,19 @@ export async function updateOrder(orderId: string, input: z.input<typeof editSch
   const vat = sumMoney([...lineVats, vatOf(sumMoney([shippingFee, paymentSurcharge]), SHIPPING_VAT_RATE)]);
   const total = sumMoney([subtotal, shippingFee, paymentSurcharge, vat]);
 
-  await prisma.$transaction(async (tx) => {
-    if (removeIds.length) await tx.orderItem.deleteMany({ where: { id: { in: removeIds }, orderId } });
-    for (const u of updates) await tx.orderItem.update({ where: { id: u.id }, data: { qty: u.qty, lineTotal: u.lineTotal } });
-    await tx.order.update({
-      where: { id: orderId },
+  const auditCtx = await auditRequestContext();
+  const changed = await prisma.$transaction(async (tx) => {
+    const res = await tx.order.updateMany({
+      where: { id: orderId, status: order.status },
       data: { subtotal, vat, total, deliveryLocationId, note: parsed.data.note !== undefined ? (parsed.data.note?.trim().slice(0, 2000) || null) : order.note },
     });
+    if (res.count === 0) return false;
+    if (removeIds.length) await tx.orderItem.deleteMany({ where: { id: { in: removeIds }, orderId } });
+    for (const u of updates) await tx.orderItem.update({ where: { id: u.id }, data: { qty: u.qty, lineTotal: u.lineTotal } });
+    await writeAuditRequired(tx, { userId: staff.id, companyId: order.companyId, action: "ORDER_EDIT", entity: "Order", entityId: orderId, meta: { number: order.number, total, items: updates.length, removed: removeIds.length } }, auditCtx);
+    return true;
   });
-
-  await writeAudit({ userId: staff.id, action: "ORDER_EDIT", entity: "Order", entityId: orderId, meta: { number: order.number, total, items: updates.length, removed: removeIds.length } });
+  if (!changed) return { ok: false, error: "Objednávka sa medzitým zmenila — obnovte stránku." };
   revalidate(order.id);
   return { ok: true };
 }

@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { safeJsonLd } from "@/lib/json-ld";
 import { SITE_URL } from "@/lib/site-url";
+import { connection } from "next/server";
 import "./globals.css";
 
 const sans = Hanken_Grotesk({
@@ -82,7 +83,9 @@ const businessLd = {
   founder: { "@type": "Person", name: "Jozef Slobodník" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nonce-based CSP potrebuje nonce z konkrétneho requestu; statické HTML by ho nemalo.
+  await connection();
   return (
     <html lang="sk" className={`${sans.variable} ${displayFont.variable}`}>
       <body>

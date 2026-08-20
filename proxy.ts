@@ -14,10 +14,36 @@ const SESSION_COOKIE_OPTS = {
   maxAge: Math.ceil(ABSOLUTE_MS / 1000),
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const supabaseHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname;
+  const isDev = process.env.NODE_ENV !== "production";
+  const csp = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "frame-src 'none'",
+    "form-action 'self'",
+    `img-src 'self' data: blob: https://${supabaseHost}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `style-src 'self' 'nonce-${nonce}'`,
+    "style-src-attr 'unsafe-inline'",
+    "font-src 'self' data:",
+    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://api.pwnedpasswords.com`,
+    "upgrade-insecure-requests",
+  ].join("; ");
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
+  const secure = <T extends NextResponse>(response: T): T => {
+    response.headers.set("Content-Security-Policy", csp);
+    return response;
+  };
+
   // request-id: korelácia odpovede ↔ Vercel logov/Sentry (echo inbound alebo nové UUID)
   const requestId = request.headers.get("x-request-id")?.slice(0, 64) || crypto.randomUUID();
-  const { response, user, supabase, sessionId } = await updateSession(request);
+  const { response, user, supabase, sessionId } = await updateSession(request, requestHeaders);
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
 
@@ -42,7 +68,7 @@ export async function middleware(request: NextRequest) {
       }
       redir.cookies.set(SESSION_COOKIE, "", { ...SESSION_COOKIE_OPTS, maxAge: 0 });
       redir.headers.set("x-request-id", requestId);
-      return redir;
+      return secure(redir);
     }
     if (dec.kind !== "OK") response.cookies.set(SESSION_COOKIE, dec.value, SESSION_COOKIE_OPTS);
   } else if (request.cookies.get(SESSION_COOKIE)) {
@@ -56,10 +82,10 @@ export async function middleware(request: NextRequest) {
     url.searchParams.set("next", path);
     const redir = NextResponse.redirect(url);
     redir.headers.set("x-request-id", requestId);
-    return redir;
+    return secure(redir);
   }
   response.headers.set("x-request-id", requestId);
-  return response;
+  return secure(response);
 }
 
 export const config = {

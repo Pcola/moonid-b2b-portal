@@ -18,7 +18,7 @@ V Supabase SQL editore (alebo z dev stroja):
 ```sql
 ALTER ROLE pohoda_agent PASSWORD 'silne-nahodne-heslo';
 ```
-(Rola už existuje z `npm run pohoda:rpc`. Heslo poznáš len ty.)
+(Rolu a RPC vytvorí migrácia `20260820150000_security_objects`. Heslo poznáš len ty.)
 
 ## 3. Vyplň `appsettings.json`
 - `Supabase:ConnectionString` — Username `pohoda_agent` + heslo z kroku 2; host zo Supabase → **Connect → Session pooler**.

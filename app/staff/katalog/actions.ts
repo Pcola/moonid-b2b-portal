@@ -6,6 +6,7 @@ import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rehostImage, PRODUCT_BUCKET } from "@/lib/rehost-image";
 import { writeAudit } from "@/lib/audit";
+import { normalizeImageFile, type NormalizedImage } from "@/lib/safe-image";
 
 // Copy-on-confirm: pri potvrdení zhody sa obsah zdroja JEDNORAZOVO skopíruje do Product
 // (len ak je pole prázdne — manuálne/existujúce hodnoty vyhrávajú). Re-import feedu
@@ -123,14 +124,10 @@ export async function createProduct(formData: FormData): Promise<{ ok: boolean; 
   if (!Number.isFinite(vatRate) || vatRate < 0 || vatRate > 100) return { ok: false, error: "Neplatná sadzba DPH." };
 
   // validácia uploadu pred vytvorením (žiadny orphan produkt pri zlom obrázku)
-  let imageFile: File | null = null;
+  let safeImage: NormalizedImage | null = null;
   if (image && typeof image !== "string" && image.size > 0) {
-    const f = image as File;
-    if (f.size > 5 * 1024 * 1024) return { ok: false, error: "Obrázok je príliš veľký (max 5 MB)." };
-    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(f.type)) {
-      return { ok: false, error: "Nepovolený formát obrázka (povolené: JPG, PNG, WEBP, GIF)." };
-    }
-    imageFile = f;
+    try { safeImage = await normalizeImageFile(image as File); }
+    catch (error) { return { ok: false, error: error instanceof Error ? error.message : "Neplatný obrázok." }; }
   }
 
   if (await prisma.product.findUnique({ where: { sku }, select: { id: true } })) {
@@ -145,13 +142,12 @@ export async function createProduct(formData: FormData): Promise<{ ok: boolean; 
     },
   });
 
-  if (imageFile) {
-    const buf = Buffer.from(await imageFile.arrayBuffer());
-    const ext = (imageFile.type.split("/")[1] || "jpg").replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
+  if (safeImage) {
     const admin = createAdminClient();
-    const { error } = await admin.storage.from(PRODUCT_BUCKET).upload(`manual-${product.id}.${ext}`, buf, { contentType: imageFile.type || "image/jpeg", upsert: true });
+    const path = `manual-${product.id}.${safeImage.extension}`;
+    const { error } = await admin.storage.from(PRODUCT_BUCKET).upload(path, safeImage.buffer, { contentType: safeImage.contentType, upsert: true });
     if (!error) {
-      const url = admin.storage.from(PRODUCT_BUCKET).getPublicUrl(`manual-${product.id}.${ext}`).data.publicUrl;
+      const url = admin.storage.from(PRODUCT_BUCKET).getPublicUrl(path).data.publicUrl;
       await prisma.productMedia.create({ data: { productId: product.id, storagePath: url, isPrimary: true, alt: name } });
     }
   }

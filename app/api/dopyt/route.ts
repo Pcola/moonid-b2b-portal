@@ -5,7 +5,7 @@ import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
 import { reportError } from "@/lib/observability";
 import { PRIVACY_VERSION } from "@/lib/consent";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimit, rateLimitKey, clientIp } from "@/lib/rate-limit";
 
 // Príjem dopytu z kontaktného formulára. Validácia (zod + max dĺžky), kontrola Origin,
 // honeypot proti botom, sanitizácia subjectu. Posiela cez centrálny lib/email (Resend);
@@ -20,7 +20,6 @@ const schema = z.object({
   typ: z.string().trim().max(60).optional().default(""),
   segment: z.string().trim().max(80).optional().default(""),
   sprava: z.string().trim().max(4000).optional().default(""),
-  gdpr: z.union([z.boolean(), z.string()]).optional(),
   web: z.string().optional(), // honeypot — ľudia ho nevidia, boti ho vyplnia
 });
 
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
   if (!originOk(req)) return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
 
   // anti-abuse: max 5 dopytov / 10 min na IP (SECURITY_AUDIT M-1)
-  const rl = await rateLimit(`dopyt:${clientIp(req.headers)}`, { limit: 5, windowSec: 600 });
+  const rl = await rateLimit(rateLimitKey("dopyt", clientIp(req.headers)), { limit: 5, windowSec: 600 });
   if (!rl.ok) {
     // Retry-After = horná hranica okna (RFC 9110 §10.2.3) — presný zvyšok okna nepoznáme
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429, headers: { "Retry-After": "600" } });
@@ -64,12 +63,6 @@ export async function POST(req: Request) {
 
   // honeypot vyplnený → bot. Tvárime sa OK, ale nič neodošleme.
   if (d.web && d.web.trim()) return NextResponse.json({ ok: true });
-  // GDPR súhlas je povinný
-  if (!d.gdpr || d.gdpr === "false") return NextResponse.json({ ok: false, error: "missing_fields" }, { status: 422 });
-
-  // záznam súhlasu do append-only auditu (preukázateľnosť: kto/kedy/akú verziu)
-  await writeAudit({ action: "CONSENT", entity: "Dopyt", meta: { email: d.email, privacyVersion: PRIVACY_VERSION, basis: "kontaktny-formular" } });
-
   const subject = oneLine(`Nový dopyt z webu — ${d.firma} (${d.typ || "dopyt"})`);
   const lines = [
     `Meno: ${d.meno}`,
@@ -89,6 +82,8 @@ export async function POST(req: Request) {
   const inquiry = await prisma.inquiry
     .create({ data: { name: d.meno, company: d.firma, email: d.email, phone: d.telefon || null, location: d.lokalita || null, type: d.typ || null, segment: d.segment || null, message: d.sprava || null } })
     .catch((e) => { reportError("dopyt.persist", e, {}); return null; });
+
+  await writeAudit({ action: "PRIVACY_NOTICE_PROVIDED", entity: "Inquiry", entityId: inquiry?.id, meta: { privacyVersion: PRIVACY_VERSION, context: "kontaktny-formular" } });
 
   const res = await sendEmail({ to: STAFF_NOTIFY, subject, text: lines, replyTo: d.email });
   if (inquiry && res.ok) await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailSent: true } }).catch(() => {});

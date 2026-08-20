@@ -24,4 +24,4 @@ jobs:
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.14.x
-          lhci autorun --config=./lighthouserc.json || echo "::warning::Lighthouse assertions failed (warn-only)"
+          lhci autorun --config=./lighthouserc.json

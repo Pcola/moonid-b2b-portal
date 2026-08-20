@@ -1,24 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 // verzia cookie politiky — pri zmene textu zvýš → banner sa zobrazí znova
 const CONSENT_VERSION = 1;
+const subscribe = () => () => {};
+
+function needsCookieNotice(): boolean {
+  try {
+    const raw = localStorage.getItem("moonid_cookies");
+    const record = raw ? JSON.parse(raw) : null;
+    return !record || record.v !== CONSENT_VERSION;
+  } catch {
+    return true;
+  }
+}
 
 export function CookieBanner() {
-  const [show, setShow] = useState(false);
+  const shouldShow = useSyncExternalStore(subscribe, needsCookieNotice, () => false);
+  const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("moonid_cookies");
-      const rec = raw ? JSON.parse(raw) : null;
-      if (!rec || rec.v !== CONSENT_VERSION) setShow(true);
-    } catch {
-      setShow(true);
-    }
-  }, []);
-
-  if (!show) return null;
+  if (!shouldShow || dismissed) return null;
 
   return (
     <div
@@ -34,9 +36,9 @@ export function CookieBanner() {
       <div>
         <button
           onClick={() => {
-            // záznam súhlasu: verzia + časová pečiatka (GDPR — preukázateľnosť)
+            // Potvrdenie zobrazenia informačného oznamu; nejde o súhlas s nevyhnutnými cookies.
             try { localStorage.setItem("moonid_cookies", JSON.stringify({ v: CONSENT_VERSION, ts: new Date().toISOString() })); } catch {}
-            setShow(false);
+            setDismissed(true);
           }}
           className="rounded-[9px] bg-brand px-[18px] py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2"
         >

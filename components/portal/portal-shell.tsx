@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { focusFirst, trapTabKey } from "@/lib/focus-trap";
 
 type Props = { companyName: string; userName: string | null; email: string; tierCode: string | null; cartCount: number; pendingApproval: number; isAdmin: boolean; children: React.ReactNode };
 
@@ -63,13 +64,27 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   // WCAG 2.1.1/2.4.3: Escape zavrie drawer a vráti fokus na tlačidlo menu
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); menuBtnRef.current?.focus(); } };
+    focusFirst(drawerRef.current);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        requestAnimationFrame(() => menuBtnRef.current?.focus());
+        return;
+      }
+      trapTabKey(e, drawerRef.current);
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   const title = pathname.startsWith("/objednavky/") ? "Objednávka" : (TITLES[pathname] ?? "Portál");
@@ -141,13 +156,13 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
       <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
 
       {/* mobile drawer */}
-      {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)} />}
-      <aside id="portal-drawer" role="dialog" aria-modal="true" aria-label="Navigácia" inert={!open}
+      {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 backdrop-blur-sm lg:hidden" onClick={() => { setOpen(false); requestAnimationFrame(() => menuBtnRef.current?.focus()); }} />}
+      <aside ref={drawerRef} id="portal-drawer" role="dialog" aria-modal="true" aria-label="Navigácia" inert={!open} tabIndex={-1}
         className={`fixed inset-y-0 left-0 z-50 w-[276px] transition-transform lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-col" inert={open || undefined}>
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-white/80 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-8">
-          <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="portal-drawer">
+          <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="portal-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
           <h1 className="font-display text-[21px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>

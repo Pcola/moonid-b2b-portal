@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { exportMyData, requestErasure } from "./actions";
+import { exportCompanyData, exportMyData, requestErasure } from "./actions";
 
-export function GdprSection() {
+export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [erasing, setErasing] = useState(false);
@@ -35,6 +35,22 @@ export function GdprSection() {
     });
   }
 
+  function doCompanyExport() {
+    setMsg(null);
+    start(async () => {
+      const res = await exportCompanyData();
+      if (!res.ok || !res.data) { setMsg(res.error ?? "Firemný export sa nepodaril."); return; }
+      const blob = new Blob([res.data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "moonid-firemne-udaje.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg("Firemný export stiahnutý.");
+    });
+  }
+
   return (
     <section className="rounded-2xl border border-line bg-white">
       <div className="border-b border-line px-6 py-4"><h2 className="text-[18px] font-normal text-ink">Ochrana osobných údajov (GDPR)</h2></div>
@@ -48,6 +64,16 @@ export function GdprSection() {
             {pending ? "Pripravujem…" : "Stiahnuť JSON"}
           </button>
         </div>
+
+        {isCompanyAdmin && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <div>
+              <div className="text-[14.5px] font-medium text-ink">Prevádzkový export firmy</div>
+              <div className="text-[13px] text-muted-2">Firemné objednávky, faktúry, členovia a adresy. Toto nie je individuálna GDPR odpoveď.</div>
+            </div>
+            <button onClick={doCompanyExport} disabled={pending} className="rounded-[10px] border border-line px-4 py-2.5 text-[14px] font-semibold text-ink transition hover:border-brand disabled:opacity-60">Stiahnuť firemný JSON</button>
+          </div>
+        )}
 
         <div className="border-t border-line pt-4">
           {erased ? (
@@ -64,7 +90,7 @@ export function GdprSection() {
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
+              <textarea aria-label="Dôvod alebo rozsah žiadosti o výmaz (nepovinné)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
               <div className="flex gap-2">
                 <button onClick={doErasure} disabled={pending} className="rounded-[10px] bg-[#9a3025] px-4 py-2 text-[13.5px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60">{pending ? "Odosielam…" : "Odoslať žiadosť"}</button>
                 <button onClick={() => setErasing(false)} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40">Zrušiť</button>
@@ -73,7 +99,7 @@ export function GdprSection() {
           )}
         </div>
 
-        {msg && <p className="text-[13px] text-muted-3">{msg}</p>}
+        {msg && <p role="status" className="text-[13px] text-muted-3">{msg}</p>}
       </div>
     </section>
   );

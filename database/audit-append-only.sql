@@ -2,7 +2,8 @@
 -- pre záznamy staršie ako 24 mesiacov (retenčný purge — GDPR čl. 5(1)(e), lib/retention.ts).
 -- Trigger platí pre VŠETKÝCH (vrátane vlastníka tabuľky a app role cez pooler),
 -- na rozdiel od REVOKE, ktoré vlastník tabuľky obíde.
--- Idempotentné — bezpečné spustiť opakovane. Spusti: npm run audit:lock
+-- Legacy break-glass mirror. Kanonická definícia je vo verzovanej Prisma migrácii
+-- 20260820150000_security_objects a nasadzuje sa cez `prisma migrate deploy`.
 -- (DDL ako ALTER TABLE nie je riadkový UPDATE/DELETE, takže migrácie schémy trigger neblokuje.)
 
 CREATE OR REPLACE FUNCTION audit_log_no_mutate() RETURNS trigger

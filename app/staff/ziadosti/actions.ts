@@ -1,17 +1,15 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAudit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/site-url";
 
 async function origin() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  const h = await headers();
-  return h.get("origin") ?? `https://${h.get("host")}`;
+  return SITE_URL;
 }
 
 export async function approveRequest(

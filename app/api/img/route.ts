@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MAX_REMOTE_IMAGE_BYTES, normalizeImageBuffer } from "@/lib/safe-image";
 
 // Proxy obrázkov dodávateľa pre staff match-review. Berie OPAQUE id ProductSource
 // (nie URL) — dodávateľská URL sa tak nezobrazí ani v zdroji staff stránky.
@@ -24,7 +25,6 @@ export async function GET(req: NextRequest) {
 
   // Hardening (SECURITY_AUDIT L-4): timeout proti zaseknutiu, redirect:'manual' aby
   // upstream nepresmeroval fetch na iný (interný) cieľ, kontrola content-type + veľkosti.
-  const MAX_BYTES = 10 * 1024 * 1024; // 10 MB strop
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), 8000);
   let res: Response;
@@ -40,12 +40,17 @@ export async function GET(req: NextRequest) {
   const ct = res.headers.get("content-type") ?? "image/jpeg";
   if (!ct.startsWith("image/")) return new NextResponse("not an image", { status: 415 });
   const len = Number(res.headers.get("content-length") ?? 0);
-  if (len > MAX_BYTES) return new NextResponse("too large", { status: 413 });
+  if (len > MAX_REMOTE_IMAGE_BYTES) return new NextResponse("too large", { status: 413 });
 
   const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.byteLength > MAX_BYTES) return new NextResponse("too large", { status: 413 });
-  return new NextResponse(buf, {
-    status: 200,
-    headers: { "Content-Type": ct, "Cache-Control": "private, max-age=3600" },
-  });
+  if (buf.byteLength > MAX_REMOTE_IMAGE_BYTES) return new NextResponse("too large", { status: 413 });
+  try {
+    const safe = await normalizeImageBuffer(buf, MAX_REMOTE_IMAGE_BYTES);
+    return new NextResponse(new Uint8Array(safe.buffer), {
+      status: 200,
+      headers: { "Content-Type": safe.contentType, "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff" },
+    });
+  } catch {
+    return new NextResponse("invalid image", { status: 415 });
+  }
 }

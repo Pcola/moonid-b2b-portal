@@ -41,7 +41,6 @@ const IDENT: { label: string; value: string }[] = [
   { label: "DIČ", value: "2120530995" },
   { label: "IČ DPH", value: "SK2120530995" },
   { label: "Zápis v registri", value: "Obchodný register Okresného súdu Nitra, oddiel Sro, vložka č. 43461/N" },
-  { label: "Bankové spojenie", value: "[DOPLNIŤ: IBAN]" },
   { label: "E-mail", value: "moonid@moonid.sk" },
   { label: "Telefón", value: "0919 216 908" },
   { label: "Orgán dozoru", value: "Slovenská obchodná inšpekcia, Inšpektorát SOI pre Nitriansky kraj (v rozsahu všeobecného trhového dozoru)" },

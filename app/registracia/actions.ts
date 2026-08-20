@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { writeAudit } from "@/lib/audit";
 import { PRIVACY_VERSION } from "@/lib/consent";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimit, rateLimitKey, clientIp } from "@/lib/rate-limit";
+import { SITE_URL } from "@/lib/site-url";
 
 const schema = z.object({
   ico: z.string().trim().min(6, "Neplatné IČO").max(12),
@@ -15,7 +16,6 @@ const schema = z.object({
   email: z.string().trim().email("Neplatný e-mail").max(160),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   note: z.string().trim().max(1000).optional().or(z.literal("")),
-  gdpr: z.any().optional(), // súhlas so spracovaním OÚ (checkbox)
   hp: z.string().optional(), // honeypot
 });
 
@@ -27,11 +27,8 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
   const d = parsed.data;
   // honeypot vyplnený → bot. Tvárime sa OK, ale žiadosť nezakladáme.
   if (d.hp && d.hp.trim()) return { ok: true };
-  // súhlas so spracovaním OÚ je povinný — overené aj server-side, nielen v UI
-  if (!d.gdpr) return { ok: false, error: "Potvrďte súhlas so spracovaním údajov." };
-
   // anti-abuse: max 5 žiadostí / hod na IP (SECURITY_AUDIT M-1)
-  const rl = await rateLimit(`access-req:${clientIp(await headers())}`, { limit: 5, windowSec: 3600 });
+  const rl = await rateLimit(rateLimitKey("access-req", clientIp(await headers())), { limit: 5, windowSec: 3600 });
   if (!rl.ok) return { ok: false, error: "Priveľa pokusov. Skúste o chvíľu znova." };
 
   const req = await prisma.accessRequest.create({
@@ -45,11 +42,11 @@ export async function createAccessRequest(input: unknown): Promise<{ ok: boolean
     },
   });
 
-  // záznam súhlasu do append-only auditu (GDPR čl. 7 — preukázateľnosť: kto/kedy/akú verziu)
-  await writeAudit({ action: "CONSENT", entity: "AccessRequest", entityId: req.id, meta: { email: d.email, privacyVersion: PRIVACY_VERSION, basis: "registracia-pristup" } });
+  // Dôkaz, aká privacy notice bola pri zbere poskytnutá. Nejde o súhlas.
+  await writeAudit({ action: "PRIVACY_NOTICE_PROVIDED", entity: "AccessRequest", entityId: req.id, meta: { privacyVersion: PRIVACY_VERSION, context: "registracia-pristup" } });
 
   // notifikuj Moonid o novej žiadosti (best-effort, nikdy nehádže)
-  const portal = process.env.NEXT_PUBLIC_SITE_URL ?? "https://moonid-b2b-portal.vercel.app";
+  const portal = SITE_URL;
   await sendEmail({
     to: STAFF_NOTIFY,
     subject: `Nová žiadosť o prístup — ${d.companyName}`,

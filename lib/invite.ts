@@ -1,13 +1,11 @@
 import "server-only";
-import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/site-url";
 
 export async function inviteOrigin() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  const h = await headers();
-  return h.get("origin") ?? `https://${h.get("host")}`;
+  return SITE_URL;
 }
 
 /**

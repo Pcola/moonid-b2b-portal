@@ -20,10 +20,11 @@ async function sessionTimedOut(supabase: Awaited<ReturnType<typeof createClient>
     if (!meta) return false;
     const { data: { session } } = await supabase.auth.getSession();
     const sid = sessionIdFromJwt(session?.access_token);
-    if (!sid) return false;
+    if (!sid) return true;
     return evaluateSession(meta, sid, Date.now()).kind === "TIMEOUT";
-  } catch {
-    return false; // kontrola timeoutu nesmie zhodiť auth (fail-open na chybe čítania)
+  } catch (e) {
+    reportError("session.timeout", e, {});
+    return true; // bezpečnostná kontrola pri chybe zlyhá uzavreto
   }
 }
 
@@ -49,19 +50,12 @@ function isStaff(role: string) {
   return role === "STAFF" || role === "ADMIN";
 }
 
-// Escape-hatch: MFA sa pre staff/admin vynucuje (enrolment) štandardne. Ak by vynútenie
-// niekedy zamklo prístup (napr. MFA toggle v Supabase omylom vypnutý → nikto sa nevie
-// zaregistrovať), nastav vo Vercel env MFA_ENFORCE=off a redeploy → ostane len AAL2 výzva
-// pre už-zaregistrovaných, povinný enrolment sa dočasne nevynúti.
-const ENFORCE_MFA = process.env.MFA_ENFORCE !== "off";
-
 /** MFA stav privilegovaného účtu:
  *  - enrolled: má aspoň jeden OVERENÝ TOTP faktor (listFactors().totp = verified)
  *  - needsChallenge: má faktor, ale relácia je ešte AAL1 (musí prejsť /mfa výzvou)
  *  Fail-CLOSED na druhom faktore: pri chybe MFA API pošli na /mfa výzvu, nie prepustiť AAL1
  *  reláciu. /mfa pri chybe getAAL NErobí redirect späť (žiadny loop); trvalý výpadok rieši
- *  escape-hatch MFA_ENFORCE=off. enrolled=true, aby sme (možno zaregistrovaného) usera
- *  nehnali do /mfa/setup. */
+ *  enrolled=true, aby sme (možno zaregistrovaného) usera nehnali do /mfa/setup. */
 async function mfaStatus(): Promise<{ enrolled: boolean; needsChallenge: boolean }> {
   try {
     const supabase = await createClient();
@@ -81,7 +75,7 @@ async function mfaStatus(): Promise<{ enrolled: boolean; needsChallenge: boolean
 async function enforceStaffMfa(): Promise<void> {
   const mfa = await mfaStatus();
   if (mfa.needsChallenge) redirect("/mfa");
-  if (ENFORCE_MFA && !mfa.enrolled) redirect("/mfa/setup");
+  if (!mfa.enrolled) redirect("/mfa/setup");
 }
 
 /** Vyžaduje prihláseného zákazníka (alebo staff). Inak redirect. */

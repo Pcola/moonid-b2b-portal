@@ -8,6 +8,7 @@ import { writeAudit } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PRODUCT_BUCKET } from "@/lib/rehost-image";
 import { round2 } from "@/lib/money";
+import { normalizeImageFile } from "@/lib/safe-image";
 
 const ID = z.string().min(1).max(100);
 
@@ -145,16 +146,12 @@ export async function updateProductImage(id: string, formData: FormData): Promis
   const image = formData.get("image");
   if (!image || typeof image === "string" || image.size === 0) return { ok: false, error: "Vyberte obrázok." };
   const f = image as File;
-  if (f.size > 5 * 1024 * 1024) return { ok: false, error: "Obrázok je príliš veľký (max 5 MB)." };
-  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(f.type)) {
-    return { ok: false, error: "Nepovolený formát (JPG, PNG, WEBP, GIF)." };
-  }
-
-  const buf = Buffer.from(await f.arrayBuffer());
-  const ext = (f.type.split("/")[1] || "jpg").replace("jpeg", "jpg").replace(/[^a-z0-9]/g, "") || "jpg";
+  let safe;
+  try { safe = await normalizeImageFile(f); }
+  catch (error) { return { ok: false, error: error instanceof Error ? error.message : "Neplatný obrázok." }; }
   const admin = createAdminClient();
-  const path = `manual-${id}.${ext}`;
-  const { error } = await admin.storage.from(PRODUCT_BUCKET).upload(path, buf, { contentType: f.type, upsert: true });
+  const path = `manual-${id}.${safe.extension}`;
+  const { error } = await admin.storage.from(PRODUCT_BUCKET).upload(path, safe.buffer, { contentType: safe.contentType, upsert: true });
   if (error) return { ok: false, error: "Nahrávanie zlyhalo." };
   const url = admin.storage.from(PRODUCT_BUCKET).getPublicUrl(path).data.publicUrl;
 

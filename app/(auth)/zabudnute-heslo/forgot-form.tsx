@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { resetGate } from "@/app/(auth)/actions";
+import { requestPasswordReset } from "@/app/(auth)/actions";
 
 export function ForgotForm() {
   const [email, setEmail] = useState("");
@@ -12,14 +11,7 @@ export function ForgotForm() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
-    // app-layer brzda proti spamu/enumerácii; pri prekročení sa reset ticho neodošle
-    const gate = await resetGate(email.trim());
-    if (gate.ok) {
-      const supabase = createClient();
-      await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback?next=/nastav-heslo`,
-      });
-    }
+    await requestPasswordReset(email.trim());
     setSent(true); // rovnaká hláška bez ohľadu na výsledok → žiadny info-leak
     setLoading(false);
   }

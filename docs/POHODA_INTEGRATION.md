@@ -9,7 +9,7 @@ Obojsmerná integrácia **Moonid portál (cloud) ↔ Pohoda (on-prem notebook)**
 
 ## Architektúra
 - **Pohoda nie je na internete.** Na notebooku beží **agent** (.NET 8 Worker, Windows služba), ktorý **iniciuje všetky spojenia smerom VON** (TLS) → na notebooku sa **neotvára žiadny inbound port**.
-- **Kanál = DB-as-queue cez SECURITY DEFINER RPC fasádu** v Supabase. Agent sa pripája ako rola **`pohoda_agent`**, ktorá **nemá prístup k tabuľkám** — vie volať len definované RPC funkcie (`database/pohoda-agent.sql`). Bezpečnejšie než priamy prístup k DB, jednoduchšie než samostatná REST vrstva.
+- **Kanál = DB-as-queue cez SECURITY DEFINER RPC fasádu** v Supabase. Agent sa pripája ako rola **`pohoda_agent`**, ktorá **nemá prístup k tabuľkám** — vie volať len definované RPC funkcie z migrácie `20260820150000_security_objects`. Bezpečnejšie než priamy prístup k DB, jednoduchšie než samostatná REST vrstva.
 - Agent je **tenký most**: cloud RPC ↔ lokálny **mServer** (`http://localhost:<port>`, HTTP Basic auth z Pohody). Import (objednávky) aj export (sklad, faktúry) ide cez mServer XML (DataPack obálka, viď [[pohoda-xml-schemas]]).
 
 ```
@@ -24,7 +24,7 @@ Obojsmerná integrácia **Moonid portál (cloud) ↔ Pohoda (on-prem notebook)**
 
 ## Bezpečnosť
 - Rola `pohoda_agent`: `REVOKE ALL` na tabuľky/sekvencie/funkcie, `GRANT EXECUTE` len na RPC. Overené: 0 tabuľkových práv.
-- RPC + GRANT v **samostatnom verziovanom SQL** (`database/pohoda-agent.sql`, `npm run pohoda:rpc`) — spúšťať **PO** `prisma migrate` (migrate môže granty resetnúť).
+- RPC + GRANT sú súčasťou **štandardnej Prisma migrácie** `20260820150000_security_objects`; CI kontroluje funkcie, PUBLIC execute aj atribúty roly.
 - Heslo agenta NIE v repo (DPAPI machine-scope na notebooku; rotácia `ALTER ROLE pohoda_agent PASSWORD`). TLS verify-full.
 - Zápis do Pohody **LEN cez XML import** (nikdy SQL INSERT — rozbil by COUNTER/RefAg). Idempotencia OBJ cez `tmpEshopObjID = order.id` + `check_duplicity`.
 

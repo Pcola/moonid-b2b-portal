@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { focusFirst, trapTabKey } from "@/lib/focus-trap";
 
 const NAV = [
   { label: "Sortiment", href: "/produkty" },
@@ -29,6 +30,8 @@ function LoginIcon({ size = 16 }: { size?: number }) {
 export function SiteHeader({ solid = false }: { solid?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuDialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -40,10 +43,16 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
   // WCAG 2.1.1: Escape zavrie mobilné menu; zamkni scroll pod menu
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      else trapTabKey(e, menuDialogRef.current);
+    };
     document.addEventListener("keydown", onKey);
+    queueMicrotask(() => focusFirst(menuDialogRef.current));
+    const menuButton = menuButtonRef.current;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = previousOverflow; menuButton?.focus(); };
   }, [open]);
 
   const light = solid || scrolled; // biele sklo
@@ -88,6 +97,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
           </div>
 
           <button
+            ref={menuButtonRef}
             onClick={() => setOpen(true)}
             aria-label="Otvoriť menu"
             aria-expanded={open}
@@ -102,7 +112,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
 
       {/* fullscreen mobilné menu — editoriálne */}
       {open && (
-        <div id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[60] flex flex-col bg-brand-deep lg:hidden">
+        <div ref={menuDialogRef} tabIndex={-1} id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[60] flex flex-col bg-brand-deep lg:hidden">
           <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
           <div className="relative flex items-center justify-between px-6 pt-6">
             <span className="font-display text-[26px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></span>

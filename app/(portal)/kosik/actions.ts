@@ -7,7 +7,7 @@ import { requireUser, type SessionUser } from "@/lib/auth";
 import { getOrCreateCart } from "@/lib/cart";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { emailNewOrderToStaff, emailOrderConfirmation, emailApprovalRequest } from "@/lib/email";
-import { writeAudit } from "@/lib/audit";
+import { auditRequestContext, writeAuditRequired } from "@/lib/audit";
 import { reportError } from "@/lib/observability";
 import { resolveOrderCharges } from "@/lib/store-config";
 import { isInStock } from "@/lib/stock";
@@ -15,6 +15,8 @@ import { lineTotal as moneyLine, lineVat, sumMoney } from "@/lib/money";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
+import { SITE_URL } from "@/lib/site-url";
+import { SELLER_SNAPSHOT, TERMS_PATH, TERMS_SHA256, TERMS_TEXT, TERMS_VERSION } from "@/lib/terms";
 
 // vstupná validácia (A03 — zod na každom server action)
 const ID = z.string().min(1).max(100);
@@ -50,10 +52,10 @@ async function notifyApprovalRequest(user: SessionUser, order: { id: string; num
   }
 }
 
-// overí, že CartItem patrí košíku firmy aktuálneho usera (IDOR ochrana)
-async function ownItemOrNull(itemId: string, companyId: string) {
-  const item = await prisma.cartItem.findUnique({ where: { id: itemId }, select: { id: true, cart: { select: { companyId: true } } } });
-  if (!item || item.cart.companyId !== companyId) return null;
+// Overí tenant aj vlastníka košíka; kolega z rovnakej firmy nesmie meniť cudziu položku.
+async function ownItemOrNull(itemId: string, companyId: string, userId: string) {
+  const item = await prisma.cartItem.findUnique({ where: { id: itemId }, select: { id: true, cart: { select: { companyId: true, createdById: true } } } });
+  if (!item || item.cart.companyId !== companyId || item.cart.createdById !== userId) return null;
   return item;
 }
 
@@ -96,7 +98,7 @@ export async function setQty(itemId: string, qty: number): Promise<{ ok: boolean
   const user = await requireUser();
   if (!user.companyId) return { ok: false };
   if (!ID.safeParse(itemId).success) return { ok: false };
-  const item = await ownItemOrNull(itemId, user.companyId);
+  const item = await ownItemOrNull(itemId, user.companyId, user.id);
   if (!item) return { ok: false };
   const q = Math.floor(qty);
   if (q <= 0) await prisma.cartItem.delete({ where: { id: itemId } });
@@ -109,7 +111,7 @@ export async function removeItem(itemId: string): Promise<{ ok: boolean }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false };
   if (!ID.safeParse(itemId).success) return { ok: false };
-  const item = await ownItemOrNull(itemId, user.companyId);
+  const item = await ownItemOrNull(itemId, user.companyId, user.id);
   if (!item) return { ok: false };
   await prisma.cartItem.delete({ where: { id: itemId } });
   revalidatePath("/kosik");
@@ -177,7 +179,7 @@ export async function quickAddToCart(raw: string): Promise<QuickResult> {
 }
 
 type NewAddress = { label?: string; street: string; city: string; zip: string };
-type CreateOrderOpts = { note?: string; poNumber?: string | null; deliveryLocationId?: string | null; newAddress?: NewAddress | null; deliveryCode?: string | null; paymentCode?: string | null };
+type CreateOrderOpts = { note?: string; poNumber?: string | null; deliveryLocationId?: string | null; newAddress?: NewAddress | null; deliveryCode?: string | null; paymentCode?: string | null; termsAccepted?: boolean };
 
 const newAddressSchema = z.object({
   label: z.string().trim().max(80).optional(),
@@ -190,6 +192,10 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   const o: CreateOrderOpts = typeof opts === "string" ? { note: opts } : (opts ?? {});
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  if (!user.company || !user.company.address || !user.company.city || !user.company.zip) {
+    return { ok: false, error: "Pred objednaním doplňte fakturačnú adresu firmy v Nastaveniach." };
+  }
+  if (o.termsAccepted !== true) return { ok: false, error: "Pred odoslaním potvrďte súhlas s obchodnými podmienkami." };
   const needsApproval = !user.canOrderDirectly; // reštrikčný user → objednávka ide na schválenie
   const tierCode = user.company?.priceTier?.code ?? null;
   const discountPct = await tierDiscount(tierCode);
@@ -197,24 +203,21 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   // dodacia adresa: nová (vytvorí sa pre firmu) alebo už uložená (IDOR check). Termín dodania
   // si zákazník nediktuje — rozvoz plánuje dodávateľ.
   let deliveryLocationId: string | null = null;
+  let newAddress: z.infer<typeof newAddressSchema> | null = null;
+  let savedLocation: { id: string; label: string; street: string | null; city: string | null; zip: string | null } | null = null;
   const requestedDeliveryDate: Date | null = null;
   if (o.newAddress) {
     const av = newAddressSchema.safeParse(o.newAddress);
     if (!av.success) return { ok: false, error: av.error.issues[0]?.message ?? "Vyplňte dodaciu adresu." };
-    const a = av.data;
-    const count = await prisma.deliveryLocation.count({ where: { companyId: user.companyId } });
-    const loc = await prisma.deliveryLocation.create({
-      data: { companyId: user.companyId, label: a.label || "Dodacia adresa", street: a.street, city: a.city, zip: a.zip, isDefault: count === 0 },
-      select: { id: true },
-    });
-    deliveryLocationId = loc.id;
+    newAddress = av.data;
   } else if (o.deliveryLocationId) {
-    const loc = await prisma.deliveryLocation.findFirst({ where: { id: o.deliveryLocationId, companyId: user.companyId }, select: { id: true } });
+    const loc = await prisma.deliveryLocation.findFirst({ where: { id: o.deliveryLocationId, companyId: user.companyId }, select: { id: true, label: true, street: true, city: true, zip: true } });
     if (!loc) return { ok: false, error: "Neplatná dodacia adresa." };
     deliveryLocationId = loc.id;
+    savedLocation = loc;
   }
 
-  const cart = await prisma.cart.findFirst({ where: { companyId: user.companyId }, select: { id: true } });
+  const cart = await prisma.cart.findFirst({ where: { companyId: user.companyId, createdById: user.id }, select: { id: true } });
   if (!cart) return { ok: false, error: "Košík je prázdny." };
   const rows = await prisma.cartItem.findMany({
     where: { cartId: cart.id },
@@ -222,7 +225,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
       qty: true,
       product: {
         select: {
-          id: true, sku: true, name: true, nameDisplay: true,
+          id: true, sku: true, name: true, nameDisplay: true, isPublished: true,
           basePrice: true, costPrice: true, vatRate: true, isSubsidized: true,
           isStocked: true, stockCache: true, stockSyncedAt: true,
           prices: { where: { priceTierCode: tierCode ?? "__none__" }, take: 1, select: { unitPriceNet: true } },
@@ -243,6 +246,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
 
   for (const row of rows) {
     const p = row.product;
+    if (!p.isPublished) return { ok: false, error: `Položka „${p.nameDisplay || p.name}" už nie je dostupná — odoberte ju z košíka.` };
     const qty = Math.floor(Number(row.qty));
     const price = resolveUnitPrice({
       basePriceNet: p.basePrice != null ? Number(p.basePrice) : null,
@@ -270,11 +274,28 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   // poplatky: doprava (podľa prahu) + príplatok platby — server-side autorita (jediný zdroj pravdy)
   const charges = await resolveOrderCharges({ deliveryCode: o.deliveryCode, paymentCode: o.paymentCode, itemsNet: subtotal });
   // deliveryLocationId null = doručiť na fakturačnú adresu (platná voľba); osobný odber → bez adresy
-  if (charges.delivery && !charges.delivery.requiresAddress) deliveryLocationId = null;
+  if (charges.delivery && !charges.delivery.requiresAddress) {
+    deliveryLocationId = null;
+    newAddress = null;
+    savedLocation = null;
+  }
   const vat = sumMoney([...lineVats, charges.extrasVat]);
   const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
   let order: { id: string; number: string } | null = null;
+  const auditCtx = await auditRequestContext();
+  const buyerSnapshot = {
+    companyId: user.companyId,
+    name: user.company.name,
+    ico: user.company.ico,
+    dic: user.company.dic,
+    icDph: user.company.icDph,
+    address: user.company.address,
+    zip: user.company.zip,
+    city: user.company.city,
+    contact: { userId: user.id, name: user.name, email: user.email },
+    paymentDueDays: user.company.splatDays,
+  };
   try {
     order = await prisma.$transaction(async (tx) => {
     // delete-first guard: súbežná požiadavka (2 taby/dvojklik) — ak košík už bol spracovaný,
@@ -283,7 +304,21 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
     if (del.count === 0) return null;
     const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
     const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
-    return tx.order.create({
+    if (newAddress && (charges.delivery?.requiresAddress ?? true)) {
+      const count = await tx.deliveryLocation.count({ where: { companyId: user.companyId! } });
+      const loc = await tx.deliveryLocation.create({
+        data: { companyId: user.companyId!, label: newAddress.label || "Dodacia adresa", street: newAddress.street, city: newAddress.city, zip: newAddress.zip, isDefault: count === 0 },
+        select: { id: true, label: true, street: true, city: true, zip: true },
+      });
+      deliveryLocationId = loc.id;
+      savedLocation = loc;
+    }
+    const deliveryAddressSnapshot = !(charges.delivery?.requiresAddress ?? true)
+      ? { type: "PICKUP", label: charges.delivery?.label ?? null }
+      : savedLocation
+        ? { type: "DELIVERY_LOCATION", label: savedLocation.label, street: savedLocation.street, city: savedLocation.city, zip: savedLocation.zip }
+        : { type: "BILLING_ADDRESS", label: user.company!.name, street: user.company!.address, city: user.company!.city, zip: user.company!.zip };
+    const created = await tx.order.create({
       data: {
         number, companyId: user.companyId!, createdById: user.id,
         status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
@@ -292,11 +327,16 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
         deliveryLocationId, requestedDeliveryDate,
         deliveryMethodCode: charges.delivery?.code ?? null, deliveryMethodLabel: charges.delivery?.label ?? null, shippingFee: charges.shippingFee,
         paymentMethodCode: charges.payment?.code ?? null, paymentMethodLabel: charges.payment?.label ?? null, paymentSurcharge: charges.paymentSurcharge,
+        currency: "EUR", sellerSnapshot: SELLER_SNAPSHOT, buyerSnapshot, deliveryAddressSnapshot,
+        termsVersion: TERMS_VERSION, termsSha256: TERMS_SHA256, termsUrl: `${SITE_URL}${TERMS_PATH}`,
+        termsSnapshot: TERMS_TEXT, termsAcknowledgedAt: now,
         items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
         events: { create: { status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", source: "PORTAL", changedById: user.id } },
       },
       select: { id: true, number: true },
     });
+    await writeAuditRequired(tx, { userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: created.id, meta: { number: created.number, total, termsVersion: TERMS_VERSION, termsSha256: TERMS_SHA256 } }, auditCtx);
+    return created;
     });
   } catch (e) {
     reportError("order.create", e, { companyId: user.companyId });
@@ -304,7 +344,6 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
   }
   if (!order) return { ok: false, error: "Košík bol medzičasom spracovaný — skontrolujte sekciu Objednávky." };
 
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total } });
   // Pri priamej objednávke ide staffu hneď; pri schvaľovaní až po schválení (approveOrder → email).
   if (!needsApproval) {
     await Promise.allSettled([
@@ -432,9 +471,13 @@ export async function removeRepeatDraftItem(itemId: string): Promise<{ ok: boole
 /** Zopakuje objednávku jedným potvrdením: zoberie položky z predošlej objednávky + doobjednané
  *  položky z draftu (SKU aj výber z katalógu), prepočíta aktuálne ceny/sklad a vytvorí novú
  *  objednávku (a vyčistí draft). Dodaciu adresu prevezme z predošlej. Nedostupné vynechá. */
-export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: string): Promise<{ ok: boolean; error?: string; number?: string; id?: string; pendingApproval?: boolean }> {
+export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: string, termsAccepted?: boolean): Promise<{ ok: boolean; error?: string; number?: string; id?: string; pendingApproval?: boolean }> {
   const user = await requireUser();
   if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  if (!user.company || !user.company.address || !user.company.city || !user.company.zip) {
+    return { ok: false, error: "Pred objednaním doplňte fakturačnú adresu firmy v Nastaveniach." };
+  }
+  if (termsAccepted !== true) return { ok: false, error: "Pred odoslaním potvrďte súhlas s obchodnými podmienkami." };
   if (!ID.safeParse(sourceOrderId).success) return { ok: false, error: "Neplatný vstup." };
   const needsApproval = !user.canOrderDirectly; // reštrikčný user → objednávka ide na schválenie
   // Idempotencia odoslania: kľúč z potvrdzovacej obrazovky (stabilný pre daný render), takže
@@ -500,34 +543,57 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
 
   // dodacia adresa z predošlej objednávky (ak ešte existuje pre firmu)
   let deliveryLocationId: string | null = null;
+  let savedLocation: { id: string; label: string; street: string | null; city: string | null; zip: string | null } | null = null;
   if (src.deliveryLocationId) {
-    const loc = await prisma.deliveryLocation.findFirst({ where: { id: src.deliveryLocationId, companyId: user.companyId }, select: { id: true } });
+    const loc = await prisma.deliveryLocation.findFirst({ where: { id: src.deliveryLocationId, companyId: user.companyId }, select: { id: true, label: true, street: true, city: true, zip: true } });
     deliveryLocationId = loc?.id ?? null;
+    savedLocation = loc;
   }
   // doprava + platba: prevezmeme metódy z pôvodnej objednávky, dopravu prepočítame k aktuálnej hodnote
   const charges = await resolveOrderCharges({ deliveryCode: src.deliveryMethodCode, paymentCode: src.paymentMethodCode, itemsNet: subtotal });
-  if (charges.delivery && !charges.delivery.requiresAddress) deliveryLocationId = null; // osobný odber → bez adresy
+  if (charges.delivery && !charges.delivery.requiresAddress) {
+    deliveryLocationId = null;
+    savedLocation = null;
+  }
   const vat = sumMoney([...lineVats, charges.extrasVat]);
   const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
+  const auditCtx = await auditRequestContext();
+  const buyerSnapshot = {
+    companyId: user.companyId, name: user.company.name, ico: user.company.ico,
+    dic: user.company.dic, icDph: user.company.icDph, address: user.company.address,
+    zip: user.company.zip, city: user.company.city,
+    contact: { userId: user.id, name: user.name, email: user.email },
+    paymentDueDays: user.company.splatDays,
+  };
+  const deliveryAddressSnapshot = !(charges.delivery?.requiresAddress ?? true)
+    ? { type: "PICKUP", label: charges.delivery?.label ?? null }
+    : savedLocation
+      ? { type: "DELIVERY_LOCATION", label: savedLocation.label, street: savedLocation.street, city: savedLocation.city, zip: savedLocation.zip }
+      : { type: "BILLING_ADDRESS", label: user.company.name, street: user.company.address, city: user.company.city, zip: user.company.zip };
   let order: { id: string; number: string };
   try {
     order = await prisma.$transaction(async (tx) => {
       await tx.repeatDraftItem.deleteMany({ where: { userId: user.id } }); // doobjednané sa premietli, draft vyčistený
       const counter = await tx.orderCounter.upsert({ where: { year }, create: { year, lastSeq: 1 }, update: { lastSeq: { increment: 1 } } });
       const number = `WEB-${year}-${String(counter.lastSeq).padStart(5, "0")}`;
-      return tx.order.create({
+      const created = await tx.order.create({
         data: {
           number, companyId: user.companyId!, createdById: user.id, idempotencyKey: idemKey,
           status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", pohodaSync: "LOKALNA", priceTierCode: tierCode ?? "—",
           hasBackorder, subtotal, vat, total, note: src.note?.trim().slice(0, 2000) || null, deliveryLocationId,
           deliveryMethodCode: charges.delivery?.code ?? null, deliveryMethodLabel: charges.delivery?.label ?? null, shippingFee: charges.shippingFee,
           paymentMethodCode: charges.payment?.code ?? null, paymentMethodLabel: charges.payment?.label ?? null, paymentSurcharge: charges.paymentSurcharge,
+          currency: "EUR", sellerSnapshot: SELLER_SNAPSHOT, buyerSnapshot, deliveryAddressSnapshot,
+          termsVersion: TERMS_VERSION, termsSha256: TERMS_SHA256, termsUrl: `${SITE_URL}${TERMS_PATH}`,
+          termsSnapshot: TERMS_TEXT, termsAcknowledgedAt: now,
           items: { create: items.map((it) => ({ productId: it.productId, skuSnapshot: it.skuSnapshot, pohodaSkuSnapshot: it.pohodaSkuSnapshot, nameSnapshot: it.nameSnapshot, unitPriceSnapshot: it.unitPriceSnapshot, costSnapshot: it.costSnapshot, qty: it.qty, lineTotal: it.lineTotal, fulfillment: it.fulfillment })) },
           events: { create: { status: needsApproval ? "CAKA_SCHVALENIE" : "PRIJATA", source: "PORTAL", changedById: user.id } },
         },
         select: { id: true, number: true },
       });
+      await writeAuditRequired(tx, { userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: created.id, meta: { number: created.number, total, repeatOf: src.id, termsVersion: TERMS_VERSION, termsSha256: TERMS_SHA256 } }, auditCtx);
+      return created;
     });
   } catch (e) {
     // Súbežný/duplicitný submit (dvojklik, dva taby, retry) s rovnakým idempotencyKey → unique index
@@ -544,7 +610,6 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
     return { ok: false, error: "Objednávku sa nepodarilo vytvoriť. Skúste to znova." };
   }
 
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: needsApproval ? "ORDER_PENDING_APPROVAL" : "ORDER_CREATE", entity: "Order", entityId: order.id, meta: { number: order.number, total, repeatOf: src.id } });
   if (!needsApproval) {
     await Promise.allSettled([
       emailNewOrderToStaff({ number: order.number, companyName: user.company?.name, customerEmail: user.email, total, itemCount: items.length }),

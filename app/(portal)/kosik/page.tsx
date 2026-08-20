@@ -13,7 +13,7 @@ export default async function KosikPage() {
   const discountPct = tierCode
     ? Number((await prisma.priceTier.findUnique({ where: { code: tierCode }, select: { discountPct: true } }))?.discountPct ?? 0)
     : 0;
-  const cart = await getCartDetail(user.companyId ?? "__none__", tierCode, discountPct);
+  const cart = await getCartDetail(user.companyId ?? "__none__", user.id, tierCode, discountPct);
   const [locations, delivery, payment, company] = await Promise.all([
     user.companyId
       ? prisma.deliveryLocation.findMany({

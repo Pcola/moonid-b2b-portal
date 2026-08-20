@@ -17,7 +17,7 @@ export default async function MfaPage({ searchParams }: { searchParams: Promise<
   const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   // ak nie je čo overovať (žiadny faktor alebo už AAL2), používateľ sem nepatrí.
   // Pri chybe (aal undefined) NErobíme redirect — inak by fail-closed mfaStatus() vytvoril
-  // slučku /staff↔/mfa. Radšej ostane na výzve (fail-closed); trvalý výpadok = MFA_ENFORCE=off.
+  // slučku /staff↔/mfa. Radšej ostane na výzve (fail-closed); výpadok rieši incidentný runbook.
   if (aal && !(aal.nextLevel === "aal2" && aal.currentLevel === "aal1")) {
     redirect(user.role === "STAFF" || user.role === "ADMIN" ? "/staff" : "/dashboard");
   }

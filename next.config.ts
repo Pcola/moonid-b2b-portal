@@ -3,30 +3,12 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 // Presný Supabase host z env (nie wildcard *.supabase.co — SECURITY_AUDIT L-6/M-4),
 // aby sa CSP aj image optimizer viazali len na náš projekt, nie na cudzie Supabase projekty.
+if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_URL is required in production");
+}
 const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : "*.supabase.co";
-
-// Bezpečnostné hlavičky pre všetky cesty (clickjacking, sniffing, HSTS, referrer, permissions, CSP).
-// Prísna CSP: default-deny; object/base/frame-ancestors/frame-src/form-action zamknuté;
-// img/connect viazané na náš Supabase host (+ HIBP). script-src ponecháva 'unsafe-inline'
-// VEDOME (SECURITY_AUDIT M-4): nonce-based CSP by v App Routeri vynútil dynamické
-// renderovanie statických stránok a po oprave H-1 (escapovaný JSON-LD cez safeJsonLd) +
-// React auto-escape neostáva vektor na injekciu inline scriptu → akceptované reziduálne riziko.
-const csp = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "frame-ancestors 'none'",
-  "frame-src 'none'",
-  "form-action 'self'",
-  `img-src 'self' data: https://${supabaseHost}`,
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
-  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://api.pwnedpasswords.com`,
-  "upgrade-insecure-requests",
-].join("; ");
+  : "localhost";
 
 const baseHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -38,14 +20,8 @@ const baseHeaders = [
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
-// CSP len v produkcii — v dev by 'unsafe-eval' (React Refresh/HMR) a ws spojenia
-// vyžadovali oveľa voľnejšiu politiku; lokálny dev nie je bezpečnostný cieľ.
-const securityHeaders =
-  process.env.NODE_ENV === "production"
-    ? [{ key: "Content-Security-Policy", value: csp }, ...baseHeaders]
-    : baseHeaders;
-
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   images: {
     // v dev neoptimalizovať (rýchlejší preview); produkcia optimalizuje
     unoptimized: process.env.NODE_ENV !== "production",
@@ -56,7 +32,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [{ source: "/:path*", headers: baseHeaders }];
   },
 };
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ProductImg } from "@/components/product-img";
+import { focusFirst, trapTabKey } from "@/lib/focus-trap";
 
 type P = { id: string; n: string; i: string; c: string; slug: string };
 type Active = { q: string; cat: string; sub: string; brand: string; sort: string };
@@ -20,12 +21,22 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
   const [q, setQ] = useState(active.q);
   const [brandQ, setBrandQ] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersButtonRef = useRef<HTMLButtonElement>(null);
+  const filtersDialogRef = useRef<HTMLDivElement>(null);
   const brandsShown = brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
 
   // mobilný filter-drawer = modálny dialóg: Escape zatvára + zámok scrollu tela
   useEffect(() => {
     if (!filtersOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFiltersOpen(false); };
+    focusFirst(filtersDialogRef.current);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFiltersOpen(false);
+        requestAnimationFrame(() => filtersButtonRef.current?.focus());
+        return;
+      }
+      trapTabKey(e, filtersDialogRef.current);
+    };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -131,7 +142,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
         <div className="min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setFiltersOpen(true)} className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden">
+              <button ref={filtersButtonRef} type="button" onClick={() => setFiltersOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden" aria-expanded={filtersOpen} aria-controls="public-catalog-filters">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>Filtre{chips.length > 0 && <span className="ml-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white">{chips.length}</span>}
               </button>
               <p className="text-[14px] text-muted-2"><span className="font-semibold text-ink">{total}</span> {plural(total)}</p>
@@ -206,10 +217,10 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
       {filtersOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="absolute inset-0 bg-brand-deep/40" onClick={() => setFiltersOpen(false)} />
-          <div role="dialog" aria-modal="true" aria-label="Filtre" className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
+          <div ref={filtersDialogRef} id="public-catalog-filters" role="dialog" aria-modal="true" aria-label="Filtre" tabIndex={-1} className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <span className="text-[16px] font-semibold text-ink">Filtre</span>
-              <button type="button" autoFocus onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
+              <button type="button" onClick={() => { setFiltersOpen(false); requestAnimationFrame(() => filtersButtonRef.current?.focus()); }} aria-label="Zavrieť filtre" className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-white">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>

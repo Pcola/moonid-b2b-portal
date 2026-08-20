@@ -10,12 +10,22 @@
  */
 function resolve(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/+$/, "");
+  if (explicit) {
+    const url = new URL(explicit);
+    if (process.env.NODE_ENV === "production" && url.protocol !== "https:") {
+      throw new Error("NEXT_PUBLIC_SITE_URL must use HTTPS in production");
+    }
+    return url.origin;
+  }
+
+  if (process.env.VERCEL_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_SITE_URL is required for a production deployment");
+  }
 
   // Vercel systémové premenné (bez protokolu). PRODUCTION_URL je stabilná produkčná URL projektu,
   // VERCEL_URL je URL konkrétneho deploymentu (preview) — na preview je to správnejšie ako produkcia.
   const host = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() || process.env.VERCEL_URL?.trim();
-  if (host) return `https://${host.replace(/\/+$/, "")}`;
+  if (host) return new URL(`https://${host.replace(/\/+$/, "")}`).origin;
 
   return "http://localhost:3000";
 }

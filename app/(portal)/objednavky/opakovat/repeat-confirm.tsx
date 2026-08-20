@@ -23,6 +23,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
   const [busy, startDraft] = useTransition();
   const [placing, startPlace] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const subtotal = sumMoney2([sumNet(items), sumNet(extraLines)]);
   const usableCount = items.filter((i) => i.usable).length + extraLines.filter((c) => c.usable).length;
@@ -50,8 +51,12 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
 
   function confirm() {
     setErr(null);
+    if (!termsAccepted) {
+      setErr("Pred odoslaním potvrďte súhlas s obchodnými podmienkami.");
+      return;
+    }
     startPlace(async () => {
-      const res = await placeRepeatOrder(sourceOrderId, idempotencyKey);
+      const res = await placeRepeatOrder(sourceOrderId, idempotencyKey, termsAccepted);
       if (!res.ok) { setErr(res.error ?? "Nepodarilo sa objednať."); return; }
       router.push(`/objednavky/${res.id}`);
       router.refresh();
@@ -108,6 +113,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
         <div className="mt-3 flex items-center gap-2 text-[12px] text-muted-2"><span className="h-px flex-1 bg-line" />alebo zadajte SKU<span className="h-px flex-1 bg-line" /></div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <input
+            aria-label="SKU a množstvo doobjednanej položky"
             value={skuInput}
             onChange={(e) => setSkuInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSku(); } }}
@@ -129,11 +135,15 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
       </div>
 
       <div className="mt-5 flex flex-col gap-2">
+        <label className="flex max-w-2xl items-start gap-2.5 text-[12.5px] leading-relaxed text-muted-3">
+          <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+          <span>Potvrdzujem, že som sa oboznámil s <Link href="/obchodne-podmienky" target="_blank" className="font-semibold text-brand underline underline-offset-2">obchodnými podmienkami</Link> a súhlasím s nimi. Opakovaná objednávka používa aktuálne ceny a aktuálnu verziu podmienok.</span>
+        </label>
         <button onClick={confirm} disabled={placing || usableCount === 0} className="inline-flex w-fit items-center gap-2 rounded-[11px] bg-brand px-6 py-3.5 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
           {placing ? "Objednávam…" : "Potvrdiť a objednať"}
         </button>
-        {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
+        {err && <span role="alert" className="text-[13px] text-[#9a3025]">{err}</span>}
         {usableCount === 0 && <span className="text-[13px] text-[#9a3025]">Žiadna položka nie je dostupná na objednanie.</span>}
         <p className="text-[12.5px] text-muted-2">Bez platby vopred — platíte faktúrou so splatnosťou. Termín rozvozu potvrdíme.</p>
       </div>

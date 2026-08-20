@@ -1,6 +1,22 @@
 import "server-only";
+import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { reportError } from "@/lib/observability";
+
+/**
+ * Pseudonymizovaný kľúč limitera. IP ani e-mail sa nemajú ukladať ako plaintext primary key.
+ * V produkcii je tajomstvo povinné; rotácia zresetuje iba aktuálne rate-limit okná.
+ */
+export function rateLimitKey(scope: string, identifier: string): string {
+  const secret = process.env.RATE_LIMIT_HMAC_SECRET?.trim();
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("RATE_LIMIT_HMAC_SECRET is required in production");
+  }
+  const digest = createHmac("sha256", secret || "moonid-development-only")
+    .update(identifier.trim().toLowerCase())
+    .digest("base64url");
+  return `${scope}:${digest}`;
+}
 
 // Jednoduchý fixed-window rate limiter nad existujúcou Postgres DB (žiadna nová infra).
 // Atomický INSERT ... ON CONFLICT — bezpečný aj pri súbežných requestoch na serverless.

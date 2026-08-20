@@ -73,7 +73,7 @@ export default async function NastaveniaPage() {
         </section>
       )}
 
-      <GdprSection />
+      <GdprSection isCompanyAdmin={isAdmin} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import "server-only";
-import { headers } from "next/headers";
 import { reportError } from "@/lib/observability";
+import { SITE_URL } from "@/lib/site-url";
 
 // Centrálne odosielanie e-mailov cez Resend. Best-effort: NIKDY nehádže výnimku
 // (objednávka sa nesmie zrušiť kvôli e-mailu) a ak nie je nakonfigurované
@@ -27,15 +27,9 @@ function maskEmail(e: string): string {
   return `${u.slice(0, 1)}**@${d}`;
 }
 
-/** Absolútny pôvod appky pre odkazy v e-mailoch (NEXT_PUBLIC_SITE_URL, inak origin z requestu). */
+/** Absolútny pôvod appky pre odkazy v e-mailoch — nikdy nie z nedôveryhodného Host headera. */
 async function appOrigin(): Promise<string> {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  try {
-    const h = await headers();
-    return h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
-  } catch {
-    return "";
-  }
+  return SITE_URL;
 }
 
 type SendArgs = { to: string | string[]; subject: string; text: string; html?: string; replyTo?: string };
@@ -103,13 +97,14 @@ export async function emailNewOrderToStaff(o: {
   return sendEmail({ to: STAFF_NOTIFY, subject: `Nová objednávka ${o.number} — ${o.companyName ?? o.customerEmail}`, text, replyTo: o.customerEmail });
 }
 
-/** Potvrdenie objednávky ZÁKAZNÍKOVI. */
+/** Potvrdenie PRIJATIA návrhu zákazníkovi — výslovne ešte nejde o akceptáciu zmluvy. */
 export async function emailOrderConfirmation(o: {
   to: string; number: string; items: OrderLine[]; subtotal: number; vat: number; total: number;
 }) {
   const rows = o.items.map((i) => `${i.qty}× ${i.name} — ${eur(i.lineTotal)}`).join("\n");
   const text = [
-    `Ďakujeme za objednávku ${o.number}.`,
+    `Potvrdzujeme prijatie objednávky ${o.number}.`,
+    `Tento e-mail potvrdzuje doručenie vášho návrhu a nie je jeho akceptáciou. Zmluva vznikne až samostatným potvrdením Moonid.`,
     "",
     rows,
     "",
@@ -117,32 +112,34 @@ export async function emailOrderConfirmation(o: {
     `DPH: ${eur(o.vat)}`,
     `Spolu s DPH: ${eur(o.total)}`,
     "",
-    "Objednávku spracujeme a o ďalších krokoch vás budeme informovať.",
+    "Objednávku skontrolujeme a o akceptácii a ďalších krokoch vás budeme informovať samostatne.",
   ].join("\n");
   const htmlRows = o.items.map((i) =>
     `<tr><td style="padding:4px 0">${i.qty}× ${esc(i.name)}</td><td style="padding:4px 0;text-align:right;white-space:nowrap">${eur(i.lineTotal)}</td></tr>`).join("");
-  const html = wrapHtml(`Ďakujeme za objednávku ${esc(o.number)}`, `
+  const html = wrapHtml(`Potvrdenie prijatia objednávky ${esc(o.number)}`, `
+    <p style="font-size:14px"><strong>Tento e-mail iba potvrdzuje doručenie vášho návrhu.</strong> Nie je akceptáciou objednávky; zmluva vznikne až samostatným potvrdením Moonid.</p>
     <table style="width:100%;border-collapse:collapse;font-size:14px">${htmlRows}
       <tr><td style="padding-top:10px;border-top:1px solid #e5e7eb">Medzisúčet</td><td style="padding-top:10px;border-top:1px solid #e5e7eb;text-align:right">${eur(o.subtotal)}</td></tr>
       <tr><td>DPH</td><td style="text-align:right">${eur(o.vat)}</td></tr>
       <tr><td style="font-weight:700">Spolu s DPH</td><td style="font-weight:700;text-align:right">${eur(o.total)}</td></tr>
     </table>
-    <p style="font-size:14px;margin-top:16px">Objednávku spracujeme a o ďalších krokoch vás budeme informovať.</p>`);
-  return sendEmail({ to: o.to, subject: `Potvrdenie objednávky ${o.number} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
+    <p style="font-size:14px;margin-top:16px">Objednávku skontrolujeme a o akceptácii a ďalších krokoch vás budeme informovať samostatne.</p>`);
+  return sendEmail({ to: o.to, subject: `Potvrdenie prijatia objednávky ${o.number} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
 }
 
 /** Notifikácia ZÁKAZNÍKOVI o zmene stavu objednávky. */
 export async function emailOrderStatus(o: { to: string; number: string; status: string; note?: string | null }) {
   const label = STATUS_SK[o.status] ?? o.status;
+  const accepted = o.status === "POTVRDENA";
   const text = [
-    `Stav objednávky ${o.number}: ${label}.`,
+    accepted ? `Objednávku ${o.number} sme akceptovali. Kúpna zmluva vznikla.` : `Stav objednávky ${o.number}: ${label}.`,
     o.note ? `\nPoznámka: ${o.note}` : "",
     "\nĎakujeme, že nakupujete u Moonid.",
   ].join("");
-  const html = wrapHtml(`Objednávka ${esc(o.number)}: ${esc(label)}`,
-    `<p style="font-size:14px">Stav vašej objednávky <strong>${esc(o.number)}</strong> sa zmenil na <strong>${esc(label)}</strong>.</p>
+  const html = wrapHtml(accepted ? `Akceptácia objednávky ${esc(o.number)}` : `Objednávka ${esc(o.number)}: ${esc(label)}`,
+    `<p style="font-size:14px">${accepted ? `Objednávku <strong>${esc(o.number)}</strong> sme akceptovali. Týmto potvrdením vznikla kúpna zmluva.` : `Stav vašej objednávky <strong>${esc(o.number)}</strong> sa zmenil na <strong>${esc(label)}</strong>.`}</p>
      ${o.note ? `<p style="font-size:14px;color:#374151">${esc(o.note)}</p>` : ""}`);
-  return sendEmail({ to: o.to, subject: `Objednávka ${o.number}: ${label} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
+  return sendEmail({ to: o.to, subject: accepted ? `Akceptácia objednávky ${o.number} — Moonid` : `Objednávka ${o.number}: ${label} — Moonid`, text, html, replyTo: STAFF_NOTIFY });
 }
 
 /** Notifikácia SCHVAĽOVATEĽOVI (alebo správcom firmy): objednávka kolegu čaká na schválenie. */

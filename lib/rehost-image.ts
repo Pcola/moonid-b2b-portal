@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { MAX_REMOTE_IMAGE_BYTES, normalizeImageBuffer } from "@/lib/safe-image";
 
 // Verejný bucket s obrázkami produktov (vlastné hostovanie — nie dodávateľ).
 export const PRODUCT_BUCKET = "products";
@@ -6,16 +7,6 @@ export const PRODUCT_BUCKET = "products";
 // Anti-SSRF: re-hostovať sa smie len z dôveryhodného zdroja (dodávateľský feed).
 const ALLOWED_SOURCE_HOSTS = new Set(["www.partner.humed.sk"]);
 // Strop veľkosti sťahovaného obrázka (parita s app/api/img) — ochrana pred memory exhaustion.
-const MAX_BYTES = 10 * 1024 * 1024;
-
-function extFromContentType(ct: string | null): string {
-  if (!ct) return "jpg";
-  if (ct.includes("png")) return "png";
-  if (ct.includes("webp")) return "webp";
-  if (ct.includes("gif")) return "gif";
-  if (ct.includes("svg")) return "svg";
-  return "jpg";
-}
 
 /**
  * Stiahne obrázok z externej URL a nahrá ho do Storage bucketu pod stabilným kľúčom.
@@ -41,13 +32,14 @@ export async function rehostImage(
     // žiadne SVG — vo verejnom buckete by <script> v SVG bol stored-XSS vektor
     if (ct && /svg/i.test(ct)) return null;
     const declared = Number(res.headers.get("content-length"));
-    if (Number.isFinite(declared) && declared > MAX_BYTES) return null;
+    if (Number.isFinite(declared) && declared > MAX_REMOTE_IMAGE_BYTES) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.byteLength > MAX_BYTES) return null; // aj keď hlavička klamala/chýbala
-    const path = `${key}.${extFromContentType(ct)}`;
+    if (buf.byteLength > MAX_REMOTE_IMAGE_BYTES) return null; // aj keď hlavička klamala/chýbala
+    const safe = await normalizeImageBuffer(buf, MAX_REMOTE_IMAGE_BYTES);
+    const path = `${key}.${safe.extension}`;
     const { error } = await supabase.storage
       .from(PRODUCT_BUCKET)
-      .upload(path, buf, { contentType: ct ?? "image/jpeg", upsert: true });
+      .upload(path, safe.buffer, { contentType: safe.contentType, upsert: true });
     if (error) return null;
     return supabase.storage.from(PRODUCT_BUCKET).getPublicUrl(path).data.publicUrl;
   } catch {

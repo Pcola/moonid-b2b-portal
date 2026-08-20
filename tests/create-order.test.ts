@@ -4,7 +4,11 @@ import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 
 vi.mock("@/lib/auth", () => ({ requireUser: vi.fn() }));
-vi.mock("@/lib/audit", () => ({ writeAudit: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/audit", () => ({
+  writeAudit: vi.fn().mockResolvedValue(undefined),
+  writeAuditRequired: vi.fn().mockResolvedValue(undefined),
+  auditRequestContext: vi.fn().mockResolvedValue({ ipHash: null, userAgent: null }),
+}));
 vi.mock("@/lib/email", () => ({
   emailNewOrderToStaff: vi.fn().mockResolvedValue(undefined),
   emailOrderConfirmation: vi.fn().mockResolvedValue(undefined),
@@ -40,7 +44,7 @@ beforeAll(async () => {
   await cleanup();
   const tier = await prisma.priceTier.create({ data: { code: TIER, name: "OrdTest", discountPct: 0 } });
   const product = await prisma.product.create({ data: { sku: SKU, name: "Ord test produkt", vatRate: 23, basePrice: 10, isPublished: true, isStocked: true, stockCache: 100, stockSyncedAt: new Date() } });
-  const company = await prisma.company.create({ data: { ico: ICO, name: "Ord Test sro", priceTierId: tier.id } });
+  const company = await prisma.company.create({ data: { ico: ICO, name: "Ord Test sro", dic: "2020000001", address: "Testovacia 1", city: "Bratislava", zip: "811 01", priceTierId: tier.id } });
   companyId = company.id;
   const user = await prisma.user.create({ data: { authId: "zzorder-user", email: "zzorder@test.invalid", role: "CUSTOMER_ADMIN", companyId: company.id } });
   const cart = await prisma.cart.create({ data: { companyId: company.id, createdById: user.id } });
@@ -53,7 +57,7 @@ beforeAll(async () => {
 
   vi.mocked(requireUser).mockResolvedValue({
     id: user.id, email: user.email, role: "CUSTOMER_ADMIN", companyId: company.id, active: true, canOrderDirectly: true,
-    company: { name: company.name, priceTier: { code: TIER } },
+    company: { name: company.name, ico: company.ico, dic: company.dic, icDph: company.icDph, address: company.address, city: company.city, zip: company.zip, splatDays: company.splatDays, priceTier: { code: TIER } },
   } as never);
 });
 
@@ -62,7 +66,7 @@ afterAll(async () => { await cleanup(); await prisma.$disconnect(); });
 describe("createOrder — objednávka z košíka", () => {
   it("vytvorí objednávku: číslo WEB-RRRR-NNNNN, správne sumy, snapshoty, vyprázdni košík", async () => {
     // osobný odber + faktúra → bez poplatku a bez adresy: sumy ostávajú položkové
-    const res = await createOrder({ note: "test poznámka", deliveryCode: "odber", paymentCode: "faktura" });
+    const res = await createOrder({ note: "test poznámka", deliveryCode: "odber", paymentCode: "faktura", termsAccepted: true });
     expect(res.ok).toBe(true);
     expect(res.number).toMatch(/^WEB-\d{4}-\d{5}$/);
 
@@ -72,6 +76,10 @@ describe("createOrder — objednávka z košíka", () => {
     expect(Number(order!.vat)).toBe(4.6);         // (12.3 − 10) × 2
     expect(Number(order!.total)).toBe(24.6);
     expect(order!.status).toBe("PRIJATA");
+    expect(order!.currency).toBe("EUR");
+    expect(order!.termsAcknowledgedAt).not.toBeNull();
+    expect(order!.termsSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(order!.buyerSnapshot).toMatchObject({ ico: ICO, address: "Testovacia 1" });
     expect(order!.items).toHaveLength(1);
     expect(order!.items[0].nameSnapshot).toBe("Ord test produkt");
     expect(Number(order!.items[0].qty)).toBe(2);
@@ -82,7 +90,7 @@ describe("createOrder — objednávka z košíka", () => {
   });
 
   it("druhé volanie s prázdnym košíkom → ok:false (žiadna duplicitná objednávka)", async () => {
-    const res = await createOrder({ note: "x" });
+    const res = await createOrder({ note: "x", termsAccepted: true });
     expect(res.ok).toBe(false);
     const count = await prisma.order.count({ where: { companyId } });
     expect(count).toBe(1); // stále len jedna objednávka
@@ -97,7 +105,7 @@ describe("createOrder — vetvy dostupnosti a súbeh", () => {
     await resetCart();
     const p = await bySku(SKU_BACK); // stockCache 1
     await prisma.cartItem.create({ data: { cartId, productId: p.id, qty: 2 } }); // 2 > 1 → backorder
-    const res = await createOrder({ deliveryCode: "odber", paymentCode: "faktura" });
+    const res = await createOrder({ deliveryCode: "odber", paymentCode: "faktura", termsAccepted: true });
     expect(res.ok).toBe(true);
     const order = await prisma.order.findFirst({ where: { companyId, number: res.number }, include: { items: true } });
     expect(order!.hasBackorder).toBe(true);
@@ -108,7 +116,7 @@ describe("createOrder — vetvy dostupnosti a súbeh", () => {
     await resetCart();
     const p = await bySku(SKU_REQ); // dotovaný → ON_REQUEST
     await prisma.cartItem.create({ data: { cartId, productId: p.id, qty: 1 } });
-    const res = await createOrder({ deliveryCode: "odber", paymentCode: "faktura" });
+    const res = await createOrder({ deliveryCode: "odber", paymentCode: "faktura", termsAccepted: true });
     expect(res.ok).toBe(false);
     const items = await prisma.cartItem.count({ where: { cartId } });
     expect(items).toBe(1); // objednávka nevznikla → košík sa nevyprázdnil
@@ -120,8 +128,8 @@ describe("createOrder — vetvy dostupnosti a súbeh", () => {
     await prisma.cartItem.create({ data: { cartId, productId: p.id, qty: 1 } });
     const before = await prisma.order.count({ where: { companyId } });
     const [a, b] = await Promise.all([
-      createOrder({ deliveryCode: "odber", paymentCode: "faktura" }),
-      createOrder({ deliveryCode: "odber", paymentCode: "faktura" }),
+      createOrder({ deliveryCode: "odber", paymentCode: "faktura", termsAccepted: true }),
+      createOrder({ deliveryCode: "odber", paymentCode: "faktura", termsAccepted: true }),
     ]);
     expect([a, b].filter((r) => r.ok).length).toBe(1); // len jedna prejde cez CAS deleteMany
     const after = await prisma.order.count({ where: { companyId } });

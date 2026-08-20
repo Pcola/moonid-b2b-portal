@@ -7,7 +7,11 @@ import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 
 vi.mock("@/lib/auth", () => ({ requireUser: vi.fn() }));
-vi.mock("@/lib/audit", () => ({ writeAudit: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/audit", () => ({
+  writeAudit: vi.fn().mockResolvedValue(undefined),
+  writeAuditRequired: vi.fn().mockResolvedValue(undefined),
+  auditRequestContext: vi.fn().mockResolvedValue({ ipHash: null, userAgent: null }),
+}));
 vi.mock("@/lib/email", () => ({
   emailNewOrderToStaff: vi.fn().mockResolvedValue(undefined),
   emailOrderConfirmation: vi.fn().mockResolvedValue(undefined),
@@ -40,7 +44,7 @@ async function cleanup() {
 function asUserA() {
   vi.mocked(requireUser).mockResolvedValue({
     id: userAId, email: "zzrep-a@test.invalid", role: "CUSTOMER_ADMIN", companyId, active: true, canOrderDirectly: true,
-    company: { name: "Rep Test sro", priceTier: { code: TIER } },
+    company: { name: "Rep Test sro", ico: ICO, dic: "2020000002", icDph: null, address: "Testovacia 2", city: "Bratislava", zip: "811 01", splatDays: 14, priceTier: { code: TIER } },
   } as never);
 }
 
@@ -51,7 +55,7 @@ beforeAll(async () => {
   const pr2 = await prisma.product.create({ data: { sku: SKU2, name: "Rep P2", vatRate: 23, basePrice: 20, isPublished: true } });
   const pr3 = await prisma.product.create({ data: { sku: SKU3, name: "Rep P3 (kosik)", vatRate: 23, basePrice: 5, isPublished: true } });
   p1 = pr1.id; p2 = pr2.id; p3 = pr3.id;
-  const company = await prisma.company.create({ data: { ico: ICO, name: "Rep Test sro", priceTierId: tier.id } });
+  const company = await prisma.company.create({ data: { ico: ICO, name: "Rep Test sro", dic: "2020000002", address: "Testovacia 2", city: "Bratislava", zip: "811 01", priceTierId: tier.id } });
   companyId = company.id;
   const ua = await prisma.user.create({ data: { authId: "zzrep-userA", email: "zzrep-a@test.invalid", role: "CUSTOMER_ADMIN", companyId } });
   const ub = await prisma.user.create({ data: { authId: "zzrep-userB", email: "zzrep-b@test.invalid", role: "CUSTOMER_USER", companyId } });
@@ -81,7 +85,7 @@ describe("placeRepeatOrder — opakovanie s doobjednaním", () => {
     // doobjednané: P2 ×3 v drafte usera A
     await prisma.repeatDraftItem.create({ data: { userId: userAId, productId: p2, qty: 3 } });
 
-    const res = await placeRepeatOrder(sourceOrderId);
+    const res = await placeRepeatOrder(sourceOrderId, undefined, true);
     expect(res.ok).toBe(true);
     expect(res.number).toMatch(/^WEB-\d{4}-\d{5}$/);
 
@@ -132,8 +136,8 @@ describe("placeRepeatOrder — opakovanie s doobjednaním", () => {
     await prisma.repeatDraftItem.deleteMany({ where: { userId: userAId } }); // čistý štart
     const key = randomUUID();
     const [r1, r2] = await Promise.all([
-      placeRepeatOrder(sourceOrderId, key),
-      placeRepeatOrder(sourceOrderId, key),
+      placeRepeatOrder(sourceOrderId, key, true),
+      placeRepeatOrder(sourceOrderId, key, true),
     ]);
     expect(r1.ok).toBe(true);
     expect(r2.ok).toBe(true);
@@ -144,8 +148,8 @@ describe("placeRepeatOrder — opakovanie s doobjednaním", () => {
 
   it("IDEMPOTENCIA: rôzne kľúče (nový render obrazovky) → legitímne dve samostatné objednávky", async () => {
     await prisma.repeatDraftItem.deleteMany({ where: { userId: userAId } });
-    const r1 = await placeRepeatOrder(sourceOrderId, randomUUID());
-    const r2 = await placeRepeatOrder(sourceOrderId, randomUUID());
+    const r1 = await placeRepeatOrder(sourceOrderId, randomUUID(), true);
+    const r2 = await placeRepeatOrder(sourceOrderId, randomUUID(), true);
     expect(r1.ok && r2.ok).toBe(true);
     expect(r1.id).not.toBe(r2.id); // zopakovať tú istú objednávku 2× je povolené (iný kľúč)
   });

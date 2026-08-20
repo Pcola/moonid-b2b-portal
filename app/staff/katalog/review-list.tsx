@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { confirmMatch, rejectMatch } from "./actions";
 import { setProductPublished } from "../produkty/actions";
+import { ProductImg } from "@/components/product-img";
 
 type Item = {
   id: string;
@@ -90,7 +91,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
                 {/* POHODA */}
                 <div className="flex gap-3">
                   <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-cream">
-                    {cur ? <img src={cur} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
+                    {cur ? <ProductImg src={cur} alt={it.product.nameDisplay || it.product.name} sizes="64px" iconSize={24} /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-2">Pohoda · {it.product.sku}</div>
@@ -121,7 +122,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
                 {/* HUMED */}
                 <div className="flex gap-3">
                   <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-cream">
-                    {it.imageUrl ? <img src={`/api/img?id=${it.id}`} alt="" loading="lazy" className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
+                    {it.imageUrl ? <ProductImg src={`/api/img?id=${it.id}`} alt={it.title ?? "Feed produkt"} sizes="64px" iconSize={24} /> : <span className="text-[10px] text-muted-2">bez obr.</span>}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-2">Humed · {it.externalSku ?? "—"}</div>

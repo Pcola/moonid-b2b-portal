@@ -16,7 +16,6 @@ export function RegistraciaForm() {
     e.preventDefault();
     setErr(null);
     const fd = new FormData(e.currentTarget);
-    if (!fd.get("gdpr")) { setErr("Potvrďte súhlas so spracovaním údajov."); return; }
     setLoading(true);
     const res = await createAccessRequest({
       ico: fd.get("ico"),
@@ -25,7 +24,6 @@ export function RegistraciaForm() {
       email: fd.get("email"),
       phone: fd.get("phone"),
       note: fd.get("note"),
-      gdpr: fd.get("gdpr"),
       hp: fd.get("hp"),
     });
     setLoading(false);
@@ -58,10 +56,7 @@ export function RegistraciaForm() {
         <label className={`${labelCls} sm:col-span-2`}>Telefón <span className="text-muted-2">(nepovinné)</span><input name="phone" className={inputCls} /></label>
         <label className={`${labelCls} sm:col-span-2`}>Poznámka <span className="text-muted-2">(nepovinné)</span><textarea name="note" rows={3} className={`${inputCls} resize-y`} placeholder="Napr. typ prevádzky, čo objednávate…" /></label>
       </div>
-      <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-muted">
-        <input type="checkbox" name="gdpr" required className="mt-0.5 h-4 w-4 flex-none" style={{ accentColor: "#163f38" }} />
-        <span>Súhlasím so spracovaním údajov za účelom vybavenia žiadosti o prístup (<a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>).</span>
-      </label>
+      <p className="text-[13px] leading-relaxed text-muted">Odoslaním žiadosti beriete na vedomie spracúvanie údajov potrebné na jej vybavenie. Podrobnosti a vaše práva nájdete v <a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">zásadách ochrany osobných údajov</a>. Nejde o marketingový súhlas.</p>
       <button type="submit" disabled={loading}
         className="mt-1 self-start rounded-[10px] bg-brand px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
         {loading ? "Odosielam…" : "Odoslať žiadosť"}

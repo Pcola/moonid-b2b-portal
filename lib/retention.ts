@@ -21,7 +21,7 @@ function monthsAgo(m: number): Date {
  *  fire-and-forget zo staff layoutu (after()). Žiadna cron infra: dáta rastú vtedy,
  *  keď sa portál používa, a vtedy sa aj upratuje. Best-effort — NIKDY nehádže.
  *  AuditLog DELETE prejde len pre záznamy > 24 mes. (DB trigger, viď
- *  database/audit-append-only.sql) — appka aj DB vynucujú tú istú lehotu. */
+ *  migrácia 20260820150000_security_objects) — appka aj DB vynucujú tú istú lehotu. */
 export async function maybeRunRetention(): Promise<void> {
   try {
     const gate = await rateLimit("retention:daily", { limit: 1, windowSec: 86400 });

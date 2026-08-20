@@ -2,9 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/safe-redirect";
-import { recordLoginSuccess, recordLoginFailure, loginGate } from "@/app/(auth)/actions";
+import { authenticate } from "@/app/(auth)/actions";
 
 const labelCls = "flex flex-col gap-2 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-3";
 const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-[13px] text-[16.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
@@ -30,24 +29,14 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setErr(null);
-    // app-layer brzda proti brute-force (per-IP + per-účet lockout; doplnok k Supabase limitom)
-    const gate = await loginGate(email.trim());
-    if (!gate.ok) {
-      setErr(gate.locked
-        ? "Účet je dočasne uzamknutý pre priveľa neúspešných pokusov. Skúste o 15 minút alebo si obnovte heslo."
-        : "Priveľa pokusov o prihlásenie. Skúste to o pár minút.");
+    const result = await authenticate({ email: email.trim(), password });
+    if (!result.ok) {
+      setErr(result.error === "rate_limited"
+        ? "Priveľa pokusov o prihlásenie. Skúste to o pár minút."
+        : "Nesprávny e-mail alebo heslo.");
       setLoading(false);
       return;
     }
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) {
-      void recordLoginFailure(email.trim()); // audit na pozadí
-      setErr("Nesprávny e-mail alebo heslo.");
-      setLoading(false);
-      return;
-    }
-    void recordLoginSuccess(); // audit + lastLoginAt na pozadí — neblokuje presmerovanie
     router.replace(next);
     router.refresh();
   }

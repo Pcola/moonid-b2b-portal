@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { writeAudit } from "@/lib/audit";
+import { auditRequestContext, writeAuditRequired } from "@/lib/audit";
 import { emailNewOrderToStaff, emailOrderDecision } from "@/lib/email";
 
 const ID = z.string().min(1).max(100);
@@ -37,10 +37,15 @@ export async function approveOrder(orderId: string): Promise<{ ok: boolean; erro
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { user, order } = ctx;
   // anti-súbeh: prejde len ak je stále CAKA_SCHVALENIE (dvaja schvaľovatelia naraz → jeden vyhrá)
-  const res = await prisma.order.updateMany({ where: { id: orderId, status: "CAKA_SCHVALENIE" }, data: { status: "PRIJATA" } });
-  if (res.count === 0) return { ok: false, error: "Objednávka už bola medzičasom spracovaná." };
-  await prisma.orderStatusEvent.create({ data: { orderId, status: "PRIJATA", source: "PORTAL", changedById: user.id } });
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_APPROVE", entity: "Order", entityId: orderId, meta: { number: order.number } });
+  const auditCtx = await auditRequestContext();
+  const changed = await prisma.$transaction(async (tx) => {
+    const res = await tx.order.updateMany({ where: { id: orderId, status: "CAKA_SCHVALENIE" }, data: { status: "PRIJATA" } });
+    if (res.count === 0) return false;
+    await tx.orderStatusEvent.create({ data: { orderId, status: "PRIJATA", source: "PORTAL", changedById: user.id } });
+    await writeAuditRequired(tx, { userId: user.id, companyId: user.companyId, action: "ORDER_APPROVE", entity: "Order", entityId: orderId, meta: { number: order.number } }, auditCtx);
+    return true;
+  });
+  if (!changed) return { ok: false, error: "Objednávka už bola medzičasom spracovaná." };
   // až teraz ide objednávka staffu (pri vytvorení sa e-mail zámerne odložil) + zadávateľovi info o schválení
   await Promise.allSettled([
     emailNewOrderToStaff({ number: order.number, companyName: order.company.name, customerEmail: order.createdBy.email, total: Number(order.total), itemCount: order._count.items }),
@@ -68,10 +73,15 @@ export async function cancelOwnOrder(orderId: string, reason?: string): Promise<
   }
   const note = (reason ?? "").trim().slice(0, 500) || null;
   // anti-súbeh: prejde len ak je stále PRIJATA (staff medzičasom nepotvrdil → CAS)
-  const res = await prisma.order.updateMany({ where: { id: orderId, status: "PRIJATA" }, data: { status: "STORNO" } });
-  if (res.count === 0) return { ok: false, error: "Objednávku sme už začali spracúvať — zrušenie riešte telefonicky." };
-  await prisma.orderStatusEvent.create({ data: { orderId, status: "STORNO", source: "PORTAL", changedById: user.id, note } });
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_CANCEL_CUSTOMER", entity: "Order", entityId: orderId, meta: { number: order.number, reason: note } });
+  const auditCtx = await auditRequestContext();
+  const changed = await prisma.$transaction(async (tx) => {
+    const res = await tx.order.updateMany({ where: { id: orderId, status: "PRIJATA" }, data: { status: "STORNO" } });
+    if (res.count === 0) return false;
+    await tx.orderStatusEvent.create({ data: { orderId, status: "STORNO", source: "PORTAL", changedById: user.id, note } });
+    await writeAuditRequired(tx, { userId: user.id, companyId: user.companyId, action: "ORDER_CANCEL_CUSTOMER", entity: "Order", entityId: orderId, meta: { number: order.number, reason: note } }, auditCtx);
+    return true;
+  });
+  if (!changed) return { ok: false, error: "Objednávku sme už začali spracúvať — zrušenie riešte telefonicky." };
   revalidatePath("/objednavky");
   revalidatePath(`/objednavky/${orderId}`);
   return { ok: true };
@@ -82,11 +92,16 @@ export async function rejectOrder(orderId: string, reason?: string): Promise<{ o
   const ctx = await loadForApproval(orderId);
   if ("error" in ctx) return { ok: false, error: ctx.error };
   const { user, order } = ctx;
-  const res = await prisma.order.updateMany({ where: { id: orderId, status: "CAKA_SCHVALENIE" }, data: { status: "STORNO" } });
-  if (res.count === 0) return { ok: false, error: "Objednávka už bola medzičasom spracovaná." };
   const note = (reason ?? "").trim().slice(0, 500) || null;
-  await prisma.orderStatusEvent.create({ data: { orderId, status: "STORNO", source: "PORTAL", changedById: user.id, note } });
-  await writeAudit({ userId: user.id, companyId: user.companyId, action: "ORDER_REJECT", entity: "Order", entityId: orderId, meta: { number: order.number, reason: note } });
+  const auditCtx = await auditRequestContext();
+  const changed = await prisma.$transaction(async (tx) => {
+    const res = await tx.order.updateMany({ where: { id: orderId, status: "CAKA_SCHVALENIE" }, data: { status: "STORNO" } });
+    if (res.count === 0) return false;
+    await tx.orderStatusEvent.create({ data: { orderId, status: "STORNO", source: "PORTAL", changedById: user.id, note } });
+    await writeAuditRequired(tx, { userId: user.id, companyId: user.companyId, action: "ORDER_REJECT", entity: "Order", entityId: orderId, meta: { number: order.number, reason: note } }, auditCtx);
+    return true;
+  });
+  if (!changed) return { ok: false, error: "Objednávka už bola medzičasom spracovaná." };
   // zadávateľ sa dozvie výsledok e-mailom (predtým to zistil len otvorením detailu)
   await Promise.allSettled([
     emailOrderDecision({ to: order.createdBy.email, number: order.number, approved: false, note }),

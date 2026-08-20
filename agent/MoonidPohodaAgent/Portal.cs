@@ -6,7 +6,7 @@ namespace MoonidPohodaAgent;
 
 /// <summary>
 /// Komunikácia s portálom (Supabase) IBA cez RPC fasádu — rola pohoda_agent
-/// nemá prístup k tabuľkám, vie volať len tieto funkcie (database/pohoda-agent.sql).
+/// nemá prístup k tabuľkám, vie volať len RPC z migrácie 20260820150000_security_objects.
 /// </summary>
 public sealed class Portal(IConfiguration cfg, ILogger<Portal> log)
 {

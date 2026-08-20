@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { focusFirst, trapTabKey } from "@/lib/focus-trap";
 
 type Props = {
   name: string;
@@ -85,13 +86,27 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   // WCAG 2.1.1/2.4.3: Escape zavrie drawer a vráti fokus na tlačidlo menu
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); menuBtnRef.current?.focus(); } };
+    focusFirst(drawerRef.current);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        requestAnimationFrame(() => menuBtnRef.current?.focus());
+        return;
+      }
+      trapTabKey(e, drawerRef.current);
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   const page = PAGES.find((x) => x.test(pathname)) ?? { crumb: "Admin", title: "Administrácia" };
@@ -146,13 +161,13 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
       <a href="#obsah" className="skip-link">Preskočiť na obsah</a>
       <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
 
-      {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 lg:hidden" onClick={() => setOpen(false)} />}
-      <aside id="staff-drawer" role="dialog" aria-modal="true" aria-label="Navigácia" inert={!open}
+      {open && <div className="fixed inset-0 z-40 bg-brand-deep/40 lg:hidden" onClick={() => { setOpen(false); requestAnimationFrame(() => menuBtnRef.current?.focus()); }} />}
+      <aside ref={drawerRef} id="staff-drawer" role="dialog" aria-modal="true" aria-label="Navigácia" inert={!open} tabIndex={-1}
         className={`fixed inset-y-0 left-0 z-50 w-[248px] transition-transform lg:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>{sidebar}</aside>
 
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-col" inert={open || undefined}>
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-cream/85 px-4 py-2.5 backdrop-blur sm:px-6">
-          <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="staff-drawer">
+          <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="staff-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div className="flex min-w-0 flex-col">

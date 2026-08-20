@@ -6,8 +6,8 @@
 -- funkcie. Samotný zápis do tabuliek robia funkcie (vlastník = admin), takže agent
 -- nikdy nevidí surové dáta/PII a nemôže meniť nič mimo definovaného kontraktu.
 --
--- Aplikuj:  npm run pohoda:rpc      (prisma db execute --file ...)
--- DÔLEŽITÉ: spúšťať PO `prisma migrate deploy` (migrate môže zmazať granty).
+-- Legacy break-glass mirror. Kanonická definícia je vo verzovanej Prisma migrácii
+-- 20260820150000_security_objects a nasadzuje sa cez `prisma migrate deploy`.
 -- Heslo agenta NIE je v súbore — nastav/rotuj zvlášť:  ALTER ROLE pohoda_agent PASSWORD '...';
 -- ============================================================================
 

@@ -2,18 +2,10 @@ import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/lib/audit";
+import { toCsv } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
 
-/** CSV bunka — escapuje úvodzovky/oddeľovače/nové riadky (RFC 4180). */
-function cell(v: unknown): string {
-  const s = v == null ? "" : String(v);
-  return /["\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-/** BOM + CRLF + ";" oddeľovač → korektná diakritika a stĺpce v SK Exceli. */
-function toCsv(headers: string[], rows: unknown[][]): string {
-  return "﻿" + [headers, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
-}
 // desatinná čiarka pre Excel; berie number aj Prisma.Decimal (formát priamo z DB hodnoty, bez float medzikroku)
 const money = (v: { toFixed(dp: number): string }) => v.toFixed(2).replace(".", ",");
 const day = (d: Date) => d.toISOString().slice(0, 10);

@@ -7,8 +7,8 @@ type CookieToSet = { name: string; value: string; options?: any };
 
 // Middleware variant Supabase klienta — obnoví session cookie a vráti usera.
 // (client.ts = browser, server.ts = Server Components, toto = middleware.)
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(request: NextRequest, forwardedHeaders = new Headers(request.headers)) {
+  let response = NextResponse.next({ request: { headers: forwardedHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +20,7 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet: CookieToSet[], headers: Record<string, string>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers: forwardedHeaders } });
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
           // @supabase/ssr 0.12: anti-cache hlavičky (Cache-Control: private,no-store…) na Set-Cookie
           // odpovediach — aby CDN/proxy necachoval session cookie jedného usera pre iného.

@@ -5,7 +5,11 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vites
 import { PrismaClient } from "@prisma/client";
 
 vi.mock("@/lib/auth", () => ({ requireStaff: vi.fn() }));
-vi.mock("@/lib/audit", () => ({ writeAudit: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/audit", () => ({
+  writeAudit: vi.fn().mockResolvedValue(undefined),
+  writeAuditRequired: vi.fn().mockResolvedValue(undefined),
+  auditRequestContext: vi.fn().mockResolvedValue({ ipHash: null, userAgent: null }),
+}));
 vi.mock("@/lib/email", () => ({ emailOrderStatus: vi.fn().mockResolvedValue({ ok: true }) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 

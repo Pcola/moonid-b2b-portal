@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function OchranaOsobnychUdajov() {
   return (
-    <LegalPage title="Ochrana osobných údajov" updated="16. 7. 2026">
+    <LegalPage title="Ochrana osobných údajov" updated="20. 8. 2026">
       <P>
         Tieto zásady popisujú, ako spoločnosť <strong>Moonid s.r.o.</strong>, so sídlom Hlavná 39/78, 941 43 Dolný Ohaj,
         IČO 50&nbsp;934&nbsp;660, zapísaná v Obchodnom registri Okresného súdu Nitra, oddiel Sro, vložka č. 43461/N
@@ -21,7 +21,7 @@ export default function OchranaOsobnychUdajov() {
       <UL>
         <li>Identifikačné a kontaktné údaje: meno, e-mail, telefón, firma, IČO/DIČ, fakturačná a dodacia adresa.</li>
         <li>Údaje o objednávkach a komunikácii (obsah dopytu, história objednávok).</li>
-        <li>Technické údaje nevyhnutné na prevádzku portálu (prihlasovacia identita, nevyhnutné cookies).</li>
+        <li>Technické a bezpečnostné údaje nevyhnutné na prevádzku portálu (prihlasovacia identita, IP adresa, user-agent, bezpečnostné a auditné udalosti, nevyhnutné cookies).</li>
       </UL>
       <P>
         Údaje získavame spravidla <strong>priamo od dotknutej osoby</strong> (pri registrácii, objednávke či komunikácii).
@@ -32,33 +32,37 @@ export default function OchranaOsobnychUdajov() {
 
       <H2>Účely a právne základy spracúvania</H2>
       <UL>
-        <li><strong>Plnenie zmluvy a predzmluvné opatrenia</strong> (čl. 6 ods. 1 písm. b GDPR) — vybavenie objednávky, dodanie tovaru, fakturácia, prevádzka B2B portálu a vybavenie Vášho dopytu či žiadosti o cenovú ponuku pred prípadným uzavretím zmluvy (na Vašu žiadosť).</li>
+        <li><strong>Plnenie zmluvy a predzmluvné opatrenia</strong> (čl. 6 ods. 1 písm. b GDPR) — ak ste podnikateľom – fyzickou osobou alebo zmluvnou stranou, vybavenie objednávky, dodanie, fakturácia a úkony vykonané na vašu žiadosť pred uzavretím zmluvy.</li>
         <li><strong>Zákonná povinnosť</strong> (písm. c) — účtovné a daňové doklady.</li>
-        <li><strong>Oprávnený záujem</strong> (písm. f) — ochrana a bezpečnosť systémov, prevencia zneužitia a vedenie evidencie komunikácie.</li>
+        <li><strong>Oprávnený záujem</strong> (písm. f) — komunikácia a správa vzťahu s právnickou osobou prostredníctvom jej poverených kontaktných osôb, prevádzka B2B účtov, ochrana a bezpečnosť systémov, prevencia zneužitia, preukazovanie obchodných úkonov a obrana právnych nárokov.</li>
         <li><strong>Súhlas</strong> (písm. a) — len tam, kde ho výslovne a dobrovoľne udelíte; jeho udelenie nikdy nie je podmienkou vybavenia objednávky ani dopytu a môžete ho kedykoľvek odvolať.</li>
       </UL>
 
       <H2>Doba uchovávania</H2>
-      <P>Osobné údaje uchovávame len po nevyhnutný čas — po dobu trvania zmluvného vzťahu a následne po dobu vyžadovanú právnymi predpismi (najmä účtovné doklady 10 rokov). Dopyty uchovávame po dobu nevyhnutnú na ich vybavenie.</P>
+      <UL>
+        <li>účtovné a daňové záznamy spravidla 10 rokov podľa príslušných predpisov,</li>
+        <li>objednávky, zmluvná komunikácia a účty počas vzťahu a následne podľa zákonných lehôt a času potrebného na uplatnenie alebo obranu právnych nárokov,</li>
+        <li>vybavené kontaktné dopyty 12 mesiacov od vybavenia; nevybavené najviac 24 mesiacov od prijatia,</li>
+        <li>aplikačné bezpečnostné/auditné záznamy 24 mesiacov, rate-limit záznamy najviac 7 dní.</li>
+      </UL>
+      <P>Ak právny predpis, prebiehajúci spor alebo bezpečnostný incident vyžaduje dlhšie uchovanie konkrétneho záznamu, uchováme ho len v nevyhnutnom rozsahu do skončenia daného účelu.</P>
 
       <H2>Príjemcovia a sprostredkovatelia</H2>
       <P>Na prevádzku portálu využívame nasledujúcich sprostredkovateľov, ktorých spracúvanie prebieha na základe zmlúv o spracúvaní osobných údajov (čl. 28 GDPR) a ktorí spracúvajú údaje výlučne podľa našich pokynov a sú viazaní mlčanlivosťou:</P>
       <UL>
-        <li><strong>Supabase</strong> — databáza, prihlasovanie a úložisko (hosting v EÚ — Frankfurt).</li>
-        <li><strong>Vercel</strong> — hosting a doručovanie portálu/webu, CDN (región EÚ — Frankfurt).</li>
+        <li><strong>Supabase</strong> — databáza, prihlasovanie a úložisko v zvolenom regióne projektu.</li>
+        <li><strong>Vercel</strong> — hosting, CDN, cookie-free webová analytika a meranie technického výkonu.</li>
         <li><strong>Resend</strong> — odosielanie transakčných e-mailov (potvrdenia objednávok, notifikácie).</li>
-        <li><strong>Sentry</strong> — monitorovanie chýb a stability; osobné údaje sa pred odoslaním odstraňujú (anonymizujú).</li>
+        <li><strong>Sentry</strong> — monitorovanie chýb a stability; odosielané údaje minimalizujeme a bežné identifikátory filtrujeme alebo pseudonymizujeme.</li>
       </UL>
       <P>Účtovné a daňové doklady spracúvame v účtovnom systéme Pohoda (Stormware). Aktuálny zoznam sprostredkovateľov vám na požiadanie poskytneme na <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand hover:text-brand-2">moonid@moonid.sk</a>.</P>
 
       <H2>Prenos do tretích krajín</H2>
       <P>
-        Primárne hostovanie údajov (Supabase, Vercel) prebieha v <strong>Európskej únii (Frankfurt)</strong>.
-        Sprostredkovatelia <strong>Resend</strong> (odosielanie e-mailov) a <strong>Sentry</strong> (monitorovanie chýb)
-        sú spoločnosti so sídlom v <strong>USA</strong>, kde môže dochádzať k spracúvaniu údajov. Tento prenos je krytý
-        <strong> štandardnými zmluvnými doložkami (SCC)</strong> podľa čl. 46 GDPR, prípadne certifikáciou v rámci
-        <strong> EU–US Data Privacy Framework</strong>. Do Sentry sa navyše osobné údaje pred odoslaním odstraňujú
-        (anonymizujú).
+        Pri niektorých dodávateľoch alebo ich subdodávateľoch môže dochádzať k spracúvaniu mimo EHP. Taký prenos
+        uskutočňujeme iba na základe platného mechanizmu podľa GDPR, najmä rozhodnutia o primeranosti alebo aktuálnych
+        štandardných zmluvných doložiek, a podľa potreby doplnkových opatrení. Konkrétny aktuálny zoznam príjemcov,
+        krajín a použitých záruk vám poskytneme na požiadanie.
       </P>
 
       <H2>Automatizované rozhodovanie a profilovanie</H2>

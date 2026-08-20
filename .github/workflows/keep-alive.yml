@@ -38,7 +38,10 @@ jobs:
             code=$(printf '%s' "$out" | tail -n1)
             body=$(printf '%s' "$out" | head -n1)
             echo "attempt $attempt: HTTP $code -> $body"
-            if [ "$code" = "200" ] && printf '%s' "$body" | grep -q '"db":"up"'; then
+            if { [ "$code" = "200" ] || [ "$code" = "503" ]; } && printf '%s' "$body" | grep -q '"db":"up"'; then
+              if [ "$code" = "503" ]; then
+                echo "::warning::DB odpovedala, ale aplikačné dependencies sú degraded; rieši ich samostatný readiness alert."
+              fi
               echo "OK — DB živá"; exit 0
             fi
             sleep 10

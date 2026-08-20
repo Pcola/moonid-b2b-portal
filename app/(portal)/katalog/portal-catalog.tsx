@@ -8,6 +8,7 @@ import { addToCart, addToRepeatDraft } from "../kosik/actions";
 import { FavoriteButton } from "@/components/portal/favorite-button";
 import { ProductImg } from "@/components/product-img";
 import { useToast } from "@/components/portal/toast";
+import { focusFirst, trapTabKey } from "@/lib/focus-trap";
 
 type Item = { id: string; slug: string; n: string; i: string; c: string; unit: string; stocked: boolean; fav: boolean; price: PricedLine };
 type Active = { q: string; cat: string; sub: string; brand: string; stock: string; sort: string; pmin: string; pmax: string };
@@ -19,6 +20,15 @@ type Facets = {
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 function plural(n: number) { return n === 1 ? "produkt" : n >= 2 && n <= 4 ? "produkty" : "produktov"; }
+
+function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">{title}</p>
+      <div className="flex flex-col gap-0.5">{children}</div>
+    </div>
+  );
+}
 
 function AddBtn({ productId, repeat }: { productId: string; repeat?: boolean }) {
   const [pending, start] = useTransition();
@@ -48,13 +58,27 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
   const toggleCat = (name: string) => setExpanded((prev) => { const n = new Set(prev); if (n.has(name)) n.delete(name); else n.add(name); return n; });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const drawerCloseRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const filtersButtonRef = useRef<HTMLButtonElement>(null);
   // WCAG 2.1.1 (klávesnica) + 2.4.3 (focus): Escape zavrie drawer, focus ide na tlačidlo zavrieť
   useEffect(() => {
     if (!filtersOpen) return;
-    drawerCloseRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFiltersOpen(false); };
+    focusFirst(drawerRef.current);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFiltersOpen(false);
+        requestAnimationFrame(() => filtersButtonRef.current?.focus());
+        return;
+      }
+      trapTabKey(e, drawerRef.current);
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [filtersOpen]);
   const brandsShown = facets.brands.filter((b) => b.name.toLowerCase().includes(brandQ.trim().toLowerCase()));
 
@@ -97,13 +121,6 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
     </button>
   );
 
-  const Group = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div>
-      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">{title}</p>
-      <div className="flex flex-col gap-0.5">{children}</div>
-    </div>
-  );
-
   const sidebar = (
     <div className="flex flex-col gap-6">
       <div className="relative">
@@ -112,7 +129,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
           placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
-      <Group title="Kategórie">
+      <FilterGroup title="Kategórie">
         {facetRow("Všetko", total, !active.cat && !active.brand && !active.stock, () => router.push(pathname))}
         {facets.categories.map((c) => {
           const hasKids = c.children.length > 0;
@@ -141,13 +158,13 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
             </div>
           );
         })}
-      </Group>
+      </FilterGroup>
 
-      <Group title="Dostupnosť">
+      <FilterGroup title="Dostupnosť">
         {facetRow("Skladom", facets.stockCount, active.stock === "1", () => go({ stock: active.stock === "1" ? "" : "1" }))}
-      </Group>
+      </FilterGroup>
 
-      <Group title="Cena (€)">
+      <FilterGroup title="Cena (€)">
         <div className="flex items-center gap-2 px-1">
           <input value={pmin} onChange={(e) => setPmin(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="od" aria-label="Cena od"
             className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
@@ -158,7 +175,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
         {(pmin !== active.pmin || pmax !== active.pmax) && (
           <button type="button" onClick={() => go({ pmin, pmax })} className="mt-2 w-full rounded-[9px] bg-brand/10 py-1.5 text-[12.5px] font-semibold text-brand transition hover:bg-brand/15">Použiť cenu</button>
         )}
-      </Group>
+      </FilterGroup>
 
       {facets.brands.length > 0 && (
         <div>
@@ -193,7 +210,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setFiltersOpen(true)} className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden">
+              <button ref={filtersButtonRef} type="button" onClick={() => setFiltersOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[14px] font-medium text-ink transition hover:border-brand/40 lg:hidden" aria-expanded={filtersOpen} aria-controls="portal-catalog-filters">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>Filtre{chips.length > 0 && <span className="ml-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white">{chips.length}</span>}
               </button>
               <p className="text-[14px] text-muted-2"><span className="font-semibold text-ink">{total}</span> {plural(total)}{total > 0 ? ` · ${from}–${to}` : ""}</p>
@@ -268,10 +285,10 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       {filtersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-brand-deep/40" onClick={() => setFiltersOpen(false)} />
-          <div role="dialog" aria-modal="true" aria-label="Filtre" className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
+          <div ref={drawerRef} id="portal-catalog-filters" role="dialog" aria-modal="true" aria-label="Filtre" tabIndex={-1} className="absolute inset-y-0 right-0 flex w-[88%] max-w-[360px] flex-col bg-cream">
             <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <span className="text-[16px] font-semibold text-ink">Filtre</span>
-              <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Zavrieť" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-white">
+              <button ref={drawerCloseRef} type="button" onClick={() => { setFiltersOpen(false); requestAnimationFrame(() => filtersButtonRef.current?.focus()); }} aria-label="Zavrieť filtre" className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-white">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>

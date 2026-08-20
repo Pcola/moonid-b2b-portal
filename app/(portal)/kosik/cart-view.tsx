@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { CartDetail } from "@/lib/cart";
 import { setQty, removeItem, createOrder } from "./actions";
@@ -10,10 +10,9 @@ import { sumMoney2, vatOf2 } from "@/lib/money-client";
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
 /** Množstvo v košíku: −/+ stepper + zapisovateľné pole (50 ks netreba naklikať).
- *  Commit na blur/Enter; lokálny stav sa syncuje po serverovej revalidácii (qty prop). */
+ *  Commit na blur/Enter; rodič ho po serverovej revalidácii remountne cez qty v key. */
 function CartQty({ qty, disabled, onCommit }: { qty: number; disabled: boolean; onCommit: (n: number) => void }) {
   const [val, setVal] = useState(String(qty));
-  useEffect(() => { setVal(String(qty)); }, [qty]);
   const commit = (n: number) => {
     const c = Math.max(1, Math.min(9999, Math.floor(n) || 1));
     setVal(String(c));
@@ -66,6 +65,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
   const [done, setDone] = useState<string | null>(null);
   const [donePending, setDonePending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const selDelObj = delivery.find((d) => d.code === selDel);
   const selPayObj = payment.find((p) => p.code === selPay);
@@ -109,6 +109,10 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
   function order() {
     setErr(null);
+    if (!termsAccepted) {
+      setErr("Pred odoslaním potvrďte súhlas s obchodnými podmienkami.");
+      return;
+    }
     if (needsAddress && otherAddr && addrMode === "new" && (!na.street.trim() || !na.city.trim() || !na.zip.trim())) {
       setErr("Vyplňte dodaciu adresu — ulica, mesto a PSČ.");
       return;
@@ -120,7 +124,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         : (addrMode === "new"
             ? { newAddress: { label: na.label.trim() || undefined, street: na.street.trim(), city: na.city.trim(), zip: na.zip.trim() } }
             : { deliveryLocationId: deliveryLocationId || null });
-      const res = await createOrder({ note, poNumber, deliveryCode: selDel, paymentCode: selPay, ...addr });
+      const res = await createOrder({ note, poNumber, deliveryCode: selDel, paymentCode: selPay, termsAccepted, ...addr });
       if (!res.ok) { setErr(res.error ?? "Objednávku sa nepodarilo odoslať."); return; }
       setDonePending(!!res.pendingApproval);
       setDone(res.number ?? "");
@@ -146,7 +150,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
                 <div className="text-[12.5px] text-muted-2">{it.price.kind === "PRICE" ? `${eur(it.price.net)} / ${it.unit} bez DPH` : "Cena na vyžiadanie"}</div>
               </div>
               <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
-                <CartQty qty={it.qty} disabled={pending} onCommit={(n) => start(async () => { await setQty(it.id, n); })} />
+                <CartQty key={`${it.id}:${it.qty}`} qty={it.qty} disabled={pending} onCommit={(n) => start(async () => { await setQty(it.id, n); })} />
                 <div className="text-right text-[14.5px] font-semibold text-ink sm:w-[92px]">{it.lineNet != null ? eur(it.lineNet) : "—"}</div>
                 <button aria-label="Odobrať položku" onClick={() => start(async () => { await removeItem(it.id); })} disabled={pending} title="Odobrať" className="flex-none text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
@@ -278,11 +282,15 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
             )}
             <input aria-label="Objednávkové číslo alebo referencia (nepovinné)" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="Objednávkové číslo / referencia (nepovinné)" className={`${inp} mt-3 w-full`} />
             <textarea aria-label="Poznámka k objednávke (nepovinné)" value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-2 w-full`} />
+            <label className="mt-3 flex items-start gap-2.5 text-[12.5px] leading-relaxed text-muted-3">
+              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+              <span>Potvrdzujem, že som sa oboznámil s <Link href="/obchodne-podmienky" target="_blank" className="font-semibold text-brand underline underline-offset-2">obchodnými podmienkami</Link> a súhlasím s nimi. Odoslanie je záväzný návrh; zmluva vznikne až samostatným potvrdením Moonid.</span>
+            </label>
             {err && <p role="alert" className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
             <button onClick={order} disabled={pending || cart.hasOnRequest} className="mt-3 w-full rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
               {pending ? "Odosielam…" : "Odoslať objednávku"}
             </button>
-            <p className="mt-2 text-center text-[11.5px] text-muted-2">Objednávku potvrdíme — nie je to okamžitý nákup.</p>
+            <p className="mt-2 text-center text-[11.5px] text-muted-2">Po odoslaní dostanete potvrdenie prijatia; akceptáciu objednávky pošleme samostatne.</p>
           </section>
         </div>
       </div>

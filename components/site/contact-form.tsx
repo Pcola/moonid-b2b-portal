@@ -102,10 +102,7 @@ export function ContactForm() {
           </label>
         </div>
         <input type="text" name="web" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
-        <label className="flex items-start gap-2.5 text-[13.5px] leading-relaxed text-muted-3">
-          <input name="gdpr" type="checkbox" required className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
-          <span>Súhlasím so spracovaním osobných údajov za účelom vybavenia dopytu (<a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">ochrana osobných údajov</a>). *</span>
-        </label>
+        <p className="text-[13.5px] leading-relaxed text-muted-3">Odoslaním dopytu beriete na vedomie spracúvanie údajov potrebné na jeho vybavenie. Podrobnosti sú v <a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">zásadách ochrany osobných údajov</a>. Nejde o marketingový súhlas.</p>
         {error && <p role="alert" className="text-[14px] text-[#a23b2a]">Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908.</p>}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-4">
           <button type="submit" disabled={submitting} className="inline-flex items-center gap-2.5 rounded-[9px] bg-brand px-7 py-[15px] text-[16px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-70">

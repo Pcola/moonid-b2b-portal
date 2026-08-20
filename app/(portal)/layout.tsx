@@ -9,7 +9,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const user = await requireUser();
   // Staff/admin nepatrí do zákazníckeho portálu (nemá firmu) → administrácia.
   if (user.role === "STAFF" || user.role === "ADMIN") redirect("/staff");
-  const cartCount = user.companyId ? await getCartCount(user.companyId) : 0;
+  const cartCount = user.companyId ? await getCartCount(user.companyId, user.id) : 0;
   // Objednávky čakajúce na schválenie: správca vidí celofiremné, bežný člen len svoje →
   // badge v navigácii upozorní, že niečo visí (e-maily sú best-effort/blokované).
   const pendingApproval = user.companyId
