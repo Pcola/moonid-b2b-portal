@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -23,6 +23,61 @@ export function SetPasswordForm({ email }: { email?: string | null }) {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function initializeSession() {
+      try {
+        const params = new URLSearchParams(window.location.hash.slice(1));
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        const type = params.get("type");
+        const passwordFlow = type === "invite" || type === "recovery";
+
+        if (passwordFlow) {
+          // Remove the implicit fragment before creating the PKCE client. This also
+          // keeps Auth tokens out of browser history and accidentally copied URLs.
+          window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+          if (!accessToken || !refreshToken) {
+            if (active) setErr("Odkaz vypršal alebo je neplatný. Požiadajte o nový odkaz.");
+            return;
+          }
+
+          const supabase = createClient();
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (!active) return;
+          if (error) {
+            setErr("Odkaz vypršal alebo je neplatný. Požiadajte o nový odkaz.");
+            return;
+          }
+          setSessionReady(true);
+          return;
+        }
+
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+        if (!active) return;
+        if (!data.session) {
+          setErr("Odkaz vypršal alebo je neplatný. Požiadajte o nový odkaz.");
+          return;
+        }
+        setSessionReady(true);
+      } catch {
+        if (active) setErr("Odkaz sa nepodarilo overiť. Skúste to znova alebo požiadajte o nový odkaz.");
+      }
+    }
+
+    void initializeSession();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,12 +112,12 @@ export function SetPasswordForm({ email }: { email?: string | null }) {
       {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Nové heslo
-        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}
+        <input type="password" required disabled={!sessionReady} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}
           className="rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand" />
       </label>
-      <button type="submit" disabled={loading}
+      <button type="submit" disabled={loading || !sessionReady}
         className="rounded-[10px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
-        {loading ? "Ukladám…" : "Uložiť heslo a prihlásiť"}
+        {!sessionReady && !err ? "Overujem odkaz…" : loading ? "Ukladám…" : "Uložiť heslo a prihlásiť"}
       </button>
     </form>
   );
