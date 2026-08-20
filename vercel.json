@@ -3,6 +3,9 @@
   "regions": ["fra1"],
   "buildCommand": "prisma generate && next build",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "*": false,
+      "staging": true
+    }
   }
 }
