@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 /** Upraví cenovú úroveň (názov + %). POZOR: mení ceny VŠETKÝCH zákazníkov na tejto úrovni
- *  (cena = basePrice × (1 − discountPct)). Len STAFF; zmena ide do auditu. */
+ *  (cena = basePrice × (1 − discountPct)). Len ADMIN; zmena ide do auditu. */
 export async function updateTier(code: string, input: { name: string; discountPct: number }): Promise<{ ok: boolean; error?: string }> {
   const staff = await requireAdmin();
   const c = String(code ?? "").trim().slice(0, 20);

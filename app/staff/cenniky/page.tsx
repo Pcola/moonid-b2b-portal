@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { TierEditor } from "./tier-editor";
 
@@ -13,7 +14,7 @@ const DESC: Record<string, string> = {
 };
 
 export default async function StaffPricing() {
-  await requireStaff();
+  const user = await requireStaff();
   const tiers = await prisma.priceTier.findMany({
     orderBy: { code: "asc" },
     select: { code: true, name: true, discountPct: true, _count: { select: { companies: true } } },
@@ -30,7 +31,13 @@ export default async function StaffPricing() {
 
       <p className="max-w-[640px] text-[15px] leading-relaxed text-muted">Cenové úrovne určujú zľavu pre skupiny zákazníkov. Každému zákazníkovi je priradená jedna úroveň (v detaile firmy).</p>
 
-      <TierEditor tiers={items} descriptions={DESC} />
+      {!canManagePriceTiers(user.role) && (
+        <div role="status" className="rounded-xl border border-line bg-white px-4 py-3 text-[13.5px] text-muted">
+          Máte prístup iba na čítanie. Cenové úrovne môže meniť len administrátor.
+        </div>
+      )}
+
+      <TierEditor tiers={items} descriptions={DESC} editable={canManagePriceTiers(user.role)} />
     </div>
   );
 }
