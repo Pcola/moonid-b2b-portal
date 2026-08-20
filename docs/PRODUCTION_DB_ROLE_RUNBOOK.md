@@ -49,9 +49,13 @@ sprístupnením secrets.
    ```sql
    CREATE ROLE moonid_app_staging
      LOGIN PASSWORD '<HODNOTA_Z_PASSWORD_MANAGERA>'
-     NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT
+     NOCREATEDB NOCREATEROLE INHERIT
      IN ROLE moonid_runtime;
    ```
+
+   Supabase managed `postgres` nie je skutočný superuser, preto PostgreSQL odmieta explicitné
+   zmeny atribútov `SUPERUSER`, `REPLICATION` a `BYPASSRLS`. Nová rola ich má predvolene vypnuté;
+   `npm run security:db-role` tento stav následne kontroluje fail-closed.
 
 4. Zostav staging `DATABASE_URL` pre túto rolu. Heslo percent-encode. `DIRECT_URL`/owner URL
    ulož iba ako `MIGRATOR_DATABASE_URL` v GitHub environment a nikdy ho nedávaj Vercel runtime.

@@ -5,6 +5,7 @@ type RoleCheck = {
   is_superuser: boolean;
   can_create_role: boolean;
   can_create_db: boolean;
+  can_replicate: boolean;
   can_bypass_rls: boolean;
   owns_app_tables: boolean;
   can_create_in_public: boolean;
@@ -21,6 +22,7 @@ async function main(): Promise<void> {
       r.rolsuper AS is_superuser,
       r.rolcreaterole AS can_create_role,
       r.rolcreatedb AS can_create_db,
+      r.rolreplication AS can_replicate,
       r.rolbypassrls AS can_bypass_rls,
       EXISTS (
         SELECT 1
@@ -66,6 +68,7 @@ async function main(): Promise<void> {
     check.is_superuser && "runtime je SUPERUSER",
     check.can_create_role && "runtime má CREATEROLE",
     check.can_create_db && "runtime má CREATEDB",
+    check.can_replicate && "runtime má REPLICATION",
     check.can_bypass_rls && "runtime má BYPASSRLS",
     check.owns_app_tables && "runtime vlastní aplikačné tabuľky",
     check.can_create_in_public && "runtime môže vytvárať objekty v public schéme",

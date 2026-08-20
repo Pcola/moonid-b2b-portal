@@ -12,14 +12,31 @@ DO $role$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'moonid_runtime') THEN
     CREATE ROLE moonid_runtime
-      NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT;
+      NOLOGIN NOCREATEDB NOCREATEROLE INHERIT;
   END IF;
 END
 $role$;
 
--- Re-running the script also repairs accidentally elevated attributes on the group role.
+-- Supabase's managed postgres role is intentionally not a true superuser. PostgreSQL therefore
+-- rejects even explicit NOSUPERUSER/NOREPLICATION/NOBYPASSRLS clauses in ALTER ROLE. New roles
+-- already default to those safe values; fail closed if they ever differ instead of attempting a
+-- privilege change the managed owner is not allowed to make.
+DO $privileged_attributes$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM pg_roles
+     WHERE rolname = 'moonid_runtime'
+       AND (rolsuper OR rolreplication OR rolbypassrls)
+  ) THEN
+    RAISE EXCEPTION 'moonid_runtime has a forbidden privileged role attribute';
+  END IF;
+END
+$privileged_attributes$;
+
+-- Re-running the script repairs all attributes manageable by Supabase's postgres owner.
 ALTER ROLE moonid_runtime
-  NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT;
+  NOLOGIN NOCREATEDB NOCREATEROLE INHERIT;
 
 REVOKE ALL ON DATABASE postgres FROM moonid_runtime;
 GRANT CONNECT ON DATABASE postgres TO moonid_runtime;
