@@ -16,7 +16,7 @@ type Props = {
 };
 
 type StaffBadge = null | "orders" | "requests" | "inquiries";
-type StaffItem = { href: string; exact: boolean; label: string; badge: StaffBadge; icon: React.ReactNode };
+type StaffItem = { href: string; exact: boolean; label: string; badge: StaffBadge; icon: React.ReactNode; adminOnly?: boolean };
 const NAV_GROUPS: { label: string | null; items: StaffItem[] }[] = [
   {
     label: null,
@@ -52,7 +52,7 @@ const NAV_GROUPS: { label: string | null; items: StaffItem[] }[] = [
   {
     label: "Systém",
     items: [
-      { href: "/staff/audit", exact: false, label: "Audit log", badge: null, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
+      { href: "/staff/audit", exact: false, label: "Audit log", badge: null, adminOnly: true, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
       { href: "/staff/bezpecnost", exact: false, label: "Bezpečnosť", badge: null, icon: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> },
     ],
   },
@@ -126,6 +126,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           <div key={gi} className="flex flex-col gap-0.5">
             {g.label && <span className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8fb3ab]">{g.label}</span>}
             {g.items.map((n) => {
+              if (n.adminOnly && role !== "ADMIN") return null;
               const active = isActive(n.href, n.exact);
               const count = badgeFor(n.badge);
               return (

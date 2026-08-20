@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 
 const CODE = z.string().trim().min(1).max(30);
@@ -32,9 +32,9 @@ const paymentSchema = z.object({
   surcharge: z.coerce.number().min(0, "Príplatok nemôže byť záporný").max(9999),
 });
 
-/** Upraví spôsob dopravy (názov, popis, zapnutie, poplatok, prah zdarma). Len STAFF; audit. */
+/** Upraví spôsob dopravy (názov, popis, zapnutie, poplatok, prah zdarma). Len ADMIN; audit. */
 export async function updateDeliveryMethod(code: string, input: DeliveryInput): Promise<{ ok: boolean; error?: string }> {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const c = CODE.safeParse(code);
   if (!c.success) return { ok: false, error: "Neplatný kód." };
   const p = deliverySchema.safeParse(input);
@@ -59,9 +59,9 @@ export async function updateDeliveryMethod(code: string, input: DeliveryInput): 
   return { ok: true };
 }
 
-/** Upraví spôsob platby (názov, popis, zapnutie, príplatok napr. dobierka). Len STAFF; audit. */
+/** Upraví spôsob platby (názov, popis, zapnutie, príplatok napr. dobierka). Len ADMIN; audit. */
 export async function updatePaymentMethod(code: string, input: PaymentInput): Promise<{ ok: boolean; error?: string }> {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   const c = CODE.safeParse(code);
   if (!c.success) return { ok: false, error: "Neplatný kód." };
   const p = paymentSchema.safeParse(input);
