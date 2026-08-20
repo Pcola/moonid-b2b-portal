@@ -16,19 +16,21 @@ async function main(): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await tx.$executeRawUnsafe(`
       CREATE FUNCTION pg_temp.set_moonid_app_staging_password(p_password text)
-      RETURNS void
+      RETURNS boolean
       LANGUAGE plpgsql
       SET search_path = pg_catalog
       AS $function$
       BEGIN
         EXECUTE format('ALTER ROLE moonid_app_staging LOGIN PASSWORD %L', p_password);
+        RETURN true;
       END
       $function$
     `);
 
-    await tx.$queryRaw`
-      SELECT pg_temp.set_moonid_app_staging_password(${credential.password}::text)
+    const [result] = await tx.$queryRaw<{ synchronized: boolean }[]>`
+      SELECT pg_temp.set_moonid_app_staging_password(${credential.password}::text) AS synchronized
     `;
+    if (!result?.synchronized) throw new Error("Runtime credential synchronization was not confirmed.");
 
     await tx.$executeRawUnsafe(
       "DROP FUNCTION pg_temp.set_moonid_app_staging_password(text)",
