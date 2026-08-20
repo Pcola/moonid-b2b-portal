@@ -10,6 +10,14 @@ on:
         options:
           - staging
           - production
+      operation:
+        description: Bootstrap creates staging schema/grants; migrate also verifies the runtime login
+        required: true
+        default: migrate
+        type: choice
+        options:
+          - migrate
+          - bootstrap
       confirmation:
         description: Type the selected environment name to confirm
         required: true
@@ -32,6 +40,7 @@ jobs:
       DIRECT_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
       RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
       TARGET_ENVIRONMENT: ${{ inputs.environment }}
+      OPERATION: ${{ inputs.operation }}
       CONFIRMATION: ${{ inputs.confirmation }}
     steps:
       - name: Validate confirmation and credentials
@@ -42,13 +51,23 @@ jobs:
             echo "Confirmation must exactly match the selected environment."
             exit 1
           fi
-          if [[ -z "${DATABASE_URL:-}" || -z "${RUNTIME_DATABASE_URL:-}" ]]; then
-            echo "MIGRATOR_DATABASE_URL and RUNTIME_DATABASE_URL are required."
+          if [[ -z "${DATABASE_URL:-}" ]]; then
+            echo "MIGRATOR_DATABASE_URL is required."
             exit 1
           fi
-          if [[ "$DATABASE_URL" == "$RUNTIME_DATABASE_URL" ]]; then
-            echo "Migrator and runtime credentials must be different."
+          if [[ "$OPERATION" == "bootstrap" && "$TARGET_ENVIRONMENT" != "staging" ]]; then
+            echo "Bootstrap is intentionally restricted to staging."
             exit 1
+          fi
+          if [[ "$OPERATION" == "migrate" ]]; then
+            if [[ -z "${RUNTIME_DATABASE_URL:-}" ]]; then
+              echo "RUNTIME_DATABASE_URL is required for migrate."
+              exit 1
+            fi
+            if [[ "$DATABASE_URL" == "$RUNTIME_DATABASE_URL" ]]; then
+              echo "Migrator and runtime credentials must be different."
+              exit 1
+            fi
           fi
 
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -64,10 +83,14 @@ jobs:
       - name: Apply Prisma migrations with migrator credential
         run: npx prisma migrate deploy
 
+      - name: Apply least-privilege runtime grants
+        run: npx prisma db execute --file database/runtime-role.sql --schema prisma/schema.prisma
+
       - name: Verify migration state
         run: npx prisma migrate status
 
       - name: Verify least-privilege runtime credential
+        if: inputs.operation == 'migrate'
         env:
           DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.RUNTIME_DATABASE_URL }}

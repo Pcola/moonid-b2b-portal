@@ -27,19 +27,23 @@ Vercel build nesmie spúšťať `prisma migrate deploy` a Vercel runtime nesmie 
 `DIRECT_URL` ani owner heslo. Migrácie sa spúšťajú manuálne cez
 `.github/workflows/database-migrate.yml` v GitHub environment `staging` alebo `production`.
 
-Každý GitHub environment musí mať dva odlišné secrets:
+Po dokončení bootstrapu musí mať každý GitHub environment dva odlišné secrets:
 
 - `MIGRATOR_DATABASE_URL` — priame pripojenie owner/migrator roly, dostupné iba migračnému jobu;
 - `RUNTIME_DATABASE_URL` — pooler URL pre `moonid_app_staging` alebo `moonid_app_prod`.
 
-Workflow vyžaduje ručné napísanie názvu prostredia, serializuje migrácie a po aplikovaní
-overí `prisma migrate status` aj `npm run security:db-role`. GitHub environment `production`
-musí mať povinné schválenie oprávnenou osobou pred sprístupnením secrets.
+Workflow vyžaduje ručné napísanie názvu prostredia a serializuje migrácie. Operácia `bootstrap`
+je povolená iba pre prázdny staging: s `MIGRATOR_DATABASE_URL` aplikuje Prisma migrácie aj
+`database/runtime-role.sql`. Po vytvorení runtime LOGIN sa používa výhradne operácia `migrate`,
+ktorá navyše vyžaduje odlišný `RUNTIME_DATABASE_URL` a overí `npm run security:db-role`.
+GitHub environment `production` musí mať povinné schválenie oprávnenou osobou pred
+sprístupnením secrets.
 
 ## Staging postup
 
-1. Ako vlastník spusť `prisma migrate deploy`.
-2. Ako vlastník spusť `database/runtime-role.sql`.
+1. V GitHub environment `staging` nastav iba owner URL ako `MIGRATOR_DATABASE_URL`.
+2. Spusť migračný workflow s `environment=staging`, `operation=bootstrap` a
+   `confirmation=staging`; workflow aplikuje migrácie aj `database/runtime-role.sql`.
 3. V Supabase SQL editore vytvor samostatný LOGIN bez elevated atribútov a priraď skupinu:
 
    ```sql
