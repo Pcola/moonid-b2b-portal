@@ -34,14 +34,25 @@ CREATE TRIGGER audit_log_no_truncate BEFORE TRUNCATE ON public."AuditLog"
   FOR EACH STATEMENT EXECUTE FUNCTION public.audit_log_no_mutate();
 
 -- ---------- Pohoda agent: LOGIN can execute four SECURITY DEFINER RPCs only ----------
+-- Supabase's managed `postgres` role is intentionally not a real superuser. Statements
+-- containing SUPERUSER, REPLICATION or BYPASSRLS role attributes are therefore rejected
+-- even when they only request the safe `NO*` value. PostgreSQL defaults new roles to all
+-- three attributes disabled; for an existing role we fail closed if any is unexpectedly on.
 DO $role$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'pohoda_agent') THEN
-    CREATE ROLE pohoda_agent LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+    CREATE ROLE pohoda_agent LOGIN NOCREATEDB NOCREATEROLE;
+  ELSIF EXISTS (
+    SELECT 1
+      FROM pg_roles
+     WHERE rolname = 'pohoda_agent'
+       AND (rolsuper OR rolreplication OR rolbypassrls)
+  ) THEN
+    RAISE EXCEPTION 'pohoda_agent has an unsafe elevated role attribute';
   END IF;
 END
 $role$;
-ALTER ROLE pohoda_agent LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+ALTER ROLE pohoda_agent LOGIN NOCREATEDB NOCREATEROLE;
 
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM pohoda_agent;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM pohoda_agent;
