@@ -1,7 +1,7 @@
 // CI gate (SECURITY_AUDIT M-3b): každá public tabuľka musí mať zapnuté RLS.
 // Beží v `npm test` proti (CI: efemérnej) DB po `prisma migrate deploy`. Ak niekto pridá
 // novú tabuľku bez RLS, tento test padne — pridaj do jej migrácie
-// `ALTER TABLE "X" ENABLE ROW LEVEL SECURITY;`. (_prisma_migrations je interná tabuľka Prisma.)
+// `ALTER TABLE "X" ENABLE ROW LEVEL SECURITY;`.
 import { describe, it, expect, afterAll } from "vitest";
 import { PrismaClient } from "@prisma/client";
 
@@ -12,12 +12,11 @@ afterAll(async () => {
 });
 
 describe("RLS gate", () => {
-  it("žiadna public tabuľka (okrem _prisma_migrations) nemá RLS vypnuté", async () => {
+  it("žiadna public tabuľka nemá RLS vypnuté", async () => {
     const rows = await prisma.$queryRaw<{ tablename: string }[]>`
       SELECT tablename FROM pg_tables
       WHERE schemaname = 'public'
         AND rowsecurity = false
-        AND tablename <> '_prisma_migrations'
       ORDER BY tablename`;
     const offenders = rows.map((r) => r.tablename);
     expect(

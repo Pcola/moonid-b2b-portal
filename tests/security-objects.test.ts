@@ -19,22 +19,41 @@ describe("reprodukovateľné DB bezpečnostné objekty", () => {
     ]);
   });
 
-  it("Pohoda RPC sú SECURITY DEFINER bez PUBLIC execute a agent nie je elevated", async () => {
-    const functions = await prisma.$queryRaw<{ name: string; security_definer: boolean; public_execute: boolean }[]>`
+  it("Pohoda RPC sú SECURITY DEFINER dostupné iba agentovi a agent nie je elevated", async () => {
+    const functions = await prisma.$queryRaw<{
+      name: string;
+      security_definer: boolean;
+      public_execute: boolean;
+      anon_execute: boolean;
+      authenticated_execute: boolean;
+      service_role_execute: boolean;
+      agent_execute: boolean;
+    }[]>`
       SELECT
         p.proname::text AS name,
         p.prosecdef AS security_definer,
         EXISTS (
           SELECT 1 FROM aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) acl
            WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
-        ) AS public_execute
+        ) AS public_execute,
+        has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_execute,
+        has_function_privilege('authenticated', p.oid, 'EXECUTE') AS authenticated_execute,
+        has_function_privilege('service_role', p.oid, 'EXECUTE') AS service_role_execute,
+        has_function_privilege('pohoda_agent', p.oid, 'EXECUTE') AS agent_execute
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE n.nspname = 'public'
         AND p.proname IN ('pohoda_heartbeat', 'pohoda_get_cursors', 'pohoda_ingest_stock', 'pohoda_ingest_invoices')
       ORDER BY p.proname`;
     expect(functions).toHaveLength(4);
-    expect(functions.every((fn) => fn.security_definer && !fn.public_execute)).toBe(true);
+    expect(functions.every((fn) =>
+      fn.security_definer
+      && !fn.public_execute
+      && !fn.anon_execute
+      && !fn.authenticated_execute
+      && !fn.service_role_execute
+      && fn.agent_execute
+    )).toBe(true);
 
     const [agent] = await prisma.$queryRaw<{ elevated: boolean }[]>`
       SELECT (rolsuper OR rolcreaterole OR rolcreatedb OR rolreplication OR rolbypassrls) AS elevated
