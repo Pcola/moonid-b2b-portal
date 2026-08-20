@@ -1,0 +1,74 @@
+name: Database Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment containing isolated database credentials
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      confirmation:
+        description: Type the selected environment name to confirm
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-migration-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+      RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+      TARGET_ENVIRONMENT: ${{ inputs.environment }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+    steps:
+      - name: Validate confirmation and credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CONFIRMATION" != "$TARGET_ENVIRONMENT" ]]; then
+            echo "Confirmation must exactly match the selected environment."
+            exit 1
+          fi
+          if [[ -z "${DATABASE_URL:-}" || -z "${RUNTIME_DATABASE_URL:-}" ]]; then
+            echo "MIGRATOR_DATABASE_URL and RUNTIME_DATABASE_URL are required."
+            exit 1
+          fi
+          if [[ "$DATABASE_URL" == "$RUNTIME_DATABASE_URL" ]]; then
+            echo "Migrator and runtime credentials must be different."
+            exit 1
+          fi
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Apply Prisma migrations with migrator credential
+        run: npx prisma migrate deploy
+
+      - name: Verify migration state
+        run: npx prisma migrate status
+
+      - name: Verify least-privilege runtime credential
+        env:
+          DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+        run: npm run security:db-role

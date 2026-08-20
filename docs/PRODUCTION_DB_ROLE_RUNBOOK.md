@@ -21,6 +21,21 @@ Autoritatívny základ:
 3. Vlastník/migrátor zostáva iba v zabezpečenom CI secret store; nesmie byť vo Vercel runtime env.
 4. Vygenerované minimálne 32-bajtové náhodné heslo v password manageri.
 
+## Oddelený migračný workflow
+
+Vercel build nesmie spúšťať `prisma migrate deploy` a Vercel runtime nesmie obsahovať
+`DIRECT_URL` ani owner heslo. Migrácie sa spúšťajú manuálne cez
+`.github/workflows/database-migrate.yml` v GitHub environment `staging` alebo `production`.
+
+Každý GitHub environment musí mať dva odlišné secrets:
+
+- `MIGRATOR_DATABASE_URL` — priame pripojenie owner/migrator roly, dostupné iba migračnému jobu;
+- `RUNTIME_DATABASE_URL` — pooler URL pre `moonid_app_staging` alebo `moonid_app_prod`.
+
+Workflow vyžaduje ručné napísanie názvu prostredia, serializuje migrácie a po aplikovaní
+overí `prisma migrate status` aj `npm run security:db-role`. GitHub environment `production`
+musí mať povinné schválenie oprávnenou osobou pred sprístupnením secrets.
+
 ## Staging postup
 
 1. Ako vlastník spusť `prisma migrate deploy`.
@@ -34,8 +49,8 @@ Autoritatívny základ:
      IN ROLE moonid_runtime;
    ```
 
-4. Zostav staging `DATABASE_URL` pre túto rolu. Heslo percent-encode, `DIRECT_URL` ponechaj výhradne
-   migrátoru a nikdy ho nedávaj runtime aplikácii.
+4. Zostav staging `DATABASE_URL` pre túto rolu. Heslo percent-encode. `DIRECT_URL`/owner URL
+   ulož iba ako `MIGRATOR_DATABASE_URL` v GitHub environment a nikdy ho nedávaj Vercel runtime.
 5. S novým `DATABASE_URL` spusť `npm run security:db-role`; výsledok musí mať `ok: true`.
 6. Spusť smoke test prihlásenia, katalógu, košíka, vytvorenia objednávky, staff zmeny stavu,
    dopytu a retenčnej úlohy. Potom spusti integračné testy proti samostatnej test DB, nie stagingu.
