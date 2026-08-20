@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AuditFilters } from "./audit-filters";
 
@@ -14,7 +14,7 @@ function dt(d: Date) {
 }
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<{ action?: string; q?: string; page?: string }> }) {
-  await requireStaff();
+  await requireAdmin();
   const sp = await searchParams;
   const action = (sp.action ?? "").slice(0, 60);
   const q = (sp.q ?? "").trim().slice(0, 120);

@@ -4,3 +4,11 @@ import type { Role } from "@prisma/client";
 export function canManagePriceTiers(role: Role): boolean {
   return role === "ADMIN";
 }
+
+export function canManageCommerceSettings(role: Role): boolean {
+  return role === "ADMIN";
+}
+
+export function canViewAuditLog(role: Role): boolean {
+  return role === "ADMIN";
+}
