@@ -2,9 +2,9 @@
   "ci": {
     "collect": {
       "url": [
-        "https://moonid-b2b-portal.vercel.app/",
-        "https://moonid-b2b-portal.vercel.app/produkty",
-        "https://moonid-b2b-portal.vercel.app/login"
+        "https://staging-moonid-b2b-portal.vercel.app/",
+        "https://staging-moonid-b2b-portal.vercel.app/produkty",
+        "https://staging-moonid-b2b-portal.vercel.app/login"
       ],
       "numberOfRuns": 3,
       "settings": { "preset": "desktop" }
