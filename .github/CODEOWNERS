@@ -1,0 +1,43 @@
+# GitHub CODEOWNERS — automatický code review assignment
+# Viď: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Syntax: `<path> <github-users-or-teams>`
+
+# ┌─ Security & production config ─────────────────────────────
+# Zmeny v bezpečnosti, DB, infra, env, secrets vyžadujú najmä review
+/next.config.ts                          @Pcola/moonid-core
+/proxy.ts                                @Pcola/moonid-core
+/sentry.*.config.ts                      @Pcola/moonid-core
+/.github/workflows/                      @Pcola/moonid-core
+/database/                               @Pcola/moonid-core
+/prisma/migrations/                      @Pcola/moonid-core
+/prisma/schema.prisma                    @Pcola/moonid-core
+
+# ┌─ Auth & API security ──────────────────────────────────────
+/lib/auth.ts                             @Pcola/moonid-core
+/lib/supabase/                           @Pcola/moonid-core
+/lib/rate-limit.ts                       @Pcola/moonid-core
+/lib/audit.ts                            @Pcola/moonid-core
+/app/(auth)/                             @Pcola/moonid-core
+/app/api/                                @Pcola/moonid-core
+
+# ┌─ Obchodné pravidlá, cenenie, faktúry ──────────────────────
+/lib/pricing.ts                          @Pcola/moonid-business
+/lib/money.ts                            @Pcola/moonid-business
+/app/(portal)/objednavky/                @Pcola/moonid-business
+/app/(portal)/kosik/                     @Pcola/moonid-business
+/app/staff/produkty/                     @Pcola/moonid-business
+/app/staff/cenniky/                      @Pcola/moonid-business
+
+# ┌─ Právne texty ─────────────────────────────────────────────
+/app/*/*/page.tsx                        @Pcola/moonid-legal  # VOP, GDPR, cookies…
+/docs/COMPLIANCE_*.md                    @Pcola/moonid-legal
+/docs/PRAVNE_*.md                        @Pcola/moonid-legal
+
+# ┌─ Dokumenty a audit ────────────────────────────────────────
+/docs/                                   @Pcola/moonid-core
+/docs/ENTERPRISE_*.md                    @Pcola/moonid-core
+/SECURITY_AUDIT.md                       @Pcola/moonid-core
+
+# ┌─ Default ──────────────────────────────────────────────────
+# Všetko ostatné — minimálne jeden core maintainer
+*                                        @Pcola/moonid-core
