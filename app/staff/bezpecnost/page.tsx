@@ -14,7 +14,7 @@ export default async function BezpecnostPage() {
   return (
     <div className="flex max-w-[720px] flex-col gap-5">
       <div>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Bezpečnosť konta</h1>
+        <h2 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Bezpečnosť konta</h2>
         <p className="mt-1 text-[14px] text-muted">Dvojfaktorové overenie (2FA/TOTP) chráni váš privilegovaný účet — aj keď niekto získa heslo, bez kódu z vašej aplikácie sa neprihlási. Odporúčané pre všetky staff/admin kontá.</p>
       </div>
       <div className="rounded-2xl border border-line bg-white p-6">

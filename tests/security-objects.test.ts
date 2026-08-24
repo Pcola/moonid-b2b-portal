@@ -15,7 +15,82 @@ function usesDisposableCiDatabase(): boolean {
 
 const invariantIt = usesDisposableCiDatabase() ? it : it.skip;
 
+type TransactionBarrier = {
+  wait: () => Promise<void>;
+  abort: (reason: unknown) => void;
+};
+
+function createTransactionBarrier(participants: number, timeoutMs = 5_000): TransactionBarrier {
+  if (!Number.isInteger(participants) || participants < 1) {
+    throw new Error("Transaction barrier requires at least one participant.");
+  }
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Transaction barrier timeout must be positive.");
+  }
+
+  let arrived = 0;
+  let settled = false;
+  let failure: Error | null = null;
+  let release!: () => void;
+  let reject!: (error: Error) => void;
+  const allArrived = new Promise<void>((resolve, rejectPromise) => {
+    release = resolve;
+    reject = rejectPromise;
+  });
+  // The barrier can be aborted before the first waiter attaches. Keep the shared
+  // rejection handled while every caller still awaits the original rejecting promise.
+  void allArrived.catch(() => undefined);
+
+  const fail = (error: Error) => {
+    if (settled) return;
+    settled = true;
+    failure = error;
+    clearTimeout(timeout);
+    reject(error);
+  };
+  const timeout = setTimeout(() => {
+    fail(new Error(`Transaction barrier timed out after ${timeoutMs}ms (${arrived}/${participants} arrived).`));
+  }, timeoutMs);
+
+  return {
+    wait: async () => {
+      if (settled) {
+        if (failure) throw failure;
+        throw new Error(`Transaction barrier expected exactly ${participants} participants.`);
+      }
+
+      arrived += 1;
+      if (arrived === participants) {
+        settled = true;
+        clearTimeout(timeout);
+        release();
+      }
+      await allArrived;
+    },
+    abort: (reason: unknown) => {
+      const error = reason instanceof Error
+        ? new Error(`Transaction barrier aborted because a participant failed: ${reason.message}`)
+        : new Error("Transaction barrier aborted because a participant failed.");
+      fail(error);
+    },
+  };
+}
+
 describe("reprodukovateľné DB bezpečnostné objekty", () => {
+  it("transakčná bariéra odblokuje čakajúceho účastníka pri chybe druhého", async () => {
+    const barrier = createTransactionBarrier(2, 1_000);
+    const waiting = barrier.wait();
+
+    barrier.abort(new Error("connection acquisition failed"));
+
+    await expect(waiting).rejects.toThrow("Transaction barrier aborted");
+  });
+
+  it("transakčná bariéra zlyhá ohraničene pri chýbajúcom účastníkovi", async () => {
+    const barrier = createTransactionBarrier(2, 10);
+    await expect(barrier.wait()).rejects.toThrow("Transaction barrier timed out");
+  });
+
   it("AuditLog má UPDATE, DELETE aj TRUNCATE ochranný trigger", async () => {
     const rows = await prisma.$queryRaw<{ trigger_name: string }[]>`
       SELECT tgname::text AS trigger_name
@@ -168,10 +243,25 @@ describe("reprodukovateľné DB bezpečnostné objekty", () => {
     });
 
     try {
-      const deactivate = (authId: string) => prisma.$transaction(
-        (tx) => tx.user.update({ where: { authId }, data: { active: false } }),
-        { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
-      );
+      const transactionBarrier = createTransactionBarrier(authIds.length);
+      const deactivate = async (authId: string) => {
+        try {
+          return await prisma.$transaction(async (tx) => {
+            // Otvor DB transakciu a získaj samostatné spojenie pred bariérou. Obe
+            // mutácie potom súťažia o lifecycle advisory lock v rovnakom okamihu.
+            await tx.$queryRaw`SELECT 1`;
+            await transactionBarrier.wait();
+            return tx.user.update({ where: { authId }, data: { active: false } });
+          }, {
+            isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+            maxWait: 10_000,
+            timeout: 10_000,
+          });
+        } catch (error) {
+          transactionBarrier.abort(error);
+          throw error;
+        }
+      };
       const outcomes = await Promise.allSettled(authIds.map(deactivate));
 
       expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
@@ -231,5 +321,71 @@ describe("reprodukovateľné DB bezpečnostné objekty", () => {
       await tx.user.update({ where: { id: second.id }, data: { active: false } });
     })).rejects.toThrow();
     expect(await prisma.user.count({ where: { authId: { in: authIds } } })).toBe(0);
+  });
+
+  invariantIt("dve súbežné deaktivácie ponechajú aktívnej firme presne jedného CUSTOMER_ADMIN", async () => {
+    const authIds = ["zz-security-customer-admin-race-a", "zz-security-customer-admin-race-b"];
+    const tier = await prisma.priceTier.create({
+      data: { code: "ZZSECRACE", name: "Security customer admin race", discountPct: 0 },
+    });
+    const company = await prisma.company.create({
+      data: { ico: "99009909", name: "Security customer admin race company", priceTierId: tier.id },
+    });
+    await prisma.user.createMany({
+      data: [
+        {
+          authId: authIds[0],
+          email: "zz-security-customer-admin-race-a@test.invalid",
+          role: "CUSTOMER_ADMIN",
+          companyId: company.id,
+        },
+        {
+          authId: authIds[1],
+          email: "zz-security-customer-admin-race-b@test.invalid",
+          role: "CUSTOMER_ADMIN",
+          companyId: company.id,
+        },
+      ],
+    });
+
+    try {
+      const transactionBarrier = createTransactionBarrier(authIds.length);
+      const deactivate = async (authId: string) => {
+        try {
+          return await prisma.$transaction(async (tx) => {
+            await tx.$queryRaw`SELECT 1`;
+            await transactionBarrier.wait();
+            return tx.user.update({ where: { authId }, data: { active: false } });
+          }, {
+            isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+            maxWait: 10_000,
+            timeout: 10_000,
+          });
+        } catch (error) {
+          transactionBarrier.abort(error);
+          throw error;
+        }
+      };
+      const outcomes = await Promise.allSettled(authIds.map(deactivate));
+
+      expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
+      expect(outcomes.filter((outcome) => outcome.status === "rejected")).toHaveLength(1);
+      expect(await prisma.user.count({
+        where: {
+          authId: { in: authIds },
+          role: "CUSTOMER_ADMIN",
+          active: true,
+          companyId: company.id,
+        },
+      })).toBe(1);
+    } finally {
+      // Výhradne efemérny CI Postgres: upratanie zámerne obíde preserve-only trigger.
+      await prisma.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe("SET LOCAL session_replication_role = replica");
+        await tx.user.deleteMany({ where: { authId: { in: authIds } } });
+        await tx.company.delete({ where: { id: company.id } });
+        await tx.priceTier.delete({ where: { id: tier.id } });
+      });
+    }
   });
 });

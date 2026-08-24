@@ -69,7 +69,7 @@ export function DopytyList({ items, showAll, newCount, capped, cap }: { items: I
   return (
     <div className="flex max-w-[900px] flex-col gap-5">
       <div>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Kontaktné dopyty</h1>
+        <h2 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Kontaktné dopyty</h2>
         <p className="mt-1 text-[14px] text-muted">Dopyty z verejného formulára. Ukladajú sa aj keď notifikačný e-mail neodíde, takže sa žiadny lead nestratí.</p>
       </div>
 
