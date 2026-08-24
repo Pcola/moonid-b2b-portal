@@ -35,6 +35,7 @@ async function cleanup() {
   await prisma.repeatDraftItem.deleteMany({ where: { user: { company: { ico: ICO } } } });
   await prisma.cartItem.deleteMany({ where: { cart: { company: { ico: ICO } } } });
   await prisma.cart.deleteMany({ where: { company: { ico: ICO } } });
+  await prisma.company.updateMany({ where: { ico: ICO }, data: { active: false } });
   await prisma.user.deleteMany({ where: { authId: { in: ["zzrep-userA", "zzrep-userB"] } } });
   await prisma.company.deleteMany({ where: { ico: ICO } });
   await prisma.product.deleteMany({ where: { sku: { in: [SKU1, SKU2, SKU3] } } });

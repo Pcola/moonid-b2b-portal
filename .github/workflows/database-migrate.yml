@@ -85,6 +85,10 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Preflight active internal admin invariant
+        if: inputs.operation == 'migrate'
+        run: npm run security:admin-invariant
+
       - name: Apply Prisma migrations with migrator credential
         if: inputs.operation != 'sync-runtime-credential'
         run: npx prisma migrate deploy
@@ -96,6 +100,10 @@ jobs:
       - name: Verify migration state
         if: inputs.operation != 'sync-runtime-credential'
         run: npx prisma migrate status
+
+      - name: Verify active internal admin invariant
+        if: inputs.operation == 'migrate'
+        run: npm run security:admin-invariant
 
       - name: Synchronize staging runtime credential
         if: inputs.operation == 'sync-runtime-credential'

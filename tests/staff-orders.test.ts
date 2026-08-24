@@ -26,6 +26,7 @@ async function cleanup() {
   await prisma.orderStatusEvent.deleteMany({ where: { order: { company: { ico: ICO } } } });
   await prisma.orderItem.deleteMany({ where: { order: { company: { ico: ICO } } } });
   await prisma.order.deleteMany({ where: { company: { ico: ICO } } });
+  await prisma.company.updateMany({ where: { ico: ICO }, data: { active: false } });
   await prisma.user.deleteMany({ where: { authId: { in: ["zzstaff-staff", "zzstaff-cust"] } } });
   await prisma.company.deleteMany({ where: { ico: ICO } });
   await prisma.priceTier.deleteMany({ where: { code: TIER } });

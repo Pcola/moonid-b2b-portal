@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { reportError } from "@/lib/observability";
+import { canAccessStaffPortal } from "@/lib/permissions";
 import { evaluateSession, sessionIdFromJwt, SESSION_COOKIE } from "@/lib/session-timeout";
 
 /** App-layer timeout relácie aj MIMO middleware (API routes, server actions, RSC) —
@@ -46,10 +47,6 @@ export const getCurrentUser = cache(async () => {
 
 export type SessionUser = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
-function isStaff(role: string) {
-  return role === "STAFF" || role === "ADMIN";
-}
-
 /** MFA stav privilegovaného účtu:
  *  - enrolled: má aspoň jeden OVERENÝ TOTP faktor (listFactors().totp = verified)
  *  - needsChallenge: má faktor, ale relácia je ešte AAL1 (musí prejsť /mfa výzvou)
@@ -59,9 +56,15 @@ function isStaff(role: string) {
 async function mfaStatus(): Promise<{ enrolled: boolean; needsChallenge: boolean }> {
   try {
     const supabase = await createClient();
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalError || !aal) {
+      throw aalError ?? new Error("Supabase MFA AAL response is missing");
+    }
     const needsChallenge = aal?.nextLevel === "aal2" && aal.currentLevel === "aal1";
-    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+    if (factorsError || !factors) {
+      throw factorsError ?? new Error("Supabase MFA factors response is missing");
+    }
     const enrolled = (factors?.totp?.length ?? 0) > 0;
     return { enrolled, needsChallenge };
   } catch (e) {
@@ -86,7 +89,7 @@ export async function requireUser(): Promise<SessionUser> {
   // Deaktivovaná firma (offboarding) — nesmie prihlásiť ani objednávať. getCurrentUser ťahá
   // company cez include (vrátane active); staff bez firmy (company null) sa netýka.
   if (user.company && !user.company.active) redirect("/login?disabled=1");
-  if (!user.companyId && !isStaff(user.role)) redirect("/cakajuce");
+  if (!user.companyId && !canAccessStaffPortal(user.role)) redirect("/cakajuce");
   return user;
 }
 
@@ -95,7 +98,8 @@ export async function requireStaff(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1"); // deaktivovaný staff nesmie prejsť
-  if (!isStaff(user.role)) redirect("/dashboard");
+  if (!canAccessStaffPortal(user.role)) redirect("/dashboard");
+  if (user.companyId !== null) redirect("/login?disabled=1"); // fail-closed: interná rola nikdy nepatrí firme
   await enforceStaffMfa();
   return user;
 }
@@ -105,7 +109,8 @@ export async function requireAdmin(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!user.active) redirect("/login?disabled=1");
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  if (user.role !== "ADMIN") redirect(user.role === "STAFF" ? "/staff" : "/dashboard");
+  if (user.companyId !== null) redirect("/login?disabled=1");
   await enforceStaffMfa();
   return user;
 }

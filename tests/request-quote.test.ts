@@ -18,6 +18,7 @@ let productId = "";
 
 async function cleanup() {
   await prisma.inquiry.deleteMany({ where: { email: EMAIL } });
+  await prisma.company.updateMany({ where: { ico: ICO }, data: { active: false } });
   await prisma.user.deleteMany({ where: { authId: "zzquote-user" } });
   await prisma.company.deleteMany({ where: { ico: ICO } });
   await prisma.product.deleteMany({ where: { sku: SKU } });
