@@ -228,6 +228,12 @@ model User {
   companyId     String?
   mfaEnabled    Boolean            @default(false)
   active        Boolean            @default(true)
+  // Durable synchronizácia app-layer active ↔ Supabase Auth ban. Pri pending ostáva
+  // požadovaný stav v DB a operácia je po páde procesu bezpečne opakovateľná.
+  authSyncPending   Boolean        @default(false)
+  authDesiredActive Boolean?
+  authManagedBan    Boolean        @default(false)
+  authSyncedAt      DateTime?
   // objednávkové právo: true = objednáva priamo; false = objednávka ide na schválenie approverovi
   canOrderDirectly Boolean         @default(true)
   approver      User?              @relation("UserApprover", fields: [approverId], references: [id])

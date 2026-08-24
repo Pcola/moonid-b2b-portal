@@ -12,6 +12,7 @@ let userB = "";
 async function cleanup() {
   await prisma.cartItem.deleteMany({ where: { cart: { company: { ico: ICO } } } });
   await prisma.cart.deleteMany({ where: { company: { ico: ICO } } });
+  await prisma.company.updateMany({ where: { ico: ICO }, data: { active: false } });
   await prisma.user.deleteMany({ where: { authId: { in: AUTH_IDS } } });
   await prisma.company.deleteMany({ where: { ico: ICO } });
   await prisma.priceTier.deleteMany({ where: { code: "ZZCART" } });

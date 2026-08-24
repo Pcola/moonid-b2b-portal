@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { inviteMember, setMemberPermissions, setMemberActive } from "./actions";
+import { inviteMember, resendMemberAccess, setMemberPermissions, setMemberActive } from "./actions";
 
 type Member = { id: string; name: string | null; email: string; role: string; active: boolean; canOrderDirectly: boolean; approverId: string | null };
 
@@ -13,21 +13,31 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [mode, setMode] = useState<"direct" | "approval">(m.canOrderDirectly ? "direct" : "approval");
   const [approverId, setApproverId] = useState<string>(m.approverId ?? "");
   const isAdminRole = m.role === "CUSTOMER_ADMIN";
   const approvers = members.filter((x) => x.id !== m.id && x.active);
 
   function save() {
-    setErr(null);
+    setErr(null); setNotice(null);
     start(async () => {
       const r = await setMemberPermissions(m.id, { canOrderDirectly: mode === "direct", approverId: mode === "approval" ? (approverId || null) : null });
       if (r.ok) router.refresh(); else setErr(r.error ?? "Nepodarilo sa uložiť.");
     });
   }
   function toggleActive() {
-    setErr(null);
+    setErr(null); setNotice(null);
     start(async () => { const r = await setMemberActive(m.id, !m.active); if (r.ok) router.refresh(); else setErr(r.error ?? "Chyba"); });
+  }
+  function resendAccess() {
+    setErr(null); setNotice(null);
+    start(async () => {
+      const r = await resendMemberAccess(m.id);
+      if (r.ok) setNotice(r.warning ?? "Prístupový odkaz bol odoslaný e-mailom.");
+      else setErr(r.error ?? "Prístup sa nepodarilo odoslať.");
+      router.refresh();
+    });
   }
 
   const dirty = (mode === "direct") !== m.canOrderDirectly || (mode === "approval" && approverId !== (m.approverId ?? ""));
@@ -44,6 +54,9 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
         {!m.active && <span className="rounded-full bg-[#fdeceb] px-2.5 py-0.5 text-[11.5px] font-medium text-[#9a3025]">neaktívne</span>}
         {m.id !== currentUserId && (
           <button onClick={toggleActive} disabled={pending} className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50">{m.active ? "Deaktivovať" : "Aktivovať"}</button>
+        )}
+        {m.active && m.role === "CUSTOMER_USER" && (
+          <button onClick={resendAccess} disabled={pending} className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50">Poslať prístup znova</button>
         )}
       </div>
 
@@ -69,6 +82,7 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
         </div>
       ) : null}
       {err && <div className="text-[12.5px] text-[#9a3025]">{err}</div>}
+      {notice && <div className="text-[12.5px] text-[#6d5520]" role="status">{notice}</div>}
     </div>
   );
 }
@@ -79,14 +93,13 @@ function InviteMember() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [pending, start] = useTransition();
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [link, setLink] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; warning?: boolean; text: string } | null>(null);
 
   function invite() {
-    setMsg(null); setLink(null);
+    setMsg(null);
     start(async () => {
       const r = await inviteMember({ email, name });
-      if (r.ok) { setMsg({ ok: true, text: "Pozvánka odoslaná ✓" }); setLink(r.inviteLink ?? null); setEmail(""); setName(""); router.refresh(); }
+      if (r.ok) { setMsg({ ok: true, warning: !!r.warning, text: r.warning ?? "Pozvánka odoslaná ✓" }); setEmail(""); setName(""); router.refresh(); }
       else setMsg({ ok: false, text: r.error ?? "Chyba" });
     });
   }
@@ -101,15 +114,9 @@ function InviteMember() {
       </div>
       <div className="flex items-center gap-2.5">
         <button onClick={invite} disabled={pending || !email.trim()} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Pozývam…" : "Pozvať"}</button>
-        <button onClick={() => { setOpen(false); setMsg(null); setLink(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
-        {msg && <span className={`text-[13px] font-semibold ${msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        <button onClick={() => { setOpen(false); setMsg(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
+        {msg && <span className={`text-[13px] font-semibold ${msg.warning ? "text-[#6d5520]" : msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
       </div>
-      {link && (
-        <div className="rounded-lg border border-line bg-[#fafbfa] px-3 py-2.5 text-[12px] text-muted-3">
-          Pozvánkový odkaz (ak e-mail nedorazí, pošlite ho kolegovi ručne):
-          <div className="mt-1 break-all font-mono text-[11.5px] text-ink">{link}</div>
-        </div>
-      )}
     </div>
   );
 }

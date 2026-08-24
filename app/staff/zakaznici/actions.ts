@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { inviteUser } from "@/lib/invite";
+import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
+import { isLastCustomerAdminConstraint } from "@/lib/user-lifecycle-errors";
 
 const ID = z.string().min(1).max(100);
 
@@ -35,7 +37,9 @@ export async function createCustomer(input: z.input<typeof companySchema>): Prom
     return { ok: false, error: "Firma s týmto IČO už existuje." };
   }
   if (d.contactEmail) {
-    const u = await prisma.user.findUnique({ where: { email: d.contactEmail }, select: { companyId: true } });
+    const normalized = normalizeInternalEmail(d.contactEmail);
+    const u = await prisma.user.findFirst({ where: { email: { equals: normalized, mode: "insensitive" } }, select: { companyId: true, role: true } });
+    if (u && isInternalRole(u.role)) return { ok: false, error: "Tento e-mail patrí internému Moonid účtu." };
     if (u?.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
   }
 
@@ -46,7 +50,7 @@ export async function createCustomer(input: z.input<typeof companySchema>): Prom
 
   let inviteLink: string | null = null;
   if (d.contactEmail) {
-    const res = await inviteUser(d.contactEmail, d.contactName || null, "CUSTOMER_ADMIN", company.id, company.name);
+    const res = await inviteUser(d.contactEmail, d.contactName || null, "CUSTOMER_ADMIN", company.id, company.name, { id: staff.id, kind: "STAFF" });
     if (!res.ok) { revalidatePath("/staff/zakaznici"); return { ok: true, id: company.id, error: "Firma vytvorená, ale pozvánka zlyhala: " + res.error }; }
     inviteLink = res.inviteLink ?? null;
   }
@@ -63,10 +67,12 @@ export async function addUserToCompany(companyId: string, email: string, name: s
 
   const company = await prisma.company.findUnique({ where: { id: companyId }, select: { id: true, name: true } });
   if (!company) return { ok: false, error: "Firma neexistuje." };
-  const existing = await prisma.user.findUnique({ where: { email: ev.data }, select: { companyId: true } });
+  const normalizedEmail = normalizeInternalEmail(ev.data);
+  const existing = await prisma.user.findFirst({ where: { email: { equals: normalizedEmail, mode: "insensitive" } }, select: { companyId: true, role: true } });
+  if (existing && isInternalRole(existing.role)) return { ok: false, error: "Tento e-mail patrí internému Moonid účtu." };
   if (existing?.companyId && existing.companyId !== companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
 
-  const res = await inviteUser(ev.data, String(name ?? "").trim() || null, "CUSTOMER_USER", companyId, company.name);
+  const res = await inviteUser(normalizedEmail, String(name ?? "").trim() || null, "CUSTOMER_USER", companyId, company.name, { id: staff.id, kind: "STAFF" });
   if (!res.ok) return { ok: false, error: res.error };
   await writeAudit({ userId: staff.id, companyId, action: "USER_INVITE", entity: "User", entityId: companyId, meta: { email: ev.data } });
   revalidatePath(`/staff/zakaznici/${companyId}`);
@@ -87,7 +93,12 @@ export async function setCompanyUserActive(userId: string, active: boolean): Pro
     const admins = await prisma.user.count({ where: { companyId: u.companyId, role: "CUSTOMER_ADMIN", active: true, id: { not: userId } } });
     if (admins === 0) return { ok: false, error: "Firme musí ostať aspoň jeden aktívny správca." };
   }
-  await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  try {
+    await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  } catch (error) {
+    if (isLastCustomerAdminConstraint(error)) return { ok: false, error: "Firme musí ostať aspoň jeden aktívny správca." };
+    throw error;
+  }
   if (!active) {
     // uvoľni ho ako schvaľovateľa — jeho approvees spadnú na správcu firmy (a treba im prideliť nového)
     await prisma.user.updateMany({ where: { companyId: u.companyId, approverId: userId }, data: { approverId: null } });
@@ -114,7 +125,12 @@ export async function setCompanyUserRole(userId: string, role: string): Promise<
   }
   // povýšenie na správcu → objednáva priamo, bez schvaľovateľa
   const data = rp.data === "CUSTOMER_ADMIN" ? { role: rp.data, canOrderDirectly: true, approverId: null } : { role: rp.data };
-  await prisma.user.update({ where: { id: userId }, data });
+  try {
+    await prisma.user.update({ where: { id: userId }, data });
+  } catch (error) {
+    if (isLastCustomerAdminConstraint(error)) return { ok: false, error: "Firme musí ostať aspoň jeden aktívny správca." };
+    throw error;
+  }
   await writeAudit({ userId: staff.id, companyId: u.companyId, action: "USER_ROLE", entity: "User", entityId: userId, meta: { role: rp.data } });
   revalidatePath(`/staff/zakaznici/${u.companyId}`);
   return { ok: true };
@@ -129,7 +145,7 @@ export async function resendCompanyUserInvite(userId: string): Promise<{ ok: boo
   if (!u || !u.companyId) return { ok: false, error: "Používateľ neexistuje." };
   if (u.role === "STAFF" || u.role === "ADMIN") return { ok: false, error: "Interné kontá sa takto nepozývajú." };
   if (!u.active) return { ok: false, error: "Používateľ je deaktivovaný — najprv ho aktivujte." };
-  const res = await inviteUser(u.email, u.name, u.role === "CUSTOMER_ADMIN" ? "CUSTOMER_ADMIN" : "CUSTOMER_USER", u.companyId, u.company?.name ?? "Moonid");
+  const res = await inviteUser(u.email, u.name, u.role === "CUSTOMER_ADMIN" ? "CUSTOMER_ADMIN" : "CUSTOMER_USER", u.companyId, u.company?.name ?? "Moonid", { id: staff.id, kind: "STAFF" });
   if (!res.ok) return { ok: false, error: res.error };
   await writeAudit({ userId: staff.id, companyId: u.companyId, action: "USER_INVITE_RESEND", entity: "User", entityId: userId, meta: { email: u.email } });
   revalidatePath(`/staff/zakaznici/${u.companyId}`);
