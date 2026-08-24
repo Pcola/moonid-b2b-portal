@@ -22,6 +22,7 @@ async function cleanup() {
   await prisma.cart.deleteMany({ where: { company: { ico: { in: [ICO_A, ICO_B] } } } });
   await prisma.invoice.deleteMany({ where: { company: { ico: { in: [ICO_A, ICO_B] } } } });
   await prisma.deliveryLocation.deleteMany({ where: { company: { ico: { in: [ICO_A, ICO_B] } } } });
+  await prisma.company.updateMany({ where: { ico: { in: [ICO_A, ICO_B] } }, data: { active: false } });
   await prisma.user.deleteMany({ where: { authId: { in: ["zztest-userb"] } } });
   await prisma.company.deleteMany({ where: { ico: { in: [ICO_A, ICO_B] } } });
   await prisma.product.deleteMany({ where: { sku: SKU } });

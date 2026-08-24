@@ -16,6 +16,7 @@ let companyId = "", productId = "";
 
 async function cleanup() {
   await prisma.favorite.deleteMany({ where: { company: { ico: ICO } } });
+  await prisma.company.updateMany({ where: { ico: ICO }, data: { active: false } });
   await prisma.user.deleteMany({ where: { authId: "zzfav-user" } });
   await prisma.company.deleteMany({ where: { ico: ICO } });
   await prisma.product.deleteMany({ where: { sku: SKU } });

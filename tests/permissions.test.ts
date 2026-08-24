@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { canManageCommerceSettings, canManagePriceTiers, canViewAuditLog } from "@/lib/permissions";
+import { canAccessStaffPortal, canManageCommerceSettings, canManageInternalUsers, canManagePriceTiers, canViewAuditLog } from "@/lib/permissions";
 
 describe("interné RBAC oprávnenia", () => {
+  it("ADMIN zdedí celý staff portál, zákaznícke roly nie", () => {
+    expect(canAccessStaffPortal("ADMIN")).toBe(true);
+    expect(canAccessStaffPortal("STAFF")).toBe(true);
+    expect(canAccessStaffPortal("CUSTOMER_ADMIN")).toBe(false);
+    expect(canAccessStaffPortal("CUSTOMER_USER")).toBe(false);
+  });
+
   it("cenové úrovne môže meniť iba ADMIN", () => {
     expect(canManagePriceTiers("ADMIN")).toBe(true);
     expect(canManagePriceTiers("STAFF")).toBe(false);
@@ -21,5 +28,12 @@ describe("interné RBAC oprávnenia", () => {
     expect(canViewAuditLog("STAFF")).toBe(false);
     expect(canViewAuditLog("CUSTOMER_ADMIN")).toBe(false);
     expect(canViewAuditLog("CUSTOMER_USER")).toBe(false);
+  });
+
+  it("interné kontá môže spravovať iba ADMIN", () => {
+    expect(canManageInternalUsers("ADMIN")).toBe(true);
+    expect(canManageInternalUsers("STAFF")).toBe(false);
+    expect(canManageInternalUsers("CUSTOMER_ADMIN")).toBe(false);
+    expect(canManageInternalUsers("CUSTOMER_USER")).toBe(false);
   });
 });

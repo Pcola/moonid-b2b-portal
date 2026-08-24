@@ -1,16 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAudit } from "@/lib/audit";
-import { sendEmail } from "@/lib/email";
-import { SITE_URL } from "@/lib/site-url";
-
-async function origin() {
-  return SITE_URL;
-}
+import { inviteUser } from "@/lib/invite";
+import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
 
 export async function approveRequest(
   id: string,
@@ -24,42 +20,54 @@ export async function approveRequest(
   if (!req || req.status !== "PENDING") return { ok: false, error: "Žiadosť už nie je otvorená." };
   const tier = await prisma.priceTier.findFirst({ where: { code: tierCode } });
   if (!tier) return { ok: false, error: "Neznáma cenová úroveň." };
-
-  // firma podľa IČO (existujúcu aktualizuje, novú založí)
-  const company = await prisma.company.upsert({
-    where: { ico: req.ico },
-    update: { priceTierId: tier.id, splatDays },
-    create: { ico: req.ico, name: req.companyName, priceTierId: tier.id, splatDays },
+  const normalizedEmail = normalizeInternalEmail(req.email);
+  const existing = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: "insensitive" } },
+    select: { role: true },
   });
-
-  const admin = createAdminClient();
-  const redirectTo = `${await origin()}/auth/callback?next=/nastav-heslo`;
-
-  let authId: string | null = null;
-  let inviteLink: string | null = null;
-
-  const { data: gen, error: genErr } = await admin.auth.admin.generateLink({
-    type: "invite",
-    email: req.email,
-    options: { redirectTo },
-  });
-  if (gen?.user) {
-    authId = gen.user.id;
-    inviteLink = gen.properties?.action_link ?? null;
-  } else {
-    // konto už existuje → recovery odkaz; authId vezmeme priamo z jeho odpovede
-    // (bez listUsers({perPage:1000}), ktorý by nad 1000 účtov ticho nenašiel usera).
-    const { data: rec, error: recErr } = await admin.auth.admin.generateLink({ type: "recovery", email: req.email, options: { redirectTo } });
-    if (!rec?.user) return { ok: false, error: "Nepodarilo sa nájsť/vytvoriť konto: " + (recErr?.message ?? genErr?.message ?? "neznáma chyba") };
-    authId = rec.user.id;
-    inviteLink = rec.properties?.action_link ?? null;
+  if (existing && isInternalRole(existing.role)) {
+    return { ok: false, error: "E-mail žiadosti patrí internému Moonid účtu; schválenie bolo zablokované." };
   }
 
-  await prisma.user.upsert({
-    where: { email: req.email },
-    update: { authId: authId!, role: "CUSTOMER_ADMIN", companyId: company.id, active: true },
-    create: { authId: authId!, email: req.email, name: req.contactName, role: "CUSTOMER_ADMIN", companyId: company.id },
-  });
+  // Verejná žiadosť s IČO existujúceho zákazníka nikdy automaticky nepridá nového
+  // tenant admina ani neprepíše obchodné podmienky. Vyžaduje samostatné overenie firmy.
+  const existingCompany = await prisma.company.findUnique({ where: { ico: req.ico }, select: { id: true, name: true } });
+  if (existingCompany && req.companyId !== existingCompany.id) {
+    return {
+      ok: false,
+      error: "Firma s týmto IČO už v portáli existuje. Žiadosť ponechajte otvorenú a overte oprávnenie kontaktu mimo portálu; používateľa potom pridajte cez detail firmy.",
+    };
+  }
+
+  let company = existingCompany;
+  if (!company) {
+    try {
+      company = await prisma.$transaction(async (tx) => {
+        const created = await tx.company.create({
+          data: { ico: req.ico, name: req.companyName, priceTierId: tier.id, splatDays },
+        });
+        // Väzba umožní bezpečný retry iba pre firmu vytvorenú touto konkrétnou žiadosťou.
+        await tx.accessRequest.update({ where: { id }, data: { companyId: created.id } });
+        return created;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        return { ok: false, error: "Firma s týmto IČO medzitým vznikla. Automatické schválenie bolo bezpečne zastavené." };
+      }
+      throw error;
+    }
+  }
+
+  const invited = await inviteUser(
+    normalizedEmail,
+    req.contactName,
+    "CUSTOMER_ADMIN",
+    company.id,
+    company.name,
+    { id: staff.id, kind: "STAFF" },
+  );
+  if (!invited.ok) return { ok: false, error: invited.error };
+  const inviteLink = invited.inviteLink ?? null;
 
   await prisma.accessRequest.update({
     where: { id },
@@ -69,25 +77,6 @@ export async function approveRequest(
   await writeAudit({ userId: staff.id, companyId: company.id, action: "ACCESS_APPROVE", entity: "Company", entityId: company.id, meta: { requestId: id, email: req.email, ico: req.ico, tier: tierCode, splatDays } });
   // POZN: zámerne NErevalidujeme — necháme kartu zobraziť pozvánkový odkaz staffovi.
   // Po refreshi žiadosť zmizne z PENDING zoznamu (je APPROVED).
-
-  // pošli pozvánku aj priamo zákazníkovi (best-effort, popri zobrazení staffovi)
-  if (inviteLink) {
-    await sendEmail({
-      to: req.email,
-      subject: "Prístup do Moonid B2B portálu",
-      text: [
-        "Dobrý deň,",
-        "",
-        `pripravili sme vám prístup do B2B portálu Moonid pre firmu ${company.name}.`,
-        "Heslo si nastavte cez tento odkaz:",
-        inviteLink,
-        "",
-        `Potom sa prihlásite na ${await origin()}/login.`,
-        "",
-        "Tím Moonid",
-      ].join("\n"),
-    });
-  }
 
   return { ok: true, inviteLink };
 }

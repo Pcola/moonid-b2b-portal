@@ -8,6 +8,8 @@ import { requireUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { inviteUser } from "@/lib/invite";
+import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
+import { isLastCustomerAdminConstraint } from "@/lib/user-lifecycle-errors";
 
 // ---------- Správa adries (fakturačná + dodacie) — len správca firmy (CUSTOMER_ADMIN) ----------
 
@@ -172,12 +174,14 @@ export async function requestErasure(reason?: string): Promise<{ ok: boolean; er
 // ---------- Správa členov firmy (pozvať, práva, aktivácia) — len správca firmy ----------
 
 /** Pozve nového člena firmy (CUSTOMER_USER) — e-mailový odkaz na nastavenie hesla. */
-export async function inviteMember(input: { email: string; name?: string }): Promise<{ ok: boolean; error?: string; inviteLink?: string | null }> {
+export async function inviteMember(input: { email: string; name?: string }): Promise<{ ok: boolean; error?: string; warning?: string; inviteLink?: string | null }> {
   const { user, err } = await requireCompanyAdmin();
   if (err) return { ok: false, error: err };
   const ev = z.string().trim().email("Neplatný e-mail").max(160).safeParse(String(input.email ?? "").trim());
   if (!ev.success) return { ok: false, error: "Neplatný e-mail." };
-  const existing = await prisma.user.findUnique({ where: { email: ev.data }, select: { companyId: true } });
+  const normalizedEmail = normalizeInternalEmail(ev.data);
+  const existing = await prisma.user.findFirst({ where: { email: { equals: normalizedEmail, mode: "insensitive" } }, select: { companyId: true, role: true } });
+  if (existing && isInternalRole(existing.role)) return { ok: false, error: "Tento e-mail nemožno pozvať do zákazníckej firmy." };
   if (existing?.companyId) {
     if (existing.companyId !== user.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
     // už je členom TEJTO firmy — opätovné „pozvanie" by cez inviteUser potichu prepísalo rolu
@@ -185,11 +189,36 @@ export async function inviteMember(input: { email: string; name?: string }): Pro
     return { ok: false, error: "Tento používateľ už je členom vašej firmy — spravujte ho v sekcii Používatelia." };
   }
   const company = await prisma.company.findUnique({ where: { id: user.companyId! }, select: { name: true } });
-  const res = await inviteUser(ev.data, String(input.name ?? "").trim() || null, "CUSTOMER_USER", user.companyId!, company?.name ?? "Moonid");
+  const res = await inviteUser(normalizedEmail, String(input.name ?? "").trim() || null, "CUSTOMER_USER", user.companyId!, company?.name ?? "Moonid", { id: user.id, kind: "COMPANY_ADMIN" });
   if (!res.ok) return { ok: false, error: res.error };
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_INVITE", entity: "User", meta: { email: ev.data } });
   revalidatePath("/nastavenia");
-  return { ok: true, inviteLink: res.inviteLink ?? null };
+  return { ok: true, warning: res.warning, inviteLink: null };
+}
+
+/** Opätovne odošle prístup členovi e-mailom; customer admin nikdy neuvidí bearer link. */
+export async function resendMemberAccess(userId: string): Promise<{ ok: boolean; error?: string; warning?: string }> {
+  const { user, err } = await requireCompanyAdmin();
+  if (err) return { ok: false, error: err };
+  if (!ID.safeParse(userId).success) return { ok: false, error: "Neplatný vstup." };
+  const member = await prisma.user.findFirst({
+    where: { id: userId, companyId: user.companyId! },
+    select: { id: true, email: true, name: true, role: true, active: true },
+  });
+  if (!member || member.role !== "CUSTOMER_USER") return { ok: false, error: "Prístup možno takto odoslať iba členovi firmy." };
+  if (!member.active) return { ok: false, error: "Deaktivované konto najprv aktivujte." };
+  const company = await prisma.company.findUnique({ where: { id: user.companyId! }, select: { name: true } });
+  const res = await inviteUser(
+    member.email,
+    member.name,
+    "CUSTOMER_USER",
+    user.companyId!,
+    company?.name ?? "Moonid",
+    { id: user.id, kind: "COMPANY_ADMIN" },
+  );
+  if (!res.ok) return { ok: false, error: res.error };
+  revalidatePath("/nastavenia");
+  return { ok: true, warning: res.warning };
 }
 
 const permSchema = z.object({ canOrderDirectly: z.boolean(), approverId: z.string().max(100).nullable() });
@@ -229,7 +258,12 @@ export async function setMemberActive(userId: string, active: boolean): Promise<
     const admins = await prisma.user.count({ where: { companyId: user.companyId!, role: "CUSTOMER_ADMIN", active: true, id: { not: userId } } });
     if (admins === 0) return { ok: false, error: "Musí ostať aspoň jeden aktívny správca firmy." };
   }
-  await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  try {
+    await prisma.user.update({ where: { id: userId }, data: { active: Boolean(active) } });
+  } catch (error) {
+    if (isLastCustomerAdminConstraint(error)) return { ok: false, error: "Musí ostať aspoň jeden aktívny správca firmy." };
+    throw error;
+  }
   if (!active) {
     // uvoľni ho ako schvaľovateľa iných členov — treba im prideliť nového (dovtedy schvaľuje správca)
     await prisma.user.updateMany({ where: { companyId: user.companyId!, approverId: userId }, data: { approverId: null } });

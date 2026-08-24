@@ -105,6 +105,7 @@ async function main() {
     await tx.deliveryLocation.deleteMany({ where: { companyId: { in: companyIds } } });
     await tx.accessRequest.deleteMany({ where: { OR: [{ companyId: { in: companyIds } }, ...TEST_USER_EMAIL_PATTERNS.map((p) => ({ email: { contains: p } }))] } });
     await tx.inquiry.deleteMany({ where: { OR: TEST_USER_EMAIL_PATTERNS.map((p) => ({ email: { contains: p } })) } });
+    await tx.company.updateMany({ where: { id: { in: companyIds } }, data: { active: false } });
     await tx.user.deleteMany({ where: { id: { in: userIds } } });
     await tx.company.deleteMany({ where: { id: { in: companyIds } } });
     await tx.product.deleteMany({ where: { sku: { startsWith: TEST_PRODUCT_SKU_PREFIX } } });

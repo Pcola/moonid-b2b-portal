@@ -44,10 +44,18 @@ export async function sendEmail(args: SendArgs): Promise<{ ok: boolean; skipped?
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(KEY);
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM, to: args.to, subject: args.subject,
       text: args.text, html: args.html, replyTo: args.replyTo,
     });
+    // Resend pri niektorých API chybách nevyhodí výnimku, ale vráti `error`.
+    // Bez kontroly výsledku by portál nepravdivo tvrdil, že bezpečnostný odkaz odišiel.
+    if (result.error || !result.data?.id) {
+      reportError("email.send", new Error("Resend API returned an unsuccessful result"), {
+        subject: args.subject,
+      });
+      return { ok: false };
+    }
     return { ok: true };
   } catch (e) {
     // Subject je bezpečné logovať (číslo objednávky/stav); príjemcu (PII) NIE.
