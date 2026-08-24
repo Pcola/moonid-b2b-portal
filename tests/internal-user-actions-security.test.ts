@@ -8,6 +8,8 @@ const authAdmin = readFileSync(resolve(process.cwd(), "lib/internal-auth-admin.t
 const lifecycleLock = readFileSync(resolve(process.cwd(), "lib/user-lifecycle-lock.ts"), "utf8");
 const customerInvite = readFileSync(resolve(process.cwd(), "lib/invite.ts"), "utf8");
 const migration = readFileSync(resolve(process.cwd(), "prisma/migrations/20260824170000_internal_identity_lifecycle/migration.sql"), "utf8");
+const migrationWorkflow = readFileSync(resolve(process.cwd(), ".github/workflows/database-migrate.yml"), "utf8");
+const adminInvariantChecker = readFileSync(resolve(process.cwd(), "scripts/security/check-admin-invariant.ts"), "utf8");
 
 const actionNames = [
   "inviteInternalUser",
@@ -61,5 +63,34 @@ describe("statické security gate pre správu interných účtov", () => {
   it("prístupový bearer token sa vkladá iba do URL fragmentu", () => {
     expect(authAdmin).toContain("/potvrdit-pristup#token_hash=");
     expect(authAdmin).not.toContain("/potvrdit-pristup?token_hash=");
+  });
+
+  it("DB workflow overí ADMIN invariant pred aj po migrácii bez zablokovania čistého staging bootstrapu", () => {
+    const preflight = migrationWorkflow.indexOf("- name: Preflight active internal admin invariant");
+    const deploy = migrationWorkflow.indexOf("- name: Apply Prisma migrations with migrator credential");
+    const postCheck = migrationWorkflow.indexOf("- name: Verify active internal admin invariant");
+
+    expect(preflight).toBeGreaterThan(-1);
+    expect(deploy).toBeGreaterThan(preflight);
+    expect(postCheck).toBeGreaterThan(deploy);
+
+    const preflightBlock = migrationWorkflow.slice(preflight, deploy);
+    expect(preflightBlock).toContain("inputs.operation == 'migrate' || inputs.operation == 'bootstrap'");
+    expect(preflightBlock).toContain("to_regclass('public.\"User\"')");
+    expect(preflightBlock).toContain("EXISTS (SELECT 1 FROM public.\"User\")");
+
+    const syncCredential = migrationWorkflow.indexOf("- name: Synchronize staging runtime credential");
+    expect(syncCredential).toBeGreaterThan(postCheck);
+
+    const postCheckBlock = migrationWorkflow.slice(postCheck, syncCredential);
+    expect(postCheckBlock).toContain("if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'");
+    expect(postCheckBlock).toContain('if [[ "$OPERATION" == "bootstrap" ]]');
+    expect(postCheckBlock).toContain("npm run security:admin-invariant -- --allow-empty");
+    expect(postCheckBlock).toMatch(/\n\s+npm run security:admin-invariant\r?\n/);
+
+    expect(adminInvariantChecker).toContain('args[0] === "--allow-empty"');
+    expect(adminInvariantChecker).toMatch(
+      /if \(allowEmpty && totalUsers === 0\)[\s\S]+return;[\s\S]+if \(activeAdmins < 1\)/,
+    );
   });
 });

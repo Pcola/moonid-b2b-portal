@@ -123,7 +123,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
         <Link href="/staff" onClick={() => setOpen(false)} prefetch={false} className="font-display text-[24px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></Link>
         <span className="rounded border border-[#8fc3b9]/30 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mint">{role === "ADMIN" ? "Admin" : "Staff"}</span>
       </div>
-      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto [scrollbar-width:thin]">
+      <nav aria-label="Navigácia administrácie" className="flex flex-1 flex-col gap-4 overflow-y-auto [scrollbar-width:thin]">
         {NAV_GROUPS.map((g, gi) => (
           <div key={gi} className="flex flex-col gap-0.5">
             {g.label && <span className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8fb3ab]">{g.label}</span>}

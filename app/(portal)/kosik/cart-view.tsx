@@ -164,7 +164,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         <div className="flex flex-col gap-4">
           {/* Doprava */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <h3 className={sectionH}>Doprava</h3>
+            <h2 className={sectionH}>Doprava</h2>
             <div className="flex flex-col gap-2">
               {delivery.map((d) => {
                 const fee = shippingFor(d, cart.subtotalNet);
@@ -188,7 +188,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
           {/* Dodanie — fakturačná / iná dodacia adresa alebo odberné miesto */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <h3 className={sectionH}>{needsAddress ? "Dodanie" : "Odberné miesto"}</h3>
+            <h2 className={sectionH}>{needsAddress ? "Dodanie" : "Odberné miesto"}</h2>
             {!needsAddress ? (
               <p className="text-[14px] leading-relaxed text-muted-3">{selDelObj?.description || "Tovar si vyzdvihnete u nás. Detaily potvrdíme."}</p>
             ) : (
@@ -234,7 +234,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
           {/* Platba */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <h3 className={sectionH}>Platba</h3>
+            <h2 className={sectionH}>Platba</h2>
             <div className="flex flex-col gap-2">
               {payment.map((p) => {
                 const active = selPay === p.code;
@@ -257,7 +257,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
           {/* Súhrn */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <h3 className={sectionH}>Súhrn</h3>
+            <h2 className={sectionH}>Súhrn</h2>
             <div className="flex flex-col gap-2 text-[14px]">
               <div className="flex justify-between text-muted"><span>Medzisúčet (tovar, bez DPH)</span><span className="tabular-nums text-ink">{eur(cart.subtotalNet)}</span></div>
               <div className="flex justify-between text-muted"><span>Doprava{selDelObj ? ` · ${selDelObj.label}` : ""}</span><span className="tabular-nums text-ink">{shipping === 0 ? "Zdarma" : eur(shipping)}</span></div>

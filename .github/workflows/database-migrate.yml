@@ -86,8 +86,44 @@ jobs:
         run: npm ci
 
       - name: Preflight active internal admin invariant
-        if: inputs.operation == 'migrate'
-        run: npm run security:admin-invariant
+        if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$OPERATION" == "migrate" ]]; then
+            npm run security:admin-invariant
+            exit 0
+          fi
+
+          # A clean staging bootstrap has no User table (and a retry can have an empty
+          # table), so it cannot satisfy the admin invariant yet. Once identity rows
+          # exist, however, bootstrap must not be usable to bypass the same preflight.
+          npx prisma db execute --stdin --schema prisma/schema.prisma <<'SQL'
+          DO $bootstrap_preflight$
+          DECLARE
+            populated_without_admin boolean := false;
+          BEGIN
+            -- Dynamic SQL is intentional: a pristine database has no User relation,
+            -- so PostgreSQL must not resolve that relation until after to_regclass.
+            IF pg_catalog.to_regclass('public."User"') IS NOT NULL THEN
+              EXECUTE $query$
+                SELECT EXISTS (SELECT 1 FROM public."User")
+                  AND NOT EXISTS (
+                    SELECT 1
+                      FROM public."User"
+                     WHERE "role"::text = 'ADMIN'
+                       AND "active" = true
+                       AND "companyId" IS NULL
+                  )
+              $query$ INTO populated_without_admin;
+            END IF;
+
+            IF populated_without_admin THEN
+              RAISE EXCEPTION 'Bootstrap blocked: populated User table requires an active internal ADMIN';
+            END IF;
+          END;
+          $bootstrap_preflight$;
+          SQL
 
       - name: Apply Prisma migrations with migrator credential
         if: inputs.operation != 'sync-runtime-credential'
@@ -102,8 +138,17 @@ jobs:
         run: npx prisma migrate status
 
       - name: Verify active internal admin invariant
-        if: inputs.operation == 'migrate'
-        run: npm run security:admin-invariant
+        if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$OPERATION" == "bootstrap" ]]; then
+            # A pristine bootstrap intentionally has no users yet. A retry over any
+            # populated User table must preserve the same ADMIN invariant as migrate.
+            npm run security:admin-invariant -- --allow-empty
+          else
+            npm run security:admin-invariant
+          fi
 
       - name: Synchronize staging runtime credential
         if: inputs.operation == 'sync-runtime-credential'

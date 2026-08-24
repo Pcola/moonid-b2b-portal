@@ -61,7 +61,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   return (
     <div className="flex max-w-[1160px] flex-col gap-5">
       <div>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Audit log</h1>
+        <h2 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Audit log</h2>
         <p className="mt-1 text-[14px] text-muted">Append-only záznam bezpečnostných a prevádzkových udalostí — prihlásenia, zmeny práv, objednávky, GDPR prístupy. Zápis je na úrovni DB nemazateľný.</p>
       </div>
 

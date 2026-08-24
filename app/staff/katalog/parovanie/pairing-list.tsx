@@ -132,7 +132,7 @@ export function PairingList({ items, total, unmatchedCount, page, pageSize, filt
     <div className="max-w-[1100px]">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Link href="/staff/katalog" className="text-[14px] font-semibold text-brand transition hover:text-brand-2">← Katalóg</Link>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Manuálne párovanie feedu</h1>
+        <h2 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Manuálne párovanie feedu</h2>
       </div>
       <p className="text-[14.5px] text-muted-3">Pre každú feed položku vyhľadaj a vyber zodpovedajúci Pohoda produkt. Po napárovaní sa skopíruje obrázok (do tvojho úložiska) a popis.</p>
 

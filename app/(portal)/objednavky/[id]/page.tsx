@@ -40,7 +40,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <Link href="/objednavky" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Objednávky</Link>
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-mono text-[24px] font-semibold text-ink">{order.number}</h1>
+          <h2 className="font-mono text-[24px] font-semibold text-ink">{order.number}</h2>
           <span className="rounded-full bg-cream px-2.5 py-1 text-[12.5px] font-semibold text-brand">{STATUS[order.status] ?? order.status}</span>
           <span className="text-[13px] text-muted-2">{new Date(order.createdAt).toLocaleString("sk")}</span>
         </div>

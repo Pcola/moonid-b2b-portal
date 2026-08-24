@@ -73,7 +73,7 @@ export default async function StaffDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <span className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-brand-2">{now.toLocaleDateString("sk", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
-          <h1 className="text-[clamp(26px,3.2vw,38px)] font-normal tracking-[-0.015em] text-ink">Prehľad prevádzky</h1>
+          <h2 className="text-[clamp(26px,3.2vw,38px)] font-normal tracking-[-0.015em] text-ink">Prehľad prevádzky</h2>
         </div>
         <Link href="/staff/objednavky" className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[18px] py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2">
           Spracovať objednávky

@@ -49,6 +49,14 @@ const TITLES: Record<string, string> = {
   "/objednavky": "Objednávky", "/faktury": "Faktúry", "/pouzivatelia": "Používatelia", "/nastavenia": "Nastavenia",
 };
 
+function pageTitle(pathname: string) {
+  if (TITLES[pathname]) return TITLES[pathname];
+  if (pathname === "/objednavky/opakovat") return "Zopakovať objednávku";
+  if (pathname.startsWith("/objednavky/")) return "Objednávka";
+  if (pathname.startsWith("/katalog/")) return "Katalóg";
+  return "Portál";
+}
+
 function Icon({ children }: { children: React.ReactNode }) {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
 }
@@ -87,7 +95,7 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
     };
   }, [open]);
 
-  const title = pathname.startsWith("/objednavky/") ? "Objednávka" : (TITLES[pathname] ?? "Portál");
+  const title = pageTitle(pathname);
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
   const identity = userName?.trim() || companyName || "Moonid";
   const initials = identity.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();

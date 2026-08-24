@@ -55,7 +55,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-mono text-[clamp(24px,3vw,32px)] font-semibold text-ink">{order.number}</h1>
+            <h2 className="font-mono text-[clamp(24px,3vw,32px)] font-semibold text-ink">{order.number}</h2>
             <span className="rounded-full px-3 py-1 text-[12px] font-semibold" style={{ color: meta.fg, background: meta.bg }}>{meta.label}</span>
             {order.hasBackorder && <span className="rounded-full bg-[#FBF1DC] px-2.5 py-1 text-[11.5px] font-medium text-[#9A6B0E]">čiastočne na objednávku</span>}
           </div>

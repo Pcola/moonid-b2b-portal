@@ -29,7 +29,7 @@ export function NewProductForm({ categories }: { categories: { id: string; name:
     <div className="max-w-[680px]">
       <div className="mb-6 flex items-center gap-3">
         <Link href="/staff/katalog" className="text-[14px] font-semibold text-brand transition hover:text-brand-2">← Katalóg</Link>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Nový produkt</h1>
+        <h2 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Nový produkt</h2>
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-6">

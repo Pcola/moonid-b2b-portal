@@ -5,6 +5,8 @@ import { AuthPanel } from "@/components/auth/auth-panel";
 import { ForgotForm } from "./forgot-form";
 
 export const metadata: Metadata = { title: "Zabudnuté heslo — Moonid B2B portál" };
+// Ohraničí čas requestu aj jeho `after()` callbacku. Nie je to durable queue ani retry.
+export const maxDuration = 30;
 
 export default function ForgotPasswordPage() {
   return (

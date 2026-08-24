@@ -46,7 +46,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
       </Link>
 
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[clamp(22px,3vw,30px)] font-semibold text-ink">{company.name}</h1>
+        <h2 className="text-[clamp(22px,3vw,30px)] font-semibold text-ink">{company.name}</h2>
         {company.active
           ? <span className="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-[12px] font-semibold text-[#14633f]">Aktívna</span>
           : <span className="rounded-full bg-[#fdecea] px-2.5 py-1 text-[12px] font-semibold text-[#9a3025]">Neaktívna</span>}
