@@ -2,10 +2,13 @@
   "ci": {
     "collect": {
       "url": [
-        "https://moonid-b2b-portal.vercel.app/",
-        "https://moonid-b2b-portal.vercel.app/produkty",
-        "https://moonid-b2b-portal.vercel.app/login"
+        "http://127.0.0.1:3000/",
+        "http://127.0.0.1:3000/produkty",
+        "http://127.0.0.1:3000/login"
       ],
+      "startServerCommand": "npm start -- --hostname 127.0.0.1 --port 3000",
+      "startServerReadyPattern": "Ready",
+      "startServerReadyTimeout": 30000,
       "numberOfRuns": 3,
       "settings": { "preset": "desktop" }
     },
