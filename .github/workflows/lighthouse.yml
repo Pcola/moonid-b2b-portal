@@ -1,9 +1,7 @@
 name: lighthouse
 
-# Lab gate pre Core Web Vitals na VEREJNÝCH stránkach (autentifikované CWV
-# meria Playwright + Vercel Speed Insights). Beží na vyžiadanie a pri PR do main.
-# Pozn.: meria PRODUKČNÚ URL; ak chceš merať preview deployment, nahraď URL
-# v lighthouserc.json za URL preview buildu.
+# Lab gate pre Core Web Vitals na verejných stránkach. Beží proti lokálnemu
+# produkčnému buildu PR, takže nepotrebuje verejnú produkčnú URL ani DB secrets.
 
 on:
   workflow_dispatch: {}
@@ -16,12 +14,34 @@ permissions:
 jobs:
   lhci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: moonid_lighthouse
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moonid_lighthouse
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/moonid_lighthouse
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: lighthouse-placeholder-anon-key
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm run build
       - name: Run Lighthouse CI
         run: |
-          npm install -g @lhci/cli@0.14.x
+          npm install --global @lhci/cli@0.15.1
           lhci autorun --config=./lighthouserc.json
