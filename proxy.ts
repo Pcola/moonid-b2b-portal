@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { evaluateSession, SESSION_COOKIE, ABSOLUTE_MS } from "@/lib/session-timeout";
+import { shouldRefreshSession } from "@/lib/auth-flow";
 
 // Chránené prefixy — neprihlásený sa odtiaľ presmeruje na /login.
 // Jemné gating podľa rolí (staff/zákazník) rieši layout cez requireUser/requireStaff.
@@ -43,8 +44,17 @@ export async function proxy(request: NextRequest) {
 
   // request-id: korelácia odpovede ↔ Vercel logov/Sentry (echo inbound alebo nové UUID)
   const requestId = request.headers.get("x-request-id")?.slice(0, 64) || crypto.randomUUID();
-  const { response, user, supabase, sessionId } = await updateSession(request, requestHeaders);
   const path = request.nextUrl.pathname;
+
+  // Callback musí najprv v route handleri vymeniť nový auth token/code. Pokus
+  // middleware obnoviť starú cookie vie pred výmenou vyvolať refresh_token_not_found.
+  if (!shouldRefreshSession(path)) {
+    const passthrough = NextResponse.next({ request: { headers: requestHeaders } });
+    passthrough.headers.set("x-request-id", requestId);
+    return secure(passthrough);
+  }
+
+  const { response, user, supabase, sessionId } = await updateSession(request, requestHeaders);
   const isProtected = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
 
   // Časovanie relácie: idle 24 h / absolútne 14 dní (app-layer; Supabase timeouty sú Pro-only).
