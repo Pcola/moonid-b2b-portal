@@ -8,10 +8,10 @@ type Tier = { code: string; name: string; discountPct: number };
 const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
-export function NewCustomerForm({ tiers }: { tiers: Tier[] }) {
+export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canEditPricing: boolean }) {
   const [f, setF] = useState({
     name: "", ico: "", dic: "", icDph: "", city: "", address: "",
-    tierCode: tiers[0]?.code ?? "", splatDays: "14", contactEmail: "", contactName: "",
+    tierCode: (canEditPricing ? tiers[0] : [...tiers].sort((a, b) => a.discountPct - b.discountPct)[0])?.code ?? "", splatDays: "14", contactEmail: "", contactName: "",
   });
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -63,9 +63,10 @@ export function NewCustomerForm({ tiers }: { tiers: Tier[] }) {
           <label className={lbl}>Mesto<input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={inp} /></label>
           <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} /></label>
           <label className={lbl}>Cenová úroveň *
-            <select value={f.tierCode} onChange={(e) => setF({ ...f, tierCode: e.target.value })} className={inp}>
+            <select value={f.tierCode} onChange={(e) => setF({ ...f, tierCode: e.target.value })} disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "new-tier-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}>
               {tiers.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.name} (−{t.discountPct.toFixed(0)} %)</option>)}
             </select>
+            {!canEditPricing && <span id="new-tier-locked" className="text-[12.5px] font-normal normal-case tracking-normal text-muted-3">Zľavovú úroveň priradí administrátor po založení.</span>}
           </label>
           <label className={lbl}>Splatnosť faktúr (dni)<input type="number" min={0} max={365} value={f.splatDays} onChange={(e) => setF({ ...f, splatDays: e.target.value })} className={inp} /></label>
         </div>

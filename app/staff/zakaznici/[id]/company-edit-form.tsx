@@ -12,7 +12,7 @@ type Company = {
 const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
-export function CompanyEditForm({ company, tiers }: { company: Company; tiers: Tier[] }) {
+export function CompanyEditForm({ company, tiers, canEditPricing }: { company: Company; tiers: Tier[]; canEditPricing: boolean }) {
   const [pending, start] = useTransition();
   const [f, setF] = useState({
     name: company.name, dic: company.dic ?? "", icDph: company.icDph ?? "",
@@ -40,9 +40,10 @@ export function CompanyEditForm({ company, tiers }: { company: Company; tiers: T
         <label className={lbl}>Mesto<input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={inp} /></label>
         <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa (ulica a číslo)<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} /></label>
         <label className={lbl}>Cenová úroveň
-          <select value={f.priceTierCode} onChange={(e) => setF({ ...f, priceTierCode: e.target.value })} className={inp}>
+          <select value={f.priceTierCode} onChange={(e) => setF({ ...f, priceTierCode: e.target.value })} disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "tier-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}>
             {tiers.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.name} (−{Number(t.discountPct).toFixed(0)} %)</option>)}
           </select>
+          {!canEditPricing && <span id="tier-locked" className="text-[12.5px] font-normal normal-case tracking-normal text-muted-3">Cenovú úroveň mení administrátor.</span>}
         </label>
         <label className={lbl}>Splatnosť faktúr (dni)<input type="number" min={0} max={365} value={f.splatDays} onChange={(e) => setF({ ...f, splatDays: e.target.value })} className={inp} /></label>
       </div>

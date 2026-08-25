@@ -19,16 +19,52 @@ const actionNames = [
   "resetInternalUserMfa",
 ];
 
+const isExported = (node: ts.Node & { modifiers?: ts.NodeArray<ts.ModifierLike> }) =>
+  node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+
+/**
+ * V súbore s "use server" je KAŽDÝ export server action, teda POST endpoint dosiahnuteľný
+ * kýmkoľvek, kto pozná jeho ID. Preto sa nesmieme pozerať len na `export async function`:
+ * `export const x = async () => {}` je VariableStatement, nie FunctionDeclaration, a starší
+ * gate ho prehliadol — nová akcia bez requireAdmin() by prešla nazeleno. Zbierame teda oba
+ * tvary aj ľubovoľný iný export (ten musí zoznam rozbiť, nech si ho niekto všimne).
+ */
+function exportedServerActions(sourceText: string): { name: string | undefined; body: string }[] {
+  const source = ts.createSourceFile("actions.ts", sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  return source.statements.flatMap((node) => {
+    if (ts.isFunctionDeclaration(node) && isExported(node)) {
+      return [{ name: node.name?.text, body: node.body?.getText(source) ?? "" }];
+    }
+    if (ts.isVariableStatement(node) && isExported(node)) {
+      return node.declarationList.declarations.map((decl) => ({
+        name: ts.isIdentifier(decl.name) ? decl.name.text : undefined,
+        body: decl.initializer?.getText(source) ?? "",
+      }));
+    }
+    return [];
+  });
+}
+
 describe("statické security gate pre správu interných účtov", () => {
   it("každá verejná server action vyžaduje ADMIN + MFA gate", () => {
-    const source = ts.createSourceFile("actions.ts", actions, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const exported = source.statements.filter(ts.isFunctionDeclaration).filter((node) =>
-      node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword),
-    );
-    expect(exported.map((node) => node.name?.text)).toEqual(actionNames);
+    const exported = exportedServerActions(actions);
+    expect(exported.map((node) => node.name)).toEqual(actionNames);
     for (const action of exported) {
-      expect(action.body?.getText(source), action.name?.text).toContain("await requireAdmin()");
+      expect(action.body, action.name).toContain("await requireAdmin()");
     }
+  });
+
+  it("gate zachytí aj akciu napísanú ako exportovaná arrow funkcia", () => {
+    // Regresný test samotného gatu: keby detekcia opäť spadla na FunctionDeclaration,
+    // tento prípad by prešiel a ochrana interných účtov by ticho zmizla.
+    const smuggled = [
+      '"use server";',
+      "export async function inviteInternalUser() { const actor = await requireAdmin(); return actor; }",
+      "export const backdoor = async (userId: string) => { return prisma.user.delete({ where: { id: userId } }); };",
+    ].join("\n");
+    const found = exportedServerActions(smuggled);
+    expect(found.map((node) => node.name)).toEqual(["inviteInternalUser", "backdoor"]);
+    expect(found.find((node) => node.name === "backdoor")?.body).not.toContain("await requireAdmin()");
   });
 
   it("kritické DB zmeny používajú required audit a race-safe advisory lock", () => {

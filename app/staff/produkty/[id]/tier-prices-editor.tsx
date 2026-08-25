@@ -21,6 +21,7 @@ export function TierPricesEditor({
   isSubsidized,
   tiers,
   initial,
+  canEditPricing,
 }: {
   productId: string;
   basePriceNet: number | null;
@@ -28,6 +29,7 @@ export function TierPricesEditor({
   isSubsidized: boolean;
   tiers: Tier[];
   initial: Record<string, number>;
+  canEditPricing: boolean;
 }) {
   const [vals, setVals] = useState<Record<string, string>>(() =>
     Object.fromEntries(tiers.map((t) => [t.code, initial[t.code] != null ? String(initial[t.code]) : ""])),
@@ -110,7 +112,9 @@ export function TierPricesEditor({
                       inputMode="decimal"
                       placeholder={def != null ? def.toFixed(2).replace(".", ",") : "—"}
                       aria-label={`Zmluvná netto cena pre úroveň ${t.name}`}
-                      className={inp}
+                      disabled={!canEditPricing}
+                      aria-describedby={canEditPricing ? undefined : "tier-prices-locked"}
+                      className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}
                     />
                   </td>
                   <td className="py-2.5 font-medium text-ink">{gross != null ? fmt(gross) : "—"}</td>
@@ -122,9 +126,10 @@ export function TierPricesEditor({
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+        <button onClick={save} disabled={pending || !canEditPricing} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:cursor-not-allowed disabled:opacity-60">
           {pending ? "Ukladám…" : "Uložiť ceny"}
         </button>
+        {!canEditPricing && <span id="tier-prices-locked" className="text-[13px] text-muted-3">Zmluvné ceny nastavuje administrátor.</span>}
         {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
       </div>
     </div>

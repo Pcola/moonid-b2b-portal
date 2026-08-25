@@ -4,6 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
+import { dec } from "@/lib/money";
 import { writeAudit } from "@/lib/audit";
 import { inviteUser } from "@/lib/invite";
 import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
@@ -31,8 +33,19 @@ export async function createCustomer(input: z.input<typeof companySchema>): Prom
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Skontrolujte polia." };
   const d = parsed.data;
 
-  const tier = await prisma.priceTier.findFirst({ where: { code: d.tierCode }, select: { id: true } });
+  // Zakladanie firmy rovno na zľavovej úrovni je tá istá právomoc ako neskoršia zmena
+  // úrovne (updateCompany) — bez tohto gate by bola ADMIN-only cenotvorba obíditeľná
+  // jednoducho tým, že sa firma založí hneď na „Gastro VIP“. STAFF preto smie onboardovať
+  // len na úrovni s najnižšou zľavou; skutočnú hladinu priradí ADMIN.
+  const tiers = await prisma.priceTier.findMany({ select: { id: true, code: true, name: true, discountPct: true } });
+  const tier = tiers.find((t) => t.code === d.tierCode);
   if (!tier) return { ok: false, error: "Neznáma cenová úroveň." };
+  if (!canManagePriceTiers(staff.role)) {
+    const baseline = tiers.reduce((min, t) => (dec(t.discountPct).lessThan(dec(min.discountPct)) ? t : min), tiers[0]);
+    if (baseline && !dec(tier.discountPct).equals(dec(baseline.discountPct))) {
+      return { ok: false, error: `Zľavovú úroveň „${tier.name}“ priraďuje iba administrátor. Založte firmu na úrovni „${baseline.name}“ a požiadajte o zmenu.` };
+    }
+  }
   if (await prisma.company.findUnique({ where: { ico: d.ico }, select: { id: true } })) {
     return { ok: false, error: "Firma s týmto IČO už existuje." };
   }

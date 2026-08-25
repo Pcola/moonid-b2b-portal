@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { CompanyEditForm } from "./company-edit-form";
 import { LocationsManager } from "./locations-manager";
@@ -13,7 +14,10 @@ function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireStaff();
+  const staff = await requireStaff();
+  // Zmenu cenovej úrovne vynucuje updateCompany na serveri; tu len nezobrazuj ovládač,
+  // ktorý by staffovi aj tak vrátil chybu.
+  const canEditPricing = canManagePriceTiers(staff.role);
 
   const [company, tiers, recentOrders] = await Promise.all([
     prisma.company.findUnique({
@@ -55,7 +59,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
 
       <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr] lg:items-start">
         <div className="flex flex-col gap-5">
-          <CompanyEditForm company={editable} tiers={tierList} />
+          <CompanyEditForm company={editable} tiers={tierList} canEditPricing={canEditPricing} />
           <LocationsManager companyId={company.id} locations={company.locations} />
         </div>
 

@@ -13,7 +13,7 @@ type Product = {
 const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
-export function ProductEditForm({ product, cats }: { product: Product; cats: { id: string; name: string; parentId: string | null }[] }) {
+export function ProductEditForm({ product, cats, canEditPricing }: { product: Product; cats: { id: string; name: string; parentId: string | null }[]; canEditPricing: boolean }) {
   const [f, setF] = useState({
     nameDisplay: product.nameDisplay, categoryId: product.categoryId, subcategoryId: product.subcategoryId, unit: product.unit, brand: product.brand,
     basePrice: product.basePrice != null ? String(product.basePrice) : "", vatRate: String(product.vatRate),
@@ -107,8 +107,9 @@ export function ProductEditForm({ product, cats }: { product: Product; cats: { i
             <label className={lbl}>Značka<input value={f.brand} onChange={(e) => setF({ ...f, brand: e.target.value })} className={inp} /></label>
             <label className={lbl}>Jednotka<input value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })} className={inp} /></label>
             <div className="grid grid-cols-2 gap-3">
-              <label className={lbl}>Cena (bez DPH)<input value={f.basePrice} onChange={(e) => setF({ ...f, basePrice: e.target.value })} inputMode="decimal" className={inp} /></label>
-              <label className={lbl}>DPH %<input value={f.vatRate} onChange={(e) => setF({ ...f, vatRate: e.target.value })} inputMode="decimal" className={inp} /></label>
+              <label className={lbl}>Cena (bez DPH)<input value={f.basePrice} onChange={(e) => setF({ ...f, basePrice: e.target.value })} inputMode="decimal" disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "pricing-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`} /></label>
+              <label className={lbl}>DPH %<input value={f.vatRate} onChange={(e) => setF({ ...f, vatRate: e.target.value })} inputMode="decimal" disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "pricing-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`} /></label>
+            {!canEditPricing && <p id="pricing-locked" className="text-[12.5px] text-muted-3">Nákupnú cenu a DPH mení administrátor.</p>}
             </div>
           </div>
           <label className={lbl}>Popis
