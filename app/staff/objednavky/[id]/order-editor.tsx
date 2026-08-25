@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrder } from "../actions";
-import { lineTotal2, sumMoney2, grossUnit2, vatOf2 } from "@/lib/money-client";
+import { lineTotal2, sumMoney2, vatOf2, vatFromLines2 } from "@/lib/money-client";
 
 type Item = { id: string; name: string; sku: string; unit: string; unitPriceSnapshot: number; vatRate: number; qty: number };
 type Loc = { id: string; label: string | null; street: string | null; city: string | null; zip: string | null };
@@ -28,7 +28,7 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
   const usable = items.filter((i) => (qty[i.id] ?? 0) > 0);
   // náhľad počíta rovnako ako server (lib/money): centová aritmetika, polovica nahor
   const subtotal = sumMoney2(usable.map((i) => lineTotal2(i.unitPriceSnapshot, qty[i.id])));
-  const itemsVat = sumMoney2(usable.map((i) => lineTotal2(grossUnit2(i.unitPriceSnapshot, i.vatRate) - i.unitPriceSnapshot, qty[i.id])));
+  const itemsVat = vatFromLines2(usable.map((i) => ({ net: lineTotal2(i.unitPriceSnapshot, qty[i.id]), vatRatePct: i.vatRate })));
   const vat = sumMoney2([itemsVat, vatOf2(sumMoney2([shippingFee, paymentSurcharge]), vatRate)]);
   const total = sumMoney2([subtotal, shippingFee, paymentSurcharge, vat]); // doprava/príplatok ostávajú
 

@@ -8,12 +8,14 @@ import { CookieBanner } from "@/components/site/cookie-banner";
 import { ProductImg } from "@/components/product-img";
 import { safeJsonLd } from "@/lib/json-ld";
 import { SITE_URL } from "@/lib/site-url";
+import { isInStock } from "@/lib/stock";
 
 export const dynamic = "force-dynamic";
 
 const detailSelect = {
   id: true, slug: true, sku: true, name: true, nameDisplay: true,
-  brand: true, ean: true, unit: true, packSize: true, isStocked: true, descriptionLong: true,
+  brand: true, ean: true, unit: true, packSize: true, descriptionLong: true,
+  isStocked: true, stockCache: true, stockSyncedAt: true,
   categoryId: true, subcategory: true,
   category: { select: { name: true } },
   media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
@@ -68,7 +70,11 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
   if (p.packSize) specs.push({ label: "Balenie", value: p.packSize });
   if (p.ean) specs.push({ label: "EAN", value: p.ean });
   if (p.unit) specs.push({ label: "Merná jednotka", value: p.unit });
-  specs.push({ label: "Dostupnosť", value: p.isStocked ? "Skladom" : "Na objednávku" });
+  // Dostupnosť MUSÍ prejsť rovnakým pravidlom ako prihlásená časť (lib/stock.ts): keď sklad
+  // nie je čerstvý, „Skladom“ je nepravdivé tvrdenie — a tu ho navyše čítal aj Google zo
+  // structured data. Verejná stránka preto zobrazí sklad iba pri čerstvých dátach.
+  const inStock = isInStock(p);
+  specs.push({ label: "Dostupnosť", value: inStock ? "Skladom" : "Na objednávku" });
 
   const ld = {
     "@context": "https://schema.org", "@type": "Product", name, category: cat, sku: p.sku,
@@ -76,7 +82,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
     ...(p.ean ? { gtin13: p.ean } : {}),
     ...(img ? { image: img } : {}),
     ...(p.descriptionLong ? { description: p.descriptionLong.replace(/\s+/g, " ").trim().slice(0, 400) } : {}),
-    offers: { "@type": "Offer", availability: p.isStocked ? "https://schema.org/InStock" : "https://schema.org/BackOrder", priceCurrency: "EUR", seller: { "@type": "Organization", name: "Moonid s.r.o." } },
+    offers: { "@type": "Offer", availability: inStock ? "https://schema.org/InStock" : "https://schema.org/BackOrder", priceCurrency: "EUR", seller: { "@type": "Organization", name: "Moonid s.r.o." } },
   };
 
   // BreadcrumbList — pomáha Google rich results aj AI extrakcii cesty (dáta z breadcrumb nav nižšie)
@@ -109,8 +115,8 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
           <div className="lg:sticky lg:top-[100px]">
             <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-line p-[clamp(34px,5vw,68px)] shadow-[0_36px_70px_-46px_rgba(16,42,38,0.45)]" style={{ background: "radial-gradient(125% 120% at 28% 0%, #ffffff 0%, #f1f5f3 100%)" }}>
               <span className="absolute left-4 top-4 z-10 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-2 backdrop-blur">{cat}</span>
-              <span className={`absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${p.isStocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.isStocked ? "#1aa15f" : "#c98a14" }} />{p.isStocked ? "Skladom" : "Na objednávku"}
+              <span className={`absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${inStock ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: inStock ? "#1aa15f" : "#c98a14" }} />{inStock ? "Skladom" : "Na objednávku"}
               </span>
               <ProductImg src={img} alt={name} sizes="(max-width: 1024px) 92vw, 520px" priority iconSize={72} />
             </div>
