@@ -18,7 +18,7 @@ async function isPwned(pw: string): Promise<boolean> {
   }
 }
 
-const inp = "rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[14.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[14.5px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3";
 
 function NameEditor({ initialName, email }: { initialName: string | null; email: string }) {

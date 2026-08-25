@@ -6,7 +6,7 @@ import { safeNextPath } from "@/lib/safe-redirect";
 import { authenticate } from "@/app/(auth)/actions";
 
 const labelCls = "flex flex-col gap-2 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-3";
-const inputCls = "rounded-[10px] border border-[#d2d8d4] bg-[#fbfcfb] px-3.5 py-[13px] text-[16.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
+const inputCls = "rounded-[10px] border border-field bg-[#fbfcfb] px-3.5 py-[13px] text-[16.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
 
 export function LoginForm() {
   const router = useRouter();

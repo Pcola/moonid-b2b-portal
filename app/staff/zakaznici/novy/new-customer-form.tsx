@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createCustomer } from "../actions";
 
 type Tier = { code: string; name: string; discountPct: number };
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canEditPricing: boolean }) {

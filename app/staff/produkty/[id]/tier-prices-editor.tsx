@@ -6,7 +6,7 @@ import { discountedNet2, grossUnit2 } from "@/lib/money-client";
 
 type Tier = { code: string; name: string; discountPct: number };
 
-const inp = "w-[130px] rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "w-[130px] rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 
 function fmt(n: number): string {
   return n.toFixed(2).replace(".", ",") + " €";

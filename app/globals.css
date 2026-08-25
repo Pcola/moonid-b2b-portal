@@ -21,6 +21,12 @@
   --color-muted-2: #6b675f;
   --color-muted-3: #54514a;
   --color-line: #e5eae8;
+  /* WCAG 2.2 AA (1.4.11): --color-line je DEKORATÍVNY predel — 1,22:1 na bielej, čo je pre
+     oddeľovače v poriadku (netýka sa ich žiadne kontrastné minimum). Ohraničenie
+     formulárového prvku je ale „user interface component" a potrebuje 3:1, inak pole
+     prakticky nevidno. Preto samostatný token: #7f8d88 = 3,46:1 na bielej, 3,22:1 na creme,
+     3,06:1 na mintbg. Rovnaká chladno-zelená rodina, len tmavšia hodnota. */
+  --color-field: #7f8d88;
   --color-mintbg: #eaf3f0;
 
   --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
@@ -221,11 +227,42 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 .navlink::after { content: ""; position: absolute; left: 0; bottom: -5px; height: 1.5px; width: 0; background: currentColor; transition: width .3s cubic-bezier(.2,.7,.2,1); }
 .navlink:hover::after { width: 100%; }
 
-/* ---- prístupnosť (WCAG 2.4.7 / 2.4.1): viditeľný focus + skip-link ---- */
+/* ---- prístupnosť (WCAG 2.4.7 / 1.4.11 / 2.4.1): viditeľný focus + skip-link ----
+
+   DVOJFAREBNÝ ring, a to nie zo štýlu — je to matematická nutnosť. Aby mal jednofarebný
+   indikátor 3:1 voči --color-brand-2 (#1e5249), musí mať luminanciu ≥ 0,304; aby mal 3:1
+   voči bielej, musí mať ≤ 0,283. To okno je prázdne, teda ŽIADNA jedna farba nefunguje na
+   svetlom aj tmavom podklade naraz. Predtým tu bol len `2px solid var(--color-brand)`,
+   ktorý má na sidebare back-office (#0c211d) 1,44:1 — teda neviditeľný.
+
+   Riešenie: svetlý prstenec tesne na prvku + tmavý obrys hneď za ním.
+     • na svetlom podklade nesie kontrast tmavý obrys   (#163f38 vs biela = 11,65:1)
+     • na tmavom podklade nesie kontrast svetlý prstenec (biela vs #0c211d = 16,80:1)
+     • navzájom majú 11,65:1, takže dvojica je čitateľná na čomkoľvek medzi tým
+   box-shadow so spreadom 2px presne vyplní medzeru, ktorú robí outline-offset: 2px.
+   Overené: žiadny fokusovateľný prvok v projekte nemá vlastný box-shadow, takže niet čo
+   prebiť. Pravidlo je zámerne UNLAYERED (mimo @layer), preto vyhráva nad Tailwind
+   utilitou `outline-none`, ktorú má na sebe každý input.
+
+   `border-radius` je odstránený zámerne: nastavoval polomer SAMOTNÉHO prvku, takže
+   tlačidlo s rounded-[10px] pri fokuse skočilo na 3px a viditeľne sa zdeformovalo.
+   outline aj box-shadow polomer prvku rešpektujú samy. */
 :focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
-  border-radius: 3px;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* iOS Safari zoomne stránku, keď má fokusovaný ovládač písmo pod 16 px — a v projekte je
+   pod 16 px prakticky každý input (32 rôznych veľkostí od 9 px vyššie). Namiesto zásahu do
+   ~40 volajúcich miest to riešime jedným pravidlom pre dotykové/úzke displeje; hustota na
+   desktope zostáva nedotknutá. Unlayered, takže prebije Tailwind utility text-[13px] a spol. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 .skip-link {
   position: absolute;

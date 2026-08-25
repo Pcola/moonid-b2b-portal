@@ -62,7 +62,7 @@ export function RequestList({ requests, tiers }: { requests: Req[]; tiers: Tier[
             {link ? (
               <div className="mt-4 rounded-xl border border-mint/40 bg-mintbg/60 p-3.5">
                 <div className="text-[13px] font-semibold text-brand">✓ Schválené — pošlite zákazníkovi odkaz na nastavenie hesla:</div>
-                <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="mt-2 w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-[12px] text-muted-3" />
+                <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="mt-2 w-full rounded-md border border-field bg-white px-2.5 py-1.5 text-[12px] text-muted-3" />
               </div>
             ) : (
               <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-line pt-4">

@@ -5,7 +5,7 @@ import { addDeliveryLocation, removeDeliveryLocation } from "./actions";
 
 type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null; isDefault: boolean };
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 
 export function LocationsManager({ companyId, locations }: { companyId: string; locations: Loc[] }) {
   const [pending, start] = useTransition();

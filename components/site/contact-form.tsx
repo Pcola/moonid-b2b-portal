@@ -15,7 +15,7 @@ const SEGMENTS = [
 const TYPY = ["Cenová ponuka", "Prenájom dávkovačov", "Prístup do portálu", "Iné"];
 
 const inputCls =
-  "border-0 border-b border-[#d2d8d4] bg-transparent px-0.5 py-2.5 text-[16.5px] text-ink outline-none transition-colors focus:border-brand";
+  "border-0 border-b border-field bg-transparent px-0.5 py-2.5 text-[16.5px] text-ink outline-none transition-colors focus:border-brand";
 const labelCls =
   "flex flex-col gap-2.5 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-2";
 

@@ -120,13 +120,13 @@ function NewTierCard() {
     <div className="flex flex-col gap-3 rounded-2xl border border-brand/30 bg-white p-6">
       <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Nová cenová úroveň</span>
       <div className="flex gap-2">
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="KÓD" className="w-[90px] rounded-lg border border-line bg-white px-2.5 py-2 text-[14px] font-semibold uppercase text-ink outline-none focus:border-brand" />
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Názov" className="flex-1 rounded-lg border border-line bg-white px-2.5 py-2 text-[14px] text-ink outline-none focus:border-brand" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="KÓD" className="w-[90px] rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] font-semibold uppercase text-ink outline-none focus:border-brand" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Názov" className="flex-1 rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] text-ink outline-none focus:border-brand" />
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-baseline gap-1">
           <span className="text-[16px] text-brand">−</span>
-          <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="0" className="w-[64px] rounded-lg border border-line bg-white px-2 py-1.5 text-right text-[16px] text-brand outline-none focus:border-brand tabular-nums" />
+          <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="0" className="w-[64px] rounded-lg border border-field bg-white px-2 py-1.5 text-right text-[16px] text-brand outline-none focus:border-brand tabular-nums" />
           <span className="text-[14px] text-brand">%</span>
         </div>
         <div className="ml-auto flex items-center gap-2">

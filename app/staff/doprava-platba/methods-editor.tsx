@@ -6,7 +6,7 @@ import { updateDeliveryMethod, updatePaymentMethod } from "./actions";
 type Delivery = { code: string; label: string; description: string | null; enabled: boolean; requiresAddress: boolean; flatFee: number; freeThreshold: number | null };
 type Payment = { code: string; label: string; description: string | null; enabled: boolean; surcharge: number };
 
-const inp = "rounded-[9px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[9px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 const chk = "flex items-center gap-2 text-[13.5px] font-medium text-ink";
 

@@ -7,7 +7,7 @@ import { updateBillingAddress, addDeliveryLocation, updateDeliveryLocation, dele
 type Loc = { id: string; label: string; street: string | null; zip: string | null; city: string | null; isDefault: boolean };
 type Billing = { street: string | null; zip: string | null; city: string | null };
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 function Msg({ m }: { m: { ok: boolean; text: string } | null }) {

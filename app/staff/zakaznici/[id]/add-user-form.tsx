@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addUserToCompany } from "../actions";
 
-const inp = "rounded-lg border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-lg border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
 
 export function AddUserForm({ companyId }: { companyId: string }) {
   const router = useRouter();

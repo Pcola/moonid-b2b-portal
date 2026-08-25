@@ -9,7 +9,7 @@ type Company = {
   address: string | null; city: string | null; priceTierCode: string; splatDays: number; active: boolean;
 };
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 export function CompanyEditForm({ company, tiers, canEditPricing }: { company: Company; tiers: Tier[]; canEditPricing: boolean }) {

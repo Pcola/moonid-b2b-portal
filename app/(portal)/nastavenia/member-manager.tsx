@@ -7,7 +7,7 @@ import { inviteMember, resendMemberAccess, setMemberPermissions, setMemberActive
 type Member = { id: string; name: string | null; email: string; role: string; active: boolean; canOrderDirectly: boolean; approverId: string | null };
 
 const ROLE: Record<string, string> = { CUSTOMER_ADMIN: "Správca firmy", CUSTOMER_USER: "Používateľ", STAFF: "Moonid tím", ADMIN: "Administrátor" };
-const inp = "rounded-[9px] border border-line bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[9px] border border-field bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none transition focus:border-brand";
 
 function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]; currentUserId: string }) {
   const router = useRouter();

@@ -41,7 +41,7 @@ type Billing = { name: string; ico: string; address: string | null; city: string
 type DeliveryOpt = { code: string; label: string; description: string | null; requiresAddress: boolean; flatFee: number; freeThreshold: number | null };
 type PaymentOpt = { code: string; label: string; description: string | null; surcharge: number };
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 const sectionH = "mb-3 text-[13px] font-semibold uppercase tracking-wide text-muted-2";
 
 function shippingFor(d: DeliveryOpt, itemsNet: number) {

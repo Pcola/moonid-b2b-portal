@@ -90,7 +90,7 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <textarea aria-label="Dôvod alebo rozsah žiadosti o výmaz (nepovinné)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
+              <textarea aria-label="Dôvod alebo rozsah žiadosti o výmaz (nepovinné)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
               <div className="flex gap-2">
                 <button onClick={doErasure} disabled={pending} className="rounded-[10px] bg-[#9a3025] px-4 py-2 text-[13.5px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60">{pending ? "Odosielam…" : "Odoslať žiadosť"}</button>
                 <button onClick={() => setErasing(false)} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40">Zrušiť</button>

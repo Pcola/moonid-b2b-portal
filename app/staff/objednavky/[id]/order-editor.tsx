@@ -95,13 +95,13 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Dodacia adresa
-          <select value={loc} onChange={(e) => setLoc(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand">
+          <select value={loc} onChange={(e) => setLoc(e.target.value)} className="rounded-lg border border-field bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand">
             <option value="">Fakturačná adresa firmy</option>
             {locations.map((l) => <option key={l.id} value={l.id}>{l.label ? l.label + " · " : ""}{[l.street, [l.zip, l.city].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</option>)}
           </select>
         </label>
         <label className="flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka
-          <input value={noteVal} onChange={(e) => setNoteVal(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand" />
+          <input value={noteVal} onChange={(e) => setNoteVal(e.target.value)} className="rounded-lg border border-field bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand" />
         </label>
       </div>
 

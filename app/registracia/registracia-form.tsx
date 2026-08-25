@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { createAccessRequest } from "./actions";
 
-const inputCls = "rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand";
+const inputCls = "rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand";
 const labelCls = "flex flex-col gap-1.5 text-[13px] font-medium text-muted-3";
 
 export function RegistraciaForm() {

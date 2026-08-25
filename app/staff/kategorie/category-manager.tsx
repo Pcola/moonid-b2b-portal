@@ -7,7 +7,7 @@ import { createCategory, renameCategory, moveCategory, reorderCategory, deleteCa
 type Node = { id: string; name: string; count: number };
 type Top = Node & { children: Node[] };
 
-const inp = "rounded-lg border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-lg border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
 const iconBtn = "flex h-7 w-7 flex-none items-center justify-center rounded-lg border border-line text-muted-2 transition hover:text-ink disabled:opacity-40";
 
 function ArrowUp() { return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>; }
