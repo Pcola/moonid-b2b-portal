@@ -94,7 +94,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
           {/* množstvo + do košíka */}
           {canBuy ? (
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center rounded-[10px] border border-line bg-white">
+              <div className="flex items-center rounded-[10px] border border-field bg-white">
                 <button type="button" aria-label="Znížiť množstvo" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">−</button>
                 <input aria-label="Množstvo" inputMode="numeric" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(9999, Math.floor(Number(e.target.value.replace(/[^0-9]/g, ""))) || 1)))} className="h-11 w-12 border-x border-field bg-transparent text-center text-[15px] font-semibold tabular-nums text-ink outline-none focus:bg-mintbg/30" />
                 <button type="button" aria-label="Zvýšiť množstvo" onClick={() => setQty((q) => Math.min(9999, q + 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">+</button>

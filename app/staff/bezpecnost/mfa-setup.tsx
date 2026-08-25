@@ -79,10 +79,10 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
         </div>
         <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
           Overovací kód
-          <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6} autoFocus value={code}
+          <input type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} autoFocus value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} placeholder="123456"
             aria-invalid={!!err} aria-describedby={err ? "mfa-enroll-error" : undefined}
-            className="w-[180px] rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[18px] tracking-[0.3em] text-ink outline-none transition focus:border-brand" />
+            className="w-[180px] rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[18px] tracking-[0.3em] text-ink outline-none transition focus:border-brand" />
         </label>
         <LiveMessage message={busy ? "Overujem kód…" : null} />
         <LiveMessage message={err} tone="error" />

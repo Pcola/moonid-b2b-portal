@@ -38,7 +38,7 @@ export function MfaChallengeForm({ next }: { next: string }) {
           value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           placeholder="123456"
           aria-invalid={!!err} aria-describedby={err ? "mfa-error" : undefined}
-          className="rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[18px] tracking-[0.3em] text-ink outline-none transition focus:border-brand" />
+          className="field-lg rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[18px] tracking-[0.3em] text-ink outline-none transition focus:border-brand" />
       </label>
       <button type="submit" disabled={loading || code.length < 6}
         className="rounded-[10px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">

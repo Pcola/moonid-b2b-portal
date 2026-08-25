@@ -126,7 +126,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input aria-label="Hľadať v sortimente" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
-          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
+          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-field bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
       <FilterGroup title="Kategórie">
@@ -167,10 +167,10 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       <FilterGroup title="Cena (€)">
         <div className="flex items-center gap-2 px-1">
           <input value={pmin} onChange={(e) => setPmin(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="od" aria-label="Cena od"
-            className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
+            className="w-full rounded-[9px] border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
           <span className="flex-none text-muted-2">–</span>
           <input value={pmax} onChange={(e) => setPmax(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="do" aria-label="Cena do"
-            className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
+            className="w-full rounded-[9px] border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
         </div>
         {(pmin !== active.pmin || pmax !== active.pmax) && (
           <button type="button" onClick={() => go({ pmin, pmax })} className="mt-2 w-full rounded-[9px] bg-brand/10 py-1.5 text-[12.5px] font-semibold text-brand transition hover:bg-brand/15">Použiť cenu</button>

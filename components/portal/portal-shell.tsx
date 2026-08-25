@@ -175,7 +175,7 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
           </button>
           <h1 className="font-display text-[21px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
           <div className="ml-auto flex items-center gap-2.5">
-            <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/katalog?q=${encodeURIComponent(q.trim())}` : "/katalog"); }} className="hidden items-center gap-2 rounded-xl bg-cream px-3.5 py-2.5 transition-colors focus-within:bg-white focus-within:shadow-[inset_0_0_0_1.5px_var(--color-brand)] sm:flex">
+            <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/katalog?q=${encodeURIComponent(q.trim())}` : "/katalog"); }} className="hidden items-center gap-2 rounded-xl border border-field bg-cream px-3.5 py-2.5 transition-colors focus-within:border-brand focus-within:bg-white focus-within:shadow-[inset_0_0_0_1.5px_var(--color-brand)] sm:flex">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b675f" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
               <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať produkt" placeholder="Hľadať produkt…" className="w-[150px] bg-transparent text-[15px] text-ink outline-none lg:w-[220px]" />
             </form>

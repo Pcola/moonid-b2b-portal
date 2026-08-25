@@ -8,7 +8,7 @@ import { LiveMessage } from "@/components/ui/live-region";
 type U = { id: string; name: string | null; email: string; role: string; active: boolean };
 
 const ROLE: Record<string, string> = { CUSTOMER_ADMIN: "Správca firmy", CUSTOMER_USER: "Používateľ", STAFF: "Staff", ADMIN: "Admin" };
-const sel = "rounded-lg border border-line bg-white px-2 py-1 text-[12.5px] text-ink outline-none transition focus:border-brand";
+const sel = "rounded-lg border border-field bg-white px-2 py-1 text-[12.5px] text-ink outline-none transition focus:border-brand";
 const btn = "rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50";
 
 function UserRow({ u }: { u: U }) {

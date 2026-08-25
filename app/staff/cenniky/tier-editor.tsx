@@ -53,7 +53,7 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
           <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Úroveň {tier.code}</span>
           {editable ? (
             <input value={name} onChange={(e) => setName(e.target.value)} aria-label={`Názov úrovne ${tier.code}`}
-              className="w-full rounded-lg border border-line bg-white px-2.5 py-1.5 text-[19px] font-normal text-ink outline-none transition focus:border-brand" />
+              className="field-lg w-full rounded-lg border border-field bg-white px-2.5 py-1.5 text-[19px] font-normal text-ink outline-none transition focus:border-brand" />
           ) : (
             <span className="text-[19px] font-normal text-ink">{tier.name}</span>
           )}
@@ -62,7 +62,7 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
           <span className="text-[22px] font-normal text-brand">−</span>
           {editable ? (
             <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} aria-label={`Zľava úrovne ${tier.code} v percentách`}
-              className="w-[68px] rounded-lg border border-line bg-white px-2 py-1 text-right text-[24px] font-normal text-brand outline-none transition focus:border-brand tabular-nums" />
+              className="field-xl w-[68px] rounded-lg border border-field bg-white px-2 py-1 text-right text-[24px] font-normal text-brand outline-none transition focus:border-brand tabular-nums" />
           ) : (
             <span className="text-right text-[24px] font-normal text-brand tabular-nums">{tier.discountPct}</span>
           )}
@@ -123,13 +123,13 @@ function NewTierCard() {
     <div className="flex flex-col gap-3 rounded-2xl border border-brand/30 bg-white p-6">
       <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Nová cenová úroveň</span>
       <div className="flex gap-2">
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="KÓD" className="w-[90px] rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] font-semibold uppercase text-ink outline-none focus:border-brand" />
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Názov" className="flex-1 rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] text-ink outline-none focus:border-brand" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} aria-label="Kód novej cenovej úrovne" placeholder="KÓD" className="w-[90px] rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] font-semibold uppercase text-ink outline-none focus:border-brand" />
+        <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Názov novej cenovej úrovne" placeholder="Názov" className="flex-1 rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] text-ink outline-none focus:border-brand" />
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-baseline gap-1">
           <span className="text-[16px] text-brand">−</span>
-          <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="0" className="w-[64px] rounded-lg border border-field bg-white px-2 py-1.5 text-right text-[16px] text-brand outline-none focus:border-brand tabular-nums" />
+          <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} aria-label="Zľava novej úrovne v percentách" placeholder="0" className="w-[64px] rounded-lg border border-field bg-white px-2 py-1.5 text-right text-[16px] text-brand outline-none focus:border-brand tabular-nums" />
           <span className="text-[14px] text-brand">%</span>
         </div>
         <div className="ml-auto flex items-center gap-2">

@@ -119,7 +119,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
             onChange={(e) => setSkuInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSku(); } }}
             placeholder="SKU, množstvo (napr. MYDLO-5L, 2)"
-            className="min-w-[220px] flex-1 rounded-lg border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand"
+            className="min-w-[220px] flex-1 rounded-lg border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand"
           />
           <button onClick={addSku} disabled={busy || !skuInput.trim()} className="rounded-lg bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
             {busy ? "…" : "Pridať"}

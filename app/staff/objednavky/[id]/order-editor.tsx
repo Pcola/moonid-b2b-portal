@@ -79,8 +79,8 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
               </div>
               <div className="flex flex-none items-center gap-1">
                 <button onClick={() => set(it.id, q - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-muted hover:border-brand/40">−</button>
-                <input value={q} onChange={(e) => set(it.id, Number(e.target.value))} inputMode="numeric"
-                  className="w-[52px] rounded-lg border border-line bg-white px-1 py-1 text-center text-[13.5px] text-ink outline-none focus:border-brand tabular-nums" />
+                <input value={q} onChange={(e) => set(it.id, Number(e.target.value))} inputMode="numeric" aria-label={`Množstvo — ${it.name}`}
+                  className="w-[52px] rounded-lg border border-field bg-white px-1 py-1 text-center text-[13.5px] text-ink outline-none focus:border-brand tabular-nums" />
                 <button onClick={() => set(it.id, q + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-muted hover:border-brand/40">+</button>
               </div>
               <span className="w-[74px] flex-none text-right text-[13.5px] font-semibold tabular-nums text-ink">{removed ? "—" : eur(lineTotal2(it.unitPriceSnapshot, q))}</span>

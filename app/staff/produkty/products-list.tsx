@@ -55,17 +55,17 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <select value={active.cat} onChange={(e) => go({ cat: e.target.value })}
-              className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40">
+            <select value={active.cat} onChange={(e) => go({ cat: e.target.value })} aria-label="Filtrovať podľa kategórie"
+              className="cursor-pointer appearance-none rounded-[10px] border border-field bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition focus:border-brand hover:border-brand/40">
               <option value="">Všetky kategórie</option>
               {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m6 9 6 6 6-6" /></svg>
           </div>
-          <div className="flex items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+          <div className="flex items-center gap-2 rounded-[10px] border border-field bg-white px-3 py-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7f8d88" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <form onSubmit={(e) => { e.preventDefault(); go({ q }); }}>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Názov alebo SKU…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať produkt podľa názvu alebo SKU" placeholder="Názov alebo SKU…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
             </form>
           </div>
           <Link href="/staff/katalog/novy" className="inline-flex items-center gap-1.5 rounded-[10px] bg-brand px-3.5 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2">

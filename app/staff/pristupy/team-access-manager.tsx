@@ -29,7 +29,7 @@ type TeamUser = {
   createdAt: string;
 };
 
-const inputClass = "min-h-11 rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand disabled:bg-cream disabled:opacity-60";
+const inputClass = "min-h-11 rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand disabled:bg-field/25 disabled:border-field/60 disabled:opacity-60";
 const secondaryButton = "inline-flex min-h-11 items-center justify-center rounded-lg border border-line bg-white px-3 py-2 text-[12px] font-semibold text-muted transition hover:border-brand/30 hover:text-ink disabled:cursor-not-allowed disabled:opacity-45";
 
 function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
@@ -48,7 +48,7 @@ function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
       <div className="text-[12.5px] font-semibold text-[#6d5520]">E-mail nebol doručený — citlivý jednorazový odkaz</div>
       <p className="mt-1 text-[12px] leading-relaxed text-[#786331]">{warning ?? "Odkaz odošlite používateľovi bezpečným kanálom a nikde ho trvalo neukladajte."}</p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        <input readOnly value={url} aria-label="Jednorazový prístupový odkaz" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#dfce9e] bg-white px-2.5 py-1.5 font-mono text-[11px] text-ink outline-none" />
+        <input readOnly value={url} aria-label="Jednorazový prístupový odkaz" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#a08946] bg-white px-2.5 py-1.5 font-mono text-[12px] text-ink outline-none" />
         <button type="button" onClick={copy} aria-label="Kopírovať jednorazový prístupový odkaz" className="min-h-11 rounded-lg bg-[#6d5520] px-3 py-2 text-[12px] font-semibold text-white">{copyState === "copied" ? "Skopírované" : "Kopírovať"}</button>
       </div>
       <div className="mt-1 min-h-[18px] text-[11.5px]" aria-live="polite">
@@ -303,7 +303,7 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
       <td className="px-4 py-3.5">
         <select value={user.role} onChange={(event) => changeRole(event.target.value as InternalRole)} disabled={mutationDisabled || self}
           aria-label={`Rola účtu ${user.email}`} title={self ? "Vlastnú admin rolu nemožno odobrať" : undefined}
-          className="min-h-11 rounded-lg border border-line bg-white px-2 py-1.5 text-[12.5px] font-medium text-ink outline-none transition focus:border-brand disabled:cursor-not-allowed disabled:bg-cream disabled:text-muted-2">
+          className="min-h-11 rounded-lg border border-field bg-white px-2 py-1.5 text-[12.5px] font-medium text-ink outline-none transition focus:border-brand disabled:cursor-not-allowed disabled:bg-cream disabled:text-muted-2">
           <option value="STAFF">Staff</option>
           <option value="ADMIN">Administrátor</option>
         </select>

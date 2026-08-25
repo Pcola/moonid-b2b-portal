@@ -40,8 +40,8 @@ export function AddUserForm({ companyId }: { companyId: string }) {
   return (
     <div className="mt-1 flex flex-col gap-2 rounded-xl border border-dashed border-line p-3">
       <div className="grid gap-2 sm:grid-cols-2">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="e-mail *" className={inp} />
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="meno (voliteľné)" className={inp} />
+        <label className="flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2">E-mail *<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="off" placeholder="objednavky@firma.sk" className={inp} /></label>
+        <label className="flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Meno (voliteľné)<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" placeholder="Meno a priezvisko" className={inp} /></label>
       </div>
       <div className="flex items-center gap-2">
         <button onClick={submit} disabled={pending || !email.trim()} className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">

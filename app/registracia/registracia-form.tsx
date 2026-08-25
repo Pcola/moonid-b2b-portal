@@ -53,11 +53,11 @@ export function RegistraciaForm() {
       <LiveMessage message={err} tone="error" />
       {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={labelCls}>Názov firmy<input name="companyName" required className={inputCls} /></label>
-        <label className={labelCls}>IČO<input name="ico" required inputMode="numeric" className={inputCls} /></label>
-        <label className={labelCls}>Meno a priezvisko<input name="contactName" required className={inputCls} /></label>
-        <label className={labelCls}>Firemný e-mail<input name="email" type="email" required className={inputCls} /></label>
-        <label className={`${labelCls} sm:col-span-2`}>Telefón <span className="text-muted-2">(nepovinné)</span><input name="phone" className={inputCls} /></label>
+        <label className={labelCls}>Názov firmy<input name="companyName" required autoComplete="organization" className={inputCls} /></label>
+        <label className={labelCls}>IČO<input name="ico" required inputMode="numeric" autoComplete="off" className={inputCls} /></label>
+        <label className={labelCls}>Meno a priezvisko<input name="contactName" required autoComplete="name" className={inputCls} /></label>
+        <label className={labelCls}>Firemný e-mail<input name="email" type="email" required autoComplete="email" className={inputCls} /></label>
+        <label className={`${labelCls} sm:col-span-2`}>Telefón <span className="text-muted-2">(nepovinné)</span><input name="phone" type="tel" autoComplete="tel" className={inputCls} /></label>
         <label className={`${labelCls} sm:col-span-2`}>Poznámka <span className="text-muted-2">(nepovinné)</span><textarea name="note" rows={3} className={`${inputCls} resize-y`} placeholder="Napr. typ prevádzky, čo objednávate…" /></label>
       </div>
       <p className="text-[13px] leading-relaxed text-muted">Odoslaním žiadosti beriete na vedomie spracúvanie údajov potrebné na jej vybavenie. Podrobnosti a vaše práva nájdete v <a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">zásadách ochrany osobných údajov</a>. Nejde o marketingový súhlas.</p>

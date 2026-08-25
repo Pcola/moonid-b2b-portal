@@ -47,9 +47,9 @@ function BillingSection({ isAdmin, billing }: { isAdmin: boolean; billing: Billi
   return (
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-[1fr_120px_1fr]">
-        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} className={inp} /></label>
-        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
-        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
+        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} autoComplete="billing street-address" className={inp} /></label>
+        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} autoComplete="billing postal-code" className={inp} /></label>
+        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="billing address-level2" className={inp} /></label>
       </div>
       <div className="flex items-center gap-3">
         <button onClick={save} disabled={pending} className="rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Ukladám…" : "Uložiť"}</button>
@@ -89,9 +89,9 @@ function LocationRow({ loc, isAdmin }: { loc: Loc; isAdmin: boolean }) {
       <div className="flex flex-col gap-2.5 rounded-xl border border-brand/30 bg-white p-4">
         <div className="grid gap-2.5 sm:grid-cols-2">
           <label className={lbl}>Označenie<input value={label} onChange={(e) => setLabel(e.target.value)} className={inp} /></label>
-          <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} className={inp} /></label>
-          <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
-          <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
+          <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} autoComplete="shipping street-address" className={inp} /></label>
+          <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} autoComplete="shipping postal-code" className={inp} /></label>
+          <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="shipping address-level2" className={inp} /></label>
         </div>
         <LiveMessage message={pending ? "Ukladám…" : null} />
         <LiveMessage message={err} tone="error" />
@@ -150,9 +150,9 @@ function AddLocation() {
     <div className="flex flex-col gap-2.5 rounded-xl border border-brand/30 bg-white p-4">
       <div className="grid gap-2.5 sm:grid-cols-2">
         <label className={lbl}>Označenie<input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="napr. Prevádzka centrum" className={inp} /></label>
-        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} className={inp} /></label>
-        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
-        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
+        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} autoComplete="shipping street-address" className={inp} /></label>
+        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} autoComplete="shipping postal-code" className={inp} /></label>
+        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="shipping address-level2" className={inp} /></label>
       </div>
       <LiveMessage message={pending ? "Pridávam adresu…" : null} />
       <LiveMessage message={err} tone="error" />

@@ -90,7 +90,8 @@ function PairingRow({ item }: { item: Item }) {
             <input
               value={q} onChange={(e) => setQ(e.target.value)}
               placeholder="Hľadať Pohoda produkt (názov/SKU)…"
-              className="w-full rounded-lg border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand"
+              aria-label="Hľadať produkt v Pohode (názov alebo SKU)"
+              className="w-full rounded-lg border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand"
             />
             {q.trim().length >= 2 && (searching || results.length > 0) && (
               <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-line bg-white shadow-lg">
@@ -146,8 +147,8 @@ export function PairingList({ items, total, unmatchedCount, page, pageSize, filt
           <button onClick={() => go({ filter: "unmatched", page: "1" })} className={`rounded-md px-3 py-1.5 ${filter === "unmatched" ? "bg-brand text-white" : "text-muted"}`}>Nenapárované ({unmatchedCount})</button>
           <button onClick={() => go({ filter: "all", page: "1" })} className={`rounded-md px-3 py-1.5 ${filter === "all" ? "bg-brand text-white" : "text-muted"}`}>Všetky</button>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); go({ q: search, page: "1" }); }} className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-1.5">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Hľadať vo feede…" className="w-[200px] bg-transparent text-[14px] text-ink outline-none" />
+        <form onSubmit={(e) => { e.preventDefault(); go({ q: search, page: "1" }); }} className="flex items-center gap-2 rounded-lg border border-field bg-white px-3 py-1.5">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Hľadať vo feede dodávateľa" placeholder="Hľadať vo feede…" className="w-[200px] bg-transparent text-[14px] text-ink outline-none" />
           <button type="submit" className="text-[13px] font-semibold text-brand">Hľadať</button>
         </form>
         <span className="text-[13px] text-muted-2">{total} položiek</span>

@@ -182,8 +182,8 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
             <span className="text-[12px] text-muted-2">{page.crumb}</span>
             <h1 className="font-display truncate text-[20px] font-semibold tracking-[-0.02em] text-ink">{page.title}</h1>
           </div>
-          <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+          <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-field bg-white px-3 py-2 focus-within:border-brand sm:flex">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7f8d88" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/staff/objednavky?q=${encodeURIComponent(q.trim())}` : "/staff/objednavky"); }}>
               <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať objednávku alebo firmu" placeholder="Hľadať objednávku, firmu…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none lg:w-[230px]" />
             </form>

@@ -324,6 +324,25 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 }
 .skip-link:focus { top: 12px; }
 
+/* ---- iOS Safari auto-zoom pri fokuse ----
+   Safari na iPhone zväčší celú stránku, keď má fokusovaný textový prvok
+   font-size < 16px. Nie je to porušenie žiadneho SC, ale je to reálna
+   bariéra: po vyplnení poľa ostane stránka priblížená a používateľ sa musí
+   ručne oddialiť. Podlaha 16px platí IBA na dotykových zariadeniach, takže
+   desktopový vzhľad (text-[13.5px]…text-[15px]) ostáva presne taký, aký je.
+   Pravidlo je zámerne UNLAYERED — Tailwind utility text-[14px] sú v @layer
+   utilities, takže neprebijú nelayerované pravidlo.
+   Checkbox/radio/file/range sú vylúčené: nezadáva sa do nich text a zväčšenie
+   font-size by im rozbilo h-4 w-4 rozmer. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea { font-size: 16px; }
+  /* zámerne väčšie polia (OTP kód, % zľavy) ostávajú väčšie */
+  input.field-lg, select.field-lg, textarea.field-lg { font-size: 18px; }
+  input.field-xl, select.field-xl, textarea.field-xl { font-size: 24px; }
+}
+
 /* ---- portál: aktívna položka navigácie (svetlý shell) ---- */
 .pnav-item { position: relative; }
 .pnav-item[data-active="true"]::before {

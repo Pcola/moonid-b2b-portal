@@ -35,8 +35,8 @@ export function NewProductForm({ categories }: { categories: { id: string; name:
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-6">
         <div>
-          <label className={labelCls}>Názov *</label>
-          <input name="name" required maxLength={200} className={inputCls} placeholder="napr. Tekuté mydlo 5 l" />
+          <label htmlFor="np-name" className={labelCls}>Názov *</label>
+          <input id="np-name" name="name" required maxLength={200} className={inputCls} placeholder="napr. Tekuté mydlo 5 l" />
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">

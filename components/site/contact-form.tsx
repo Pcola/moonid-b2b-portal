@@ -70,7 +70,7 @@ export function ContactForm() {
       <form onSubmit={onSubmit} className="flex flex-col gap-[26px]">
         <div className="grid gap-[26px] sm:grid-cols-2">
           <label className={labelCls}>Meno a priezvisko *
-            <input name="meno" type="text" required placeholder="Vaše meno" className={inputCls} />
+            <input name="meno" type="text" required autoComplete="name" placeholder="Vaše meno" className={inputCls} />
           </label>
           <label className={labelCls}>Firma / prevádzka *
             <input name="firma" type="text" required placeholder="Názov firmy alebo prevádzky" className={inputCls} />

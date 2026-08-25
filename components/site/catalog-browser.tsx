@@ -94,7 +94,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input aria-label="Hľadať v sortimente" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
-          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[15.5px] text-ink outline-none transition focus:border-brand" />
+          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-field bg-white py-2.5 pl-10 pr-3 text-[15.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
       <div>

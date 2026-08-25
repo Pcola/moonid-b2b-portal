@@ -117,7 +117,7 @@ export function SetPasswordForm({ email }: { email?: string | null }) {
         Nové heslo
         <input type="password" required disabled={!sessionReady} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}
           aria-invalid={!!err} aria-describedby={err ? "set-password-error" : "set-password-rules"}
-          className="rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand" />
+          className="rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand" />
         <span id="set-password-rules" className="text-[12px] font-normal text-muted-2">Minimálne 12 znakov. Heslo overujeme voči databáze uniknutých hesiel.</span>
       </label>
       <button type="submit" disabled={loading || !sessionReady}

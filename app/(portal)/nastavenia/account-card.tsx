@@ -42,10 +42,10 @@ function NameEditor({ initialName, email }: { initialName: string | null; email:
     <div className="flex flex-col gap-3 px-6 py-5">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className={lbl}>Meno
-          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} className={inp} placeholder="Meno a priezvisko" />
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} autoComplete="name" className={inp} placeholder="Meno a priezvisko" />
         </label>
         <label className={lbl}>E-mail
-          <input value={email} disabled className={`${inp} cursor-not-allowed bg-cream/50 text-muted-2`} />
+          <input value={email} disabled autoComplete="email" className={`${inp} cursor-not-allowed bg-cream/50 text-muted-2`} />
         </label>
       </div>
       <div className="flex items-center gap-2.5">

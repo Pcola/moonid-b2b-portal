@@ -29,7 +29,7 @@ function CatRow({
   return (
     <div className={`flex items-center gap-2 py-1.5 ${isChild ? "" : "font-medium"}`}>
       {editing ? (
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
+        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label={`Premenovať kategóriu ${node.name}`}
           onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) { onAct(() => renameCategory(node.id, name.trim())); setEditing(false); } if (e.key === "Escape") { setName(node.name); setEditing(false); } }}
           className={`${inp} flex-1`} />
       ) : (
@@ -49,7 +49,7 @@ function CatRow({
           <button type="button" onClick={() => onAct(() => reorderCategory(node.id, "up"))} disabled={!canUp} aria-label="Vyššie" className={iconBtn}><ArrowUp /></button>
           <button type="button" onClick={() => onAct(() => reorderCategory(node.id, "down"))} disabled={!canDown} aria-label="Nižšie" className={iconBtn}><ArrowDown /></button>
           {isChild && moveTargets && moveTargets.length > 0 && (
-            <select value="" onChange={(e) => { if (e.target.value) onAct(() => moveCategory(node.id, e.target.value)); }} title="Presunúť pod inú kategóriu" className={`${inp} max-w-[130px]`}>
+            <select value="" onChange={(e) => { if (e.target.value) onAct(() => moveCategory(node.id, e.target.value)); }} aria-label={`Presunúť „${node.name}" pod inú kategóriu`} title="Presunúť pod inú kategóriu" className={`${inp} max-w-[130px]`}>
               <option value="">Presunúť…</option>
               {moveTargets.map((t) => <option key={t.id} value={t.id}>→ {t.name}</option>)}
             </select>
@@ -73,7 +73,7 @@ function AddRow({ parentId, label, onAct }: { parentId: string | null; label: st
   }
   return (
     <div className="flex items-center gap-2">
-      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(""); setOpen(false); } }} placeholder={label} className={`${inp} flex-1`} />
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(""); setOpen(false); } }} aria-label={label} placeholder={label} className={`${inp} flex-1`} />
       <button type="button" onClick={submit} disabled={!name.trim()} className="rounded-lg bg-brand px-3 py-1.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">Pridať</button>
       <button type="button" onClick={() => { setName(""); setOpen(false); }} className="text-[12.5px] font-medium text-muted transition hover:text-ink">Zrušiť</button>
     </div>

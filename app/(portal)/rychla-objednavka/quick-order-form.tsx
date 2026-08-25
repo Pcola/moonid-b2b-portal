@@ -26,11 +26,12 @@ export function QuickOrderForm() {
   return (
     <div className="mt-6 flex flex-col gap-4">
       <textarea
+        aria-label="Zoznam položiek — SKU a množstvo, jedna položka na riadok"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={8}
         placeholder={"napr.\nMYDLO-5L, 3\nUTIERKY-200, 5\nVRECIA-120L"}
-        className="w-full rounded-[12px] border border-line bg-white px-4 py-3 font-mono text-[14px] text-ink outline-none transition focus:border-brand"
+        className="w-full rounded-[12px] border border-field bg-white px-4 py-3 font-mono text-[14px] text-ink outline-none transition focus:border-brand"
       />
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={submit} disabled={pending || !text.trim()} className="rounded-[10px] bg-brand px-5 py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">

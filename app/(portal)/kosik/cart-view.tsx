@@ -20,7 +20,7 @@ function CartQty({ qty, disabled, onCommit }: { qty: number; disabled: boolean; 
     if (c !== qty) onCommit(c);
   };
   return (
-    <div className="flex items-center rounded-[9px] border border-line">
+    <div className="flex items-center rounded-[9px] border border-field">
       <button aria-label="Znížiť množstvo" onClick={() => commit(qty - 1)} disabled={disabled} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">−</button>
       <input
         aria-label="Množstvo"
@@ -30,7 +30,7 @@ function CartQty({ qty, disabled, onCommit }: { qty: number; disabled: boolean; 
         onBlur={() => commit(Number(val))}
         onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
         disabled={disabled}
-        className="w-11 border-x border-line bg-transparent py-1.5 text-center text-[14px] tabular-nums text-ink outline-none focus:bg-mintbg/30 disabled:opacity-50"
+        className="w-12 border-x border-field bg-transparent py-1.5 text-center text-[14px] tabular-nums text-ink outline-none focus:bg-mintbg/30 disabled:opacity-50"
       />
       <button aria-label="Zvýšiť množstvo" onClick={() => commit(qty + 1)} disabled={disabled} className="px-2.5 py-1.5 text-[15px] text-muted hover:text-ink disabled:opacity-50">+</button>
     </div>
