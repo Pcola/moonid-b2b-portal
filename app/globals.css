@@ -45,7 +45,11 @@
 
 html {
   scroll-behavior: smooth;
+  /* 96px zhora kryje najvyššiu lepkavú hlavičku (verejný web: 12px odsadenie + 62px pill).
+     168px zdola kryje fixnú cookie lištu (fixed bottom-4, ~150px aj s odsadením) — bez toho
+     ostane fokusovaný ovládač schovaný pod ňou. WCAG 2.2, 2.4.11 Focus Not Obscured. */
   scroll-padding-top: 96px;
+  scroll-padding-bottom: 168px;
 }
 body {
   background: #fff;
@@ -203,9 +207,41 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 @keyframes brandScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .brand-marquee { position: relative; width: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); }
 .brand-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; padding-right: clamp(44px, 6vw, 84px); animation: brandScroll 34s linear infinite; }
-.brand-marquee:hover .brand-track { animation-play-state: paused; }
+.brand-marquee:hover .brand-track,
+.brand-marquee:focus-within .brand-track,
+.marquee-band:hover .marquee-track,
+.marquee-band:focus-within .marquee-track { animation-play-state: paused; }
+/* WCAG 2.2 SC 2.2.2 — globálny vypínač pohybu (MotionToggle prepína data-motion na <html>).
+   !important je nutné: prebíja `animation` shorthand na .brand-track/.marquee-track, ktorý
+   inak resetuje animation-play-state späť na running. */
+[data-motion="paused"] .brand-track,
+[data-motion="paused"] .marquee-track { animation-play-state: paused !important; }
 .brand-logo { height: 32px; width: auto; flex: none; object-fit: contain; filter: grayscale(1); opacity: .7; transition: filter .35s ease, opacity .35s ease; }
 .brand-marquee:hover .brand-logo { filter: grayscale(0); opacity: 1; }
+
+/* ---- ovládanie pohybu (WCAG 2.2 SC 2.2.2) — malý pill v značkovom štýle ----
+   Svetlý variant má orámovanie --color-brand, nie existujúce #b9cac4 z btnGhost:
+   to má na bielej 1,71:1 a ako ohraničenie ovládača by padlo na SC 1.4.11.
+   min 32×32 px kryje SC 2.5.8 Target Size. Focus ring dedí z :focus-visible. */
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.motion-toggle-light { border: 1px solid var(--color-brand); background: #fff; color: var(--color-brand); }
+.motion-toggle-light:hover { background: var(--color-mintbg); }
+.motion-toggle-dark { border: 1px solid rgba(255,255,255,.55); background: rgba(12,33,29,.55); color: #fff; }
+.motion-toggle-dark:hover { border-color: #fff; background: rgba(255,255,255,.14); }
 
 /* ---- karty ---- */
 .card-hover { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
@@ -247,10 +283,16 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
    `border-radius` je odstránený zámerne: nastavoval polomer SAMOTNÉHO prvku, takže
    tlačidlo s rounded-[10px] pri fokuse skočilo na 3px a viditeľne sa zdeformovalo.
    outline aj box-shadow polomer prvku rešpektujú samy. */
+   Pásy sú TRI, zvnútra von: 1px --color-ink, 2px biela, 2px --color-brand (outline).
+   Tmavý vlások je nutný pre SVETLÝ ovládač na TMAVOM podklade — `btnOnDark` (bg-white)
+   v sections.tsx:98 použitý na :122, :213, :286, biele CTA v footer.tsx:51 a
+   header.tsx:90 aj :140. Tam biely prstenec splynie s bielou výplňou tlačidla (1,00:1)
+   a zelený obrys s tmavým podkladom (1,31:1 na #0f2a26), takže bez vlásku by indikátor
+   zmizol úplne. Vlások má voči bielej výplni 18,25:1. */
 :focus-visible {
   outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 2px #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px var(--color-ink), 0 0 0 3px #fff;
 }
 
 /* iOS Safari zoomne stránku, keď má fokusovaný ovládač písmo pod 16 px — a v projekte je
@@ -265,7 +307,10 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   }
 }
 .skip-link {
-  position: absolute;
+  /* fixed, nie absolute: žiadny predok skip-linku nie je pozicovaný, takže absolute by ho
+     ukotvilo k začiatku DOKUMENTU — po zoscrollovaní by sa pri fokuse musela stránka
+     šklbnúť úplne hore, alebo by odkaz ostal mimo obrazovky. WCAG 2.2, 2.4.1 + 2.4.7. */
+  position: fixed;
   left: 12px;
   top: -56px;
   z-index: 1000;
@@ -300,4 +345,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   .brand-track { flex-wrap: wrap; justify-content: center; width: auto; animation: none; padding-right: 0; }
   .brand-dup { display: none !important; }
   .marquee-track { animation: none; flex-wrap: wrap; width: auto; }
+  /* bez animácie by sa zdvojený pás vypísal dvakrát; duplikáty už nesú aria-hidden */
+  .marquee-track > [aria-hidden="true"] { display: none !important; }
+  .marquee-band { overflow: visible; }
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Testimonials } from "@/components/site/testimonials";
+import { MotionToggle } from "@/components/site/motion-toggle";
 import { ContactForm } from "@/components/site/contact-form";
 import { safeJsonLd } from "@/lib/json-ld";
 
@@ -134,14 +135,19 @@ export function HeroSection() {
       </div>
 
       {/* textový marquee pás */}
-      <div className="marquee-band relative border-t border-white/12 bg-brand-deep/40 py-[clamp(18px,2.4vw,28px)] backdrop-blur-sm" role="img" aria-label={`Sortiment: ${MARQUEE.join(", ")}`}>
-        <div className="marquee-track">
-          {[...MARQUEE, ...MARQUEE].map((m, i) => (
-            <span key={i} aria-hidden={i >= MARQUEE.length} className="flex items-center gap-[clamp(28px,4vw,56px)]">
-              <span className="text-outline font-display whitespace-nowrap font-semibold uppercase" style={{ fontSize: "clamp(26px,3.4vw,44px)", letterSpacing: "0.01em" }}>{m}</span>
-              <span className="h-2 w-2 flex-none rounded-full bg-mint/40" />
-            </span>
-          ))}
+      <div className="relative border-t border-white/12 bg-brand-deep/40 backdrop-blur-sm">
+        <div className="marquee-band py-[clamp(18px,2.4vw,28px)]" role="img" aria-label={`Sortiment: ${MARQUEE.join(", ")}`}>
+          <div className="marquee-track">
+            {[...MARQUEE, ...MARQUEE].map((m, i) => (
+              <span key={i} aria-hidden={i >= MARQUEE.length} className="flex items-center gap-[clamp(28px,4vw,56px)]">
+                <span className="text-outline font-display whitespace-nowrap font-semibold uppercase" style={{ fontSize: "clamp(26px,3.4vw,44px)", letterSpacing: "0.01em" }}>{m}</span>
+                <span className="h-2 w-2 flex-none rounded-full bg-mint/40" />
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="absolute bottom-2 right-3 z-10">
+          <MotionToggle tone="dark" context="textového pásu" />
         </div>
       </div>
     </section>
@@ -179,6 +185,9 @@ export function BrandsSection() {
               <img key={i} src={b.src} alt={i < BRANDS.length ? b.alt : ""} aria-hidden={i >= BRANDS.length} loading="lazy" className={`brand-logo${i >= BRANDS.length ? " brand-dup" : ""}`} />
             ))}
           </div>
+        </div>
+        <div className="mt-5 flex justify-center">
+          <MotionToggle tone="light" context="pásu značiek" />
         </div>
       </div>
     </section>
