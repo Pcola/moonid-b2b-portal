@@ -6,6 +6,7 @@ import type { CartDetail } from "@/lib/cart";
 import { setQty, removeItem, createOrder } from "./actions";
 import { ProductImg } from "@/components/product-img";
 import { sumMoney2, vatOf2 } from "@/lib/money-client";
+import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
@@ -64,6 +65,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
   const [selPay, setSelPay] = useState<string>(payment[0]?.code ?? "");
   const [done, setDone] = useState<string | null>(null);
   const [donePending, setDonePending] = useState(false);
+  const doneRef = useFocusWhen<HTMLDivElement>(!!done);
   const [err, setErr] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -85,7 +87,7 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
   if (done) {
     return (
-      <div className="rounded-2xl border border-line bg-white p-8 text-center">
+      <div role="status" ref={doneRef} tabIndex={-1} className="rounded-2xl border border-line bg-white p-8 text-center">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-mintbg text-brand">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </div>
@@ -217,10 +219,10 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
                       </select>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        <input aria-label="Ulica a číslo" value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" className={inp} />
+                        <input aria-label="Ulica a číslo" value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo *" aria-required="true" aria-invalid={!!err && !na.street.trim()} aria-describedby={!!err && !na.street.trim() ? "cart-error" : undefined} className={inp} />
                         <div className="flex gap-2">
-                          <input aria-label="Mesto" value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" className={`${inp} flex-1`} />
-                          <input aria-label="PSČ" value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" className={`${inp} w-24`} />
+                          <input aria-label="Mesto" value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto *" aria-required="true" aria-invalid={!!err && !na.city.trim()} aria-describedby={!!err && !na.city.trim() ? "cart-error" : undefined} className={`${inp} flex-1`} />
+                          <input aria-label="PSČ" value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ *" aria-required="true" aria-invalid={!!err && !na.zip.trim()} aria-describedby={!!err && !na.zip.trim() ? "cart-error" : undefined} className={`${inp} w-24`} />
                         </div>
                         <input aria-label="Označenie adresy (nepovinné)" value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Prevádzka centrum) — nepovinné" className={inp} />
                       </div>
@@ -283,10 +285,15 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
             <input aria-label="Objednávkové číslo alebo referencia (nepovinné)" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} maxLength={60} placeholder="Objednávkové číslo / referencia (nepovinné)" className={`${inp} mt-3 w-full`} />
             <textarea aria-label="Poznámka k objednávke (nepovinné)" value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Poznámka k objednávke (nepovinné)…" className={`${inp} mt-2 w-full`} />
             <label className="mt-3 flex items-start gap-2.5 text-[12.5px] leading-relaxed text-muted-3">
-              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)}
+                aria-invalid={!!err && !termsAccepted}
+                aria-describedby={err && !termsAccepted ? "cart-error" : undefined}
+                className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
               <span>Potvrdzujem, že som sa oboznámil s <Link href="/obchodne-podmienky" target="_blank" className="font-semibold text-brand underline underline-offset-2">obchodnými podmienkami</Link> a súhlasím s nimi. Odoslanie je záväzný návrh; zmluva vznikne až samostatným potvrdením Moonid.</span>
             </label>
-            {err && <p role="alert" className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
+            <LiveMessage message={pending ? "Odosielam objednávku…" : null} />
+            <LiveMessage message={err} tone="error" />
+            {err && <p id="cart-error" className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
             <button onClick={order} disabled={pending || cart.hasOnRequest} className="mt-3 w-full rounded-[11px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
               {pending ? "Odosielam…" : "Odoslať objednávku"}
             </button>

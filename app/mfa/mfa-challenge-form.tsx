@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { LiveMessage } from "@/components/ui/live-region";
 
 export function MfaChallengeForm({ next }: { next: string }) {
   const router = useRouter();
@@ -28,13 +29,15 @@ export function MfaChallengeForm({ next }: { next: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      {err && <div role="alert" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
+    <form onSubmit={onSubmit} aria-busy={loading} className="flex flex-col gap-4">
+      <LiveMessage message={err} tone="error" />
+      {err && <div id="mfa-error" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Overovací kód
         <input type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} required autoFocus
           value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           placeholder="123456"
+          aria-invalid={!!err} aria-describedby={err ? "mfa-error" : undefined}
           className="rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[18px] tracking-[0.3em] text-ink outline-none transition focus:border-brand" />
       </label>
       <button type="submit" disabled={loading || code.length < 6}

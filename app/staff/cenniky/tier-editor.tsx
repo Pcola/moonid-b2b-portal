@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateTier, createTier, deleteTier } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Tier = { code: string; name: string; discountPct: number; companies: number };
 
@@ -77,6 +78,8 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
           </button>}
         </div>
         {editable && <div className="flex items-center gap-2.5">
+          <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
+          <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
           {msg && <span className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
           <button onClick={save} disabled={pending || !dirty}
             className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-40">
@@ -134,7 +137,9 @@ function NewTierCard() {
           <button onClick={create} disabled={pending || !code.trim() || !name.trim()} className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-40">{pending ? "…" : "Vytvoriť"}</button>
         </div>
       </div>
-      {err && <span className="text-[12.5px] text-[#9a3025]">{err}</span>}
+      <LiveMessage message={pending ? "Vytváram úroveň…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <span id="new-tier-error" className="text-[12.5px] text-[#9a3025]">{err}</span>}
     </div>
   );
 }

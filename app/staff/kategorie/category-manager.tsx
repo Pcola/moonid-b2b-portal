@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory, renameCategory, moveCategory, reorderCategory, deleteCategory } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Node = { id: string; name: string; count: number };
 type Top = Node & { children: Node[] };
@@ -96,6 +97,8 @@ export function CategoryManager({ tree }: { tree: Top[] }) {
 
   return (
     <div className={`flex flex-col gap-3 ${pending ? "opacity-60" : ""}`}>
+      <LiveMessage message={pending ? "Ukladám zmenu kategórie…" : null} />
+      <LiveMessage message={err} tone="error" />
       {err && <div className="rounded-lg border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13px] text-[#9a3025]">{err}</div>}
 
       {tree.map((top, i) => (

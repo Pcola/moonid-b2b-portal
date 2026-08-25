@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { markMfa } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string }) {
   const router = useRouter();
@@ -53,7 +54,9 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
       <div className="flex flex-col gap-3">
         <p className="text-[13.5px] text-muted-3">Konto <span className="font-medium text-ink">{email}</span> je chránené 2FA. Pri každom prihlásení budete zadávať kód z aplikácie.</p>
         <button onClick={disable} disabled={busy} className={`${btn} w-fit border border-line text-[#9a3025] hover:border-[#e0b0a8]`}>{busy ? "…" : "Vypnúť 2FA"}</button>
-        {err && <p role="alert" className="text-[13px] text-[#9a3025]">{err}</p>}
+        <LiveMessage message={busy ? "Vypínam 2FA…" : null} />
+        <LiveMessage message={err} tone="error" />
+        {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
       </div>
     );
   }
@@ -78,9 +81,12 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
           Overovací kód
           <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6} autoFocus value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} placeholder="123456"
+            aria-invalid={!!err} aria-describedby={err ? "mfa-enroll-error" : undefined}
             className="w-[180px] rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[18px] tracking-[0.3em] text-ink outline-none transition focus:border-brand" />
         </label>
-        {err && <p role="alert" className="text-[13px] text-[#9a3025]">{err}</p>}
+        <LiveMessage message={busy ? "Overujem kód…" : null} />
+        <LiveMessage message={err} tone="error" />
+        {err && <p id="mfa-enroll-error" className="text-[13px] text-[#9a3025]">{err}</p>}
         <div className="flex items-center gap-2.5">
           <button onClick={confirmEnroll} disabled={busy || code.length < 6} className={`${btn} bg-brand text-white hover:bg-brand-2`}>{busy ? "Overujem…" : "Potvrdiť a zapnúť"}</button>
           <button onClick={() => { setEnroll(null); setCode(""); setErr(null); }} disabled={busy} className={`${btn} border border-line text-muted hover:text-ink`}>Zrušiť</button>
@@ -93,7 +99,9 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
     <div className="flex flex-col gap-3">
       <p className="text-[13.5px] text-muted-3">Zapnite 2FA cez aplikáciu ako Google Authenticator alebo Authy. Zaberie to minútu.</p>
       <button onClick={startEnroll} disabled={busy} className={`${btn} w-fit bg-brand text-white hover:bg-brand-2`}>{busy ? "…" : "Zapnúť 2FA"}</button>
-      {err && <p role="alert" className="text-[13px] text-[#9a3025]">{err}</p>}
+      <LiveMessage message={busy ? "Pripravujem zapnutie 2FA…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
     </div>
   );
 }

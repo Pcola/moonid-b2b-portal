@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { LiveMessage } from "@/components/ui/live-region";
 import {
   inviteInternalUser,
   resendInternalUserAccess,
@@ -44,7 +45,7 @@ function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
   }
   return (
     <div className="rounded-xl border border-[#e7d7af] bg-[#fffaf0] p-3">
-      <div className="text-[12.5px] font-semibold text-[#6d5520]" role="status">E-mail nebol doručený — citlivý jednorazový odkaz</div>
+      <div className="text-[12.5px] font-semibold text-[#6d5520]">E-mail nebol doručený — citlivý jednorazový odkaz</div>
       <p className="mt-1 text-[12px] leading-relaxed text-[#786331]">{warning ?? "Odkaz odošlite používateľovi bezpečným kanálom a nikde ho trvalo neukladajte."}</p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <input readOnly value={url} aria-label="Jednorazový prístupový odkaz" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#dfce9e] bg-white px-2.5 py-1.5 font-mono text-[11px] text-ink outline-none" />
@@ -52,7 +53,7 @@ function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
       </div>
       <div className="mt-1 min-h-[18px] text-[11.5px]" aria-live="polite">
         {copyState === "copied" && <span className="font-medium text-[#14633f]">Odkaz bol skopírovaný.</span>}
-        {copyState === "failed" && <span className="font-medium text-[#9a3025]" role="alert">Odkaz sa nepodarilo skopírovať. Označte ho a skopírujte ručne.</span>}
+        {copyState === "failed" && <span className="font-medium text-[#9a3025]">Odkaz sa nepodarilo skopírovať. Označte ho a skopírujte ručne.</span>}
       </div>
     </div>
   );
@@ -144,7 +145,7 @@ export function InviteInternalUserForm() {
       <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_1fr_190px]">
         <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
           E-mail *
-          <input ref={emailInputRef} type="email" required maxLength={160} autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="meno@moonid.sk" disabled={pending} />
+          <input ref={emailInputRef} type="email" required maxLength={160} autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} aria-invalid={!!result && !result.ok} aria-describedby={result && !result.ok ? "invite-internal-error" : undefined} className={inputClass} placeholder="meno@moonid.sk" disabled={pending} />
         </label>
         <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
           Meno
@@ -158,15 +159,19 @@ export function InviteInternalUserForm() {
           </select>
         </label>
       </div>
-      {role === "ADMIN" && (
-        <div role="alert" className="mt-3 rounded-lg border border-[#e7d7af] bg-[#fffaf0] px-3 py-2 text-[12.5px] text-[#6d5520]">
-          Administrátor uvidí všetko čo staff a navyše môže meniť globálne nastavenia, roly a bezpečnostné prístupy.
-        </div>
-      )}
+      <div aria-live="polite">
+        {role === "ADMIN" && (
+          <div className="mt-3 rounded-lg border border-[#e7d7af] bg-[#fffaf0] px-3 py-2 text-[12.5px] text-[#6d5520]">
+            Administrátor uvidí všetko čo staff a navyše môže meniť globálne nastavenia, roly a bezpečnostné prístupy.
+          </div>
+        )}
+      </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
+        <LiveMessage message={pending ? "Pozývam…" : result?.ok ? (result.emailSent ? "Pozvánka bola odoslaná e-mailom." : "Konto je vytvorené. E-mail neodišiel — nižšie je jednorazový odkaz na bezpečné odovzdanie.") : null} />
+        <LiveMessage message={result && !result.ok ? result.error : null} tone="error" />
         <button type="submit" disabled={pending || !email.trim()} className="min-h-11 rounded-[10px] bg-brand px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Pozývam…" : "Odoslať pozvánku"}</button>
-        {result?.ok && result.emailSent && <span className="text-[13px] font-medium text-[#14633f]" role="status">Pozvánka bola odoslaná e-mailom.</span>}
-        {result && !result.ok && <span className="text-[13px] font-medium text-[#9a3025]" role="alert">{result.error}</span>}
+        {result?.ok && result.emailSent && <span className="text-[13px] font-medium text-[#14633f]">Pozvánka bola odoslaná e-mailom.</span>}
+        {result && !result.ok && <span id="invite-internal-error" className="text-[13px] font-medium text-[#9a3025]">{result.error}</span>}
       </div>
       {result?.inviteLink && <div className="mt-3"><ManualAccessLink url={result.inviteLink} warning={result.warning} /></div>}
     </form>
@@ -324,9 +329,10 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
           {!self && <button type="button" onClick={resetMfa} disabled={mutationDisabled} aria-label={`Resetovať MFA účtu ${user.email}`} className={secondaryButton}>Resetovať MFA</button>}
           {self && <a href="/staff/bezpecnost" aria-label="Spravovať moje MFA" className={secondaryButton}>Moje MFA</a>}
         </div>
-        <div className="mt-2 min-h-[18px]" aria-live="polite">
+        <div className="mt-2 min-h-[18px]" aria-live="polite" aria-atomic="true">
+          {pending && <span className="text-[11.5px] text-muted-2">Pracujem…</span>}
           {result?.ok && successMessage && <span className="text-[11.5px] font-medium text-[#14633f]">{successMessage}</span>}
-          {result && !result.ok && <span className="text-[11.5px] font-medium text-[#9a3025]" role="alert">{result.error}</span>}
+          {result && !result.ok && <span className="text-[11.5px] font-medium text-[#9a3025]">{result.error}</span>}
         </div>
         {result?.inviteLink && <ManualAccessLink url={result.inviteLink} warning={result.warning} />}
       </td>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateCompany } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Tier = { code: string; name: string; discountPct: number };
 type Company = {
@@ -55,6 +56,8 @@ export function CompanyEditForm({ company, tiers, canEditPricing }: { company: C
         <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
           {pending ? "Ukladám…" : "Uložiť zmeny"}
         </button>
+        <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
         {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
       </div>
     </div>

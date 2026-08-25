@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { createCustomer } from "../actions";
+import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
 
 type Tier = { code: string; name: string; discountPct: number };
 const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
@@ -16,6 +17,7 @@ export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canE
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<{ id: string; inviteLink: string | null } | null>(null);
+  const doneRef = useFocusWhen<HTMLDivElement>(!!done);
 
   function submit() {
     setErr(null);
@@ -29,7 +31,7 @@ export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canE
 
   if (done) {
     return (
-      <div className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-8 text-center">
+      <div role="status" ref={doneRef} tabIndex={-1} className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-8 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-mintbg text-brand">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </div>
@@ -87,6 +89,8 @@ export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canE
         <button onClick={submit} disabled={pending} className="rounded-[10px] bg-brand px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
           {pending ? "Vytváram…" : "Vytvoriť zákazníka"}
         </button>
+        <LiveMessage message={pending ? "Vytváram zákazníka…" : null} />
+        <LiveMessage message={err} tone="error" />
         {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
       </div>
     </div>

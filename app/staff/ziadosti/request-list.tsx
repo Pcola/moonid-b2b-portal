@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { approveRequest, rejectRequest } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Req = {
   id: string;
@@ -60,8 +61,8 @@ export function RequestList({ requests, tiers }: { requests: Req[]; tiers: Tier[
             </div>
 
             {link ? (
-              <div className="mt-4 rounded-xl border border-mint/40 bg-mintbg/60 p-3.5">
-                <div className="text-[13px] font-semibold text-brand">✓ Schválené — pošlite zákazníkovi odkaz na nastavenie hesla:</div>
+              <div role="status" className="mt-4 rounded-xl border border-mint/40 bg-mintbg/60 p-3.5">
+                <div className="text-[13px] font-semibold text-brand"><span aria-hidden="true">✓ </span>Schválené — pošlite zákazníkovi odkaz na nastavenie hesla:</div>
                 <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="mt-2 w-full rounded-md border border-field bg-white px-2.5 py-1.5 text-[12px] text-muted-3" />
               </div>
             ) : (
@@ -84,6 +85,8 @@ export function RequestList({ requests, tiers }: { requests: Req[]; tiers: Tier[
                   className="rounded-[9px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40 hover:text-ink disabled:opacity-50">
                   Zamietnuť
                 </button>
+                <LiveMessage message={isBusy ? "Spracúvam žiadosť…" : null} />
+                <LiveMessage message={errs[r.id] || null} tone="error" />
                 {errs[r.id] && <span className="text-[13px] text-[#9a3025]">{errs[r.id]}</span>}
               </div>
             )}

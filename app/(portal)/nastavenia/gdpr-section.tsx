@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { exportCompanyData, exportMyData, requestErasure } from "./actions";
+import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
 
 export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
   const [pending, start] = useTransition();
@@ -9,6 +10,7 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
   const [erasing, setErasing] = useState(false);
   const [reason, setReason] = useState("");
   const [erased, setErased] = useState(false);
+  const erasedRef = useFocusWhen<HTMLParagraphElement>(erased);
 
   function doExport() {
     setMsg(null);
@@ -77,7 +79,7 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
 
         <div className="border-t border-line pt-4">
           {erased ? (
-            <p className="text-[13.5px] text-brand-2">Žiadosť o výmaz bola odoslaná. Vybavíme ju do 30 dní a ozveme sa.</p>
+            <p role="status" ref={erasedRef} tabIndex={-1} className="text-[13.5px] text-brand-2">Žiadosť o výmaz bola odoslaná. Vybavíme ju do 30 dní a ozveme sa.</p>
           ) : !erasing ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -99,7 +101,9 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
           )}
         </div>
 
-        {msg && <p role="status" className="text-[13px] text-muted-3">{msg}</p>}
+        <LiveMessage message={pending ? "Pripravujem…" : null} />
+        <LiveMessage message={msg} />
+        {msg && <p className="text-[13px] text-muted-3">{msg}</p>}
       </div>
     </section>
   );

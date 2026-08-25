@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { setProductPrices } from "../actions";
 import { discountedNet2, grossUnit2 } from "@/lib/money-client";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Tier = { code: string; name: string; discountPct: number };
 
@@ -36,6 +37,7 @@ export function TierPricesEditor({
   );
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [badCode, setBadCode] = useState<string | null>(null);
 
   // zhodné so serverom (resolveUnitPrice/round2) — centová aritmetika, polovica nahor
   const defaultNet = (disc: number): number | null =>
@@ -50,10 +52,12 @@ export function TierPricesEditor({
 
   function save() {
     setMsg(null);
+    setBadCode(null); // nové uloženie → zahoď predchádzajúcu chybu poľa
     const entries: { code: string; price: number | null }[] = [];
     for (const t of tiers) {
       const p = parse(vals[t.code] ?? "");
       if (typeof p === "number" && Number.isNaN(p)) {
+        setBadCode(t.code);
         setMsg({ ok: false, text: `Neplatná cena pri úrovni ${t.code}. Zadajte kladné číslo alebo nechajte prázdne.` });
         return;
       }
@@ -113,7 +117,8 @@ export function TierPricesEditor({
                       placeholder={def != null ? def.toFixed(2).replace(".", ",") : "—"}
                       aria-label={`Zmluvná netto cena pre úroveň ${t.name}`}
                       disabled={!canEditPricing}
-                      aria-describedby={canEditPricing ? undefined : "tier-prices-locked"}
+                      aria-invalid={badCode === t.code || undefined}
+                      aria-describedby={!canEditPricing ? "tier-prices-locked" : badCode === t.code ? "tier-prices-error" : undefined}
                       className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}
                     />
                   </td>
@@ -130,7 +135,9 @@ export function TierPricesEditor({
           {pending ? "Ukladám…" : "Uložiť ceny"}
         </button>
         {!canEditPricing && <span id="tier-prices-locked" className="text-[13px] text-muted-3">Zmluvné ceny nastavuje administrátor.</span>}
-        {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        <LiveMessage message={pending ? "Ukladám ceny…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+        {msg && <span id="tier-prices-error" className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
       </div>
     </div>
   );

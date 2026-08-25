@@ -6,6 +6,7 @@ import Link from "next/link";
 import { confirmMatch, rejectMatch } from "./actions";
 import { setProductPublished } from "../produkty/actions";
 import { ProductImg } from "@/components/product-img";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = {
   id: string;
@@ -42,11 +43,12 @@ function Chip({ label, value, tone = "neutral" }: { label: string; value: number
 export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
   const [pending, start] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [announce, setAnnounce] = useState<string | null>(null);
   const router = useRouter();
 
-  const run = (id: string, fn: (id: string) => Promise<void>) => {
+  const run = (id: string, fn: (id: string) => Promise<void>, done?: string) => {
     setBusyId(id);
-    start(async () => { await fn(id); setBusyId(null); });
+    start(async () => { await fn(id); setBusyId(null); if (done) setAnnounce(done); });
   };
 
   const runPublish = (rowId: string, productId: string, value: boolean) => {
@@ -56,6 +58,7 @@ export function ReviewList({ items, stats }: { items: Item[]; stats: Stats }) {
 
   return (
     <div className="max-w-[1100px]">
+      <LiveMessage message={announce} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[15px] text-muted-3">Potvrď alebo odmietni navrhnuté zhody humed → Pohoda. Pri potvrdení sa obrázok a popis priradia k produktu.</p>
         <div className="flex flex-none gap-2">

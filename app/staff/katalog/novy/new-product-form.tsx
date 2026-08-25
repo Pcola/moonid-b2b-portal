@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createProduct } from "../actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 const inputCls = "w-full rounded-[10px] border border-field bg-white px-3 py-2.5 text-[14.5px] text-ink outline-none transition focus:border-brand";
 const labelCls = "mb-1.5 block text-[12.5px] font-semibold uppercase tracking-wide text-muted-2";
@@ -87,6 +88,8 @@ export function NewProductForm({ categories }: { categories: { id: string; name:
           </label>
         </div>
 
+        <LiveMessage message={pending ? "Ukladám produkt…" : null} />
+        <LiveMessage message={error} tone="error" />
         {error && <p className="text-[13.5px] text-[#9a3025]">{error}</p>}
 
         <div className="flex gap-2">

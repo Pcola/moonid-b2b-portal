@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrder } from "../actions";
 import { lineTotal2, sumMoney2, vatOf2, vatFromLines2 } from "@/lib/money-client";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = { id: string; name: string; sku: string; unit: string; unitPriceSnapshot: number; vatRate: number; qty: number };
 type Loc = { id: string; label: string | null; street: string | null; city: string | null; zip: string | null };
@@ -108,6 +109,8 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3.5">
         <div className="text-[13.5px] text-muted">Nový súčet: <span className="font-semibold text-ink">{eur(subtotal)}</span> bez DPH · <span className="font-semibold text-brand">{eur(total)}</span> s DPH</div>
         <div className="flex items-center gap-2.5">
+          <LiveMessage message={pending ? "Ukladám zmeny objednávky…" : null} />
+          <LiveMessage message={err} tone="error" />
           {err && <span className="text-[12.5px] text-[#9a3025]">{err}</span>}
           <button onClick={() => { setOpen(false); reset(); }} className="rounded-lg border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
           <button onClick={save} disabled={pending} className="rounded-lg bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Ukladám…" : "Uložiť zmeny"}</button>

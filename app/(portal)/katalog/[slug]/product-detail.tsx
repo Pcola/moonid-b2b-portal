@@ -35,7 +35,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
   const askQuote = () => startQuote(async () => {
     const r = await requestQuote(v.id);
     if (r.ok) { setQuoted(true); toast("Dopyt odoslaný — ozveme sa s cenovou ponukou"); }
-    else toast(r.error ?? "Dopyt sa nepodarilo odoslať");
+    else toast(r.error ?? "Dopyt sa nepodarilo odoslať", "error");
   });
 
   return (

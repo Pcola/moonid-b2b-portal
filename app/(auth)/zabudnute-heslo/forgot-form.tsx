@@ -2,11 +2,13 @@
 
 import { useState, type FormEvent } from "react";
 import { requestPasswordReset } from "@/app/(auth)/actions";
+import { useFocusWhen } from "@/components/ui/live-region";
 
 export function ForgotForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const sentRef = useFocusWhen<HTMLDivElement>(sent);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -18,7 +20,7 @@ export function ForgotForm() {
 
   if (sent) {
     return (
-      <div className="rounded-[10px] border border-mint/40 bg-mintbg/60 px-4 py-3.5 text-[14.5px] leading-relaxed text-brand">
+      <div role="status" ref={sentRef} tabIndex={-1} className="rounded-[10px] border border-mint/40 bg-mintbg/60 px-4 py-3.5 text-[14.5px] leading-relaxed text-brand">
         Ak e-mail existuje, poslali sme naň odkaz na nastavenie nového hesla. Skontrolujte si schránku.
       </div>
     );

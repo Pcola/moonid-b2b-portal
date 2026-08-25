@@ -2,17 +2,20 @@
 
 import { useState, useTransition } from "react";
 import { toggleFavorite } from "@/app/(portal)/oblubene/actions";
+import { useToast } from "@/components/portal/toast";
 
 export function FavoriteButton({ productId, initial, className = "" }: { productId: string; initial: boolean; className?: string }) {
   const [fav, setFav] = useState(initial);
   const [pending, start] = useTransition();
+  const toast = useToast();
 
   function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation(); // nech klik nepretečie na kartu/link
     start(async () => {
       const res = await toggleFavorite(productId);
-      if (res.ok) setFav(!!res.favorited);
+      if (res.ok) { setFav(!!res.favorited); toast(res.favorited ? "Pridané do obľúbených" : "Odobrané z obľúbených"); }
+      else toast("Zmenu obľúbených sa nepodarilo uložiť.", "error");
     });
   }
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setInquiryHandled } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = {
   id: string; name: string; company: string; email: string;
@@ -59,6 +60,8 @@ function Row({ it }: { it: Item }) {
         </div>
       </div>
       {it.message && <p className="mt-3 whitespace-pre-wrap rounded-lg bg-[#fafbfa] px-3.5 py-3 text-[13.5px] leading-relaxed text-muted-3">{it.message}</p>}
+      <LiveMessage message={pending ? "Ukladám…" : null} />
+      <LiveMessage message={err} tone="error" />
       {err && <p className="mt-2 text-[12.5px] text-[#9a3025]">{err}</p>}
     </div>
   );

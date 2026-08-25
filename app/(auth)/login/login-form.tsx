@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { authenticate } from "@/app/(auth)/actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 const labelCls = "flex flex-col gap-2 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-3";
 const inputCls = "rounded-[10px] border border-field bg-[#fbfcfb] px-3.5 py-[13px] text-[16.5px] font-normal normal-case tracking-normal text-ink outline-none transition focus:border-brand";
@@ -42,9 +43,10 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-[22px]">
+    <form onSubmit={onSubmit} aria-busy={loading} className="flex flex-col gap-[22px]">
+      <LiveMessage message={err} tone="error" />
       {err && (
-        <div id="login-error" role="alert" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>
+        <div id="login-error" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>
       )}
       <label className={labelCls}>
         Firemný e-mail

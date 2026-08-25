@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setCompanyUserActive, setCompanyUserRole, resendCompanyUserInvite } from "../actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type U = { id: string; name: string | null; email: string; role: string; active: boolean };
 
@@ -62,6 +63,8 @@ function UserRow({ u }: { u: U }) {
         </div>
       )}
 
+      <LiveMessage message={pending ? "Pracujem…" : null} />
+      <LiveMessage message={err} tone="error" />
       {err && <span className="text-[12px] text-[#9a3025]">{err}</span>}
       {link && (
         <div className="rounded-lg border border-line bg-cream/50 p-2">

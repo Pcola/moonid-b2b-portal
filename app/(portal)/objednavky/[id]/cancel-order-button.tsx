@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cancelOwnOrder } from "@/app/(portal)/objednavky/actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 /** Zrušenie vlastnej objednávky zákazníkom (len kým je PRIJATA). Inline potvrdenie
  *  namiesto window.confirm — konzistentné so zvyškom portálu, prístupnejšie. */
@@ -45,7 +46,9 @@ export function CancelOrderButton({ orderId }: { orderId: string }) {
           Späť
         </button>
       </div>
-      {err && <p role="alert" className="text-[13px] text-[#9a3025]">{err}</p>}
+      <LiveMessage message={pending ? "Ruším objednávku…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
     </div>
   );
 }

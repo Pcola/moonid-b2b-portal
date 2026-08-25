@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { searchPohodaProducts, manualPair, rejectMatch } from "../actions";
 import { ProductImg } from "@/components/product-img";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = {
   id: string;
@@ -26,6 +27,7 @@ function PairingRow({ item }: { item: Item }) {
   const [selected, setSelected] = useState<Hit | null>(null);
   const [searching, setSearching] = useState(false);
   const [done, setDone] = useState<null | "paired" | "rejected">(null);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (selected || q.trim().length < 2) return;
@@ -40,9 +42,11 @@ function PairingRow({ item }: { item: Item }) {
 
   function pair() {
     if (!selected) return;
+    setErr(null);
     start(async () => {
       const res = await manualPair(item.id, selected.id);
       if (res.ok) { setDone("paired"); router.refresh(); }
+      else setErr(res.error ?? "Napárovanie sa nepodarilo. Skúste to znova.");
     });
   }
   function reject() {
@@ -51,7 +55,7 @@ function PairingRow({ item }: { item: Item }) {
 
   if (done) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-line bg-cream/50 px-4 py-3 text-[13.5px]">
+      <div role="status" className="flex items-center gap-3 rounded-xl border border-line bg-cream/50 px-4 py-3 text-[13.5px]">
         <span className={done === "paired" ? "text-brand-2" : "text-muted-2"}>
           {done === "paired" ? `✓ Napárované na ${selected?.sku}` : "✗ Odmietnuté"}
         </span>
@@ -61,6 +65,7 @@ function PairingRow({ item }: { item: Item }) {
 
   return (
     <div className="grid grid-cols-1 gap-4 rounded-xl border border-line bg-white p-4 md:grid-cols-[1fr_1.3fr]">
+      <LiveMessage message={err} tone="error" />
       {/* HUMED feed položka */}
       <div className="flex gap-3">
         <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-lg border border-line bg-cream">

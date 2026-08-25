@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { placeRepeatOrder, quickAddToRepeatDraft, removeRepeatDraftItem } from "../../kosik/actions";
 import { lineTotal2, sumMoney2 } from "@/lib/money-client";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Line = { name: string; qty: number; net: number | null; usable: boolean };
 type ExtraLine = Line & { id: string };
@@ -124,6 +125,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
             {busy ? "…" : "Pridať"}
           </button>
         </div>
+        <LiveMessage message={busy ? "Pridávam položku…" : msg} />
         {msg && <p className="mt-1.5 text-[12.5px] text-[#9a6b0e]">{msg}</p>}
         <p className="mt-1.5 text-[12px] text-muted-2">Doobjednané položky sa pripočítajú k tejto objednávke (nie do bežného košíka).</p>
       </div>
@@ -136,14 +138,19 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
 
       <div className="mt-5 flex flex-col gap-2">
         <label className="flex max-w-2xl items-start gap-2.5 text-[12.5px] leading-relaxed text-muted-3">
-          <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+          <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)}
+            aria-invalid={!!err && !termsAccepted}
+            aria-describedby={err && !termsAccepted ? "repeat-error" : undefined}
+            className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
           <span>Potvrdzujem, že som sa oboznámil s <Link href="/obchodne-podmienky" target="_blank" className="font-semibold text-brand underline underline-offset-2">obchodnými podmienkami</Link> a súhlasím s nimi. Opakovaná objednávka používa aktuálne ceny a aktuálnu verziu podmienok.</span>
         </label>
         <button onClick={confirm} disabled={placing || usableCount === 0} className="inline-flex w-fit items-center gap-2 rounded-[11px] bg-brand px-6 py-3.5 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
           {placing ? "Objednávam…" : "Potvrdiť a objednať"}
         </button>
-        {err && <span role="alert" className="text-[13px] text-[#9a3025]">{err}</span>}
+        <LiveMessage message={placing ? "Odosielam objednávku…" : null} />
+        <LiveMessage message={err} tone="error" />
+        {err && <span id="repeat-error" className="text-[13px] text-[#9a3025]">{err}</span>}
         {usableCount === 0 && <span className="text-[13px] text-[#9a3025]">Žiadna položka nie je dostupná na objednanie.</span>}
         <p className="text-[12.5px] text-muted-2">Bez platby vopred — platíte faktúrou so splatnosťou. Termín rozvozu potvrdíme.</p>
       </div>

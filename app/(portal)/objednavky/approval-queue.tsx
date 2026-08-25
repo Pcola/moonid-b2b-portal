@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { approveOrder, rejectOrder } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type QOrder = { id: string; number: string; total: number; date: string; itemCount: number; createdByName: string };
 
@@ -43,6 +44,8 @@ export function ApprovalQueue({ orders }: { orders: QOrder[] }) {
           </div>
         ))}
       </div>
+      <LiveMessage message={pending ? "Spracúvam…" : null} />
+      <LiveMessage message={err} tone="error" />
       {err && <p className="mt-2 text-[13px] text-[#9a3025]">{err}</p>}
     </div>
   );

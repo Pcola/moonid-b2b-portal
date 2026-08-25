@@ -36,7 +36,7 @@ function AddBtn({ productId, repeat }: { productId: string; repeat?: boolean }) 
   const toast = useToast();
   return (
     <button
-      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); toast(repeat ? "Pridané k doobjednaniu" : "Pridané do košíka"); setTimeout(() => setAdded(false), 1500); } })}
+      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); toast(repeat ? "Pridané k doobjednaniu" : "Pridané do košíka"); setTimeout(() => setAdded(false), 1500); } else { toast("Položku sa nepodarilo pridať. Skúste to znova.", "error"); } })}
       disabled={pending}
       className="mt-2.5 w-full rounded-[9px] border border-brand/30 bg-mintbg/40 px-3 py-2 text-[13px] font-semibold text-brand transition hover:bg-mintbg disabled:opacity-60"
     >

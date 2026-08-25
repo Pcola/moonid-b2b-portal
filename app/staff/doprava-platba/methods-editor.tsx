@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateDeliveryMethod, updatePaymentMethod } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Delivery = { code: string; label: string; description: string | null; enabled: boolean; requiresAddress: boolean; flatFee: number; freeThreshold: number | null };
 type Payment = { code: string; label: string; description: string | null; enabled: boolean; surcharge: number };
@@ -11,8 +12,13 @@ const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wi
 const chk = "flex items-center gap-2 text-[13.5px] font-medium text-ink";
 
 function Saved({ msg }: { msg: { ok: boolean; text: string } | null }) {
-  if (!msg) return null;
-  return <span className={`text-[13px] font-semibold ${msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>;
+  return (
+    <>
+      <LiveMessage message={msg?.ok ? msg.text : null} />
+      <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+      {msg && <span className={`text-[13px] font-semibold ${msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
+    </>
+  );
 }
 
 function DeliveryCard({ m, editable }: { m: Delivery; editable: boolean }) {

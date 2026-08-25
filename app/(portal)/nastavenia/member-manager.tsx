@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { inviteMember, resendMemberAccess, setMemberPermissions, setMemberActive } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Member = { id: string; name: string | null; email: string; role: string; active: boolean; canOrderDirectly: boolean; approverId: string | null };
 
@@ -81,8 +82,10 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
           {dirty && <button onClick={save} disabled={pending} className="rounded-[9px] bg-brand px-3.5 py-2 text-[12.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "…" : "Uložiť"}</button>}
         </div>
       ) : null}
+      <LiveMessage message={pending ? "Pracujem…" : notice} />
+      <LiveMessage message={err} tone="error" />
       {err && <div className="text-[12.5px] text-[#9a3025]">{err}</div>}
-      {notice && <div className="text-[12.5px] text-[#6d5520]" role="status">{notice}</div>}
+      {notice && <div className="text-[12.5px] text-[#6d5520]">{notice}</div>}
     </div>
   );
 }
@@ -109,13 +112,15 @@ function InviteMember() {
   return (
     <div className="flex flex-col gap-2.5 rounded-xl border border-brand/30 bg-white p-4">
       <div className="grid gap-2.5 sm:grid-cols-2">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-mail kolegu *" className={inp} />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-mail kolegu *" aria-label="E-mail kolegu" aria-required="true" aria-invalid={!!msg && !msg.ok} aria-describedby={msg && !msg.ok ? "invite-member-error" : undefined} className={inp} />
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Meno (nepovinné)" className={inp} />
       </div>
       <div className="flex items-center gap-2.5">
         <button onClick={invite} disabled={pending || !email.trim()} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Pozývam…" : "Pozvať"}</button>
         <button onClick={() => { setOpen(false); setMsg(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
-        {msg && <span className={`text-[13px] font-semibold ${msg.warning ? "text-[#6d5520]" : msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        <LiveMessage message={pending ? "Pozývam…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+        {msg && <span id="invite-member-error" className={`text-[13px] font-semibold ${msg.warning ? "text-[#6d5520]" : msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
       </div>
     </div>
   );

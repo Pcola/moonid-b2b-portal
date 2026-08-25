@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBillingAddress, addDeliveryLocation, updateDeliveryLocation, deleteDeliveryLocation, setDefaultDeliveryLocation } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Loc = { id: string; label: string; street: string | null; zip: string | null; city: string | null; isDefault: boolean };
 type Billing = { street: string | null; zip: string | null; city: string | null };
@@ -11,8 +12,13 @@ const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] t
 const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 function Msg({ m }: { m: { ok: boolean; text: string } | null }) {
-  if (!m) return null;
-  return <span className={`text-[13px] font-semibold ${m.ok ? "text-brand" : "text-[#9a3025]"}`}>{m.text}</span>;
+  return (
+    <>
+      <LiveMessage message={m?.ok ? m.text : null} />
+      <LiveMessage message={m && !m.ok ? m.text : null} tone="error" />
+      {m && <span className={`text-[13px] font-semibold ${m.ok ? "text-brand" : "text-[#9a3025]"}`}>{m.text}</span>}
+    </>
+  );
 }
 
 function fmt(a: { street: string | null; zip: string | null; city: string | null }) {
@@ -87,6 +93,8 @@ function LocationRow({ loc, isAdmin }: { loc: Loc; isAdmin: boolean }) {
           <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
           <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
         </div>
+        <LiveMessage message={pending ? "Ukladám…" : null} />
+        <LiveMessage message={err} tone="error" />
         {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
         <div className="flex items-center gap-2.5">
           <button onClick={save} disabled={pending} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Ukladám…" : "Uložiť"}</button>
@@ -103,6 +111,7 @@ function LocationRow({ loc, isAdmin }: { loc: Loc; isAdmin: boolean }) {
           {loc.isDefault && <span className="rounded-full bg-mintbg px-2 py-0.5 text-[11px] font-semibold text-brand">predvolená</span>}
         </div>
         <div className="text-[13px] text-muted-2">{fmt(loc)}</div>
+        <LiveMessage message={err} tone="error" />
         {err && <div className="mt-1 text-[12.5px] text-[#9a3025]">{err}</div>}
       </div>
       {isAdmin && (
@@ -145,6 +154,8 @@ function AddLocation() {
         <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
         <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
       </div>
+      <LiveMessage message={pending ? "Pridávam adresu…" : null} />
+      <LiveMessage message={err} tone="error" />
       {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
       <div className="flex items-center gap-2.5">
         <button onClick={add} disabled={pending} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Pridávam…" : "Pridať adresu"}</button>

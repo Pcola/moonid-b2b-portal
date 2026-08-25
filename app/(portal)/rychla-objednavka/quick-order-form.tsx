@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { quickAddToCart } from "../kosik/actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Result = Awaited<ReturnType<typeof quickAddToCart>>;
 
@@ -41,6 +42,8 @@ export function QuickOrderForm() {
         </label>
       </div>
 
+      <LiveMessage message={pending ? "Pridávam položky do košíka…" : res?.ok ? `Pridané do košíka: ${res.added.length}. Nenájdené SKU: ${res.notFound.length}. Na vyžiadanie: ${res.onRequest.length}.` : null} />
+      <LiveMessage message={res?.error ?? null} tone="error" />
       {res && (
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 text-[14px]">
           {res.error && <p className="text-[#9a3025]">{res.error}</p>}

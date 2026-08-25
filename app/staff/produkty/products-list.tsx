@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setProductPublished } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = {
   id: string; sku: string; name: string; unit: string; basePrice: number | null;
@@ -117,14 +118,20 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
 function PublishToggle({ id, published }: { id: string; published: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [announce, setAnnounce] = useState<string | null>(null);
   function toggle() {
-    start(async () => { await setProductPublished(id, !published); router.refresh(); });
+    start(async () => {
+      await setProductPublished(id, !published);
+      setAnnounce(published ? "Produkt bol skrytý z katalógu." : "Produkt bol publikovaný v katalógu.");
+      router.refresh();
+    });
   }
   return (
     <button type="button" onClick={toggle} disabled={pending} title={published ? "Skryť z katalógu" : "Publikovať"}
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-[#ecfdf3] text-[#14633f] hover:bg-[#d6f5e4]" : "bg-[#f3f0ee] text-muted-2 hover:bg-[#e9e5e1]"}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-[#14633f]" : "bg-muted-2"}`} />
       {pending ? "…" : published ? "Publikované" : "Skryté"}
+      <LiveMessage message={announce} />
     </button>
   );
 }

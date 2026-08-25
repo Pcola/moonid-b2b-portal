@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { LiveMessage } from "@/components/ui/live-region";
 
 /** Kontrola hesla voči HaveIBeenPwned (k-anonymity — posiela sa len 5-znakový SHA-1 prefix). */
 async function isPwned(pw: string): Promise<boolean> {
@@ -109,11 +110,15 @@ export function SetPasswordForm({ email }: { email?: string | null }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {/* skryté používateľské meno pre správcov hesiel (autofill/a11y) */}
       {email && <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />}
-      {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
+      <LiveMessage message={!sessionReady && !err ? "Overujem odkaz…" : loading ? "Ukladám heslo…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <div id="set-password-error" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Nové heslo
         <input type="password" required disabled={!sessionReady} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}
+          aria-invalid={!!err} aria-describedby={err ? "set-password-error" : "set-password-rules"}
           className="rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand" />
+        <span id="set-password-rules" className="text-[12px] font-normal text-muted-2">Minimálne 12 znakov. Heslo overujeme voči databáze uniknutých hesiel.</span>
       </label>
       <button type="submit" disabled={loading || !sessionReady}
         className="rounded-[10px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">

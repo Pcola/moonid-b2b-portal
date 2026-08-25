@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addDeliveryLocation, removeDeliveryLocation } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null; isDefault: boolean };
 
@@ -51,13 +52,15 @@ export function LocationsManager({ companyId, locations }: { companyId: string; 
 
       {adding && (
         <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line p-3.5">
-          <input value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Sklad, Prevádzka centrum)" className={inp} />
-          <input value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo" className={inp} />
+          <input value={na.label} onChange={(e) => setNa({ ...na, label: e.target.value })} placeholder="Označenie (napr. Sklad, Prevádzka centrum)" aria-label="Označenie adresy" aria-required="true" aria-invalid={!!err && !na.label.trim()} aria-describedby={err ? "staff-loc-error" : undefined} className={inp} />
+          <input value={na.street} onChange={(e) => setNa({ ...na, street: e.target.value })} placeholder="Ulica a číslo" aria-label="Ulica a číslo" aria-required="true" aria-invalid={!!err && !na.street.trim()} aria-describedby={err ? "staff-loc-error" : undefined} className={inp} />
           <div className="flex gap-2">
-            <input value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto" className={`${inp} flex-1`} />
-            <input value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ" className={`${inp} w-24`} />
+            <input value={na.city} onChange={(e) => setNa({ ...na, city: e.target.value })} placeholder="Mesto" aria-label="Mesto" aria-required="true" aria-invalid={!!err && !na.city.trim()} aria-describedby={err ? "staff-loc-error" : undefined} className={`${inp} flex-1`} />
+            <input value={na.zip} onChange={(e) => setNa({ ...na, zip: e.target.value })} placeholder="PSČ" aria-label="PSČ" aria-required="true" aria-invalid={!!err && !na.zip.trim()} aria-describedby={err ? "staff-loc-error" : undefined} className={`${inp} w-24`} />
           </div>
-          {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
+          <LiveMessage message={pending ? "Pridávam adresu…" : null} />
+          <LiveMessage message={err} tone="error" />
+          {err && <span id="staff-loc-error" className="text-[13px] text-[#9a3025]">{err}</span>}
           <div className="flex gap-2">
             <button onClick={add} disabled={pending} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Pridávam…" : "Pridať"}</button>
             <button onClick={() => { setAdding(false); setErr(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40">Zrušiť</button>
