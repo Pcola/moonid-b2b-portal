@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { inviteUser } from "@/lib/invite";
 import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
 import { isLastCustomerAdminConstraint } from "@/lib/user-lifecycle-errors";
@@ -113,20 +114,62 @@ export async function setDefaultDeliveryLocation(id: string): Promise<{ ok: bool
   return { ok: true };
 }
 
-/** GDPR čl. 15/20 — individuálny export aktuálneho používateľa, nikdy údajov kolegov. */
+/** GDPR čl. 15/20 — individuálny export aktuálneho používateľa, NIKDY údajov kolegov.
+ *  Rozsah = úplná kópia osobných údajov, ktoré o žiadateľovi držíme: konto, firemný
+ *  kontext, jeho objednávky, jeho košík a koncept opakovanej objednávky, jeho zmeny
+ *  stavov, jeho auditná stopa a verejné dopyty/žiadosti podané z jeho e-mailu.
+ *  AuditLog.meta je zámerne VYNECHANÉ — môže niesť údaje tretích osôb (napr. e-mail
+ *  pozývaného kolegu), a čl. 15 ods. 4 zakazuje, aby kópia poškodila práva iných.
+ *  Tenant hranica: objednávky ostávajú filtrované aj na companyId, zvyšok je viazaný
+ *  výlučne na user.id / vlastný e-mail. Limit 5 exportov/hod (dotaz je DB-náročný). */
 export async function exportMyData(): Promise<{ ok: boolean; data?: string; error?: string }> {
   const user = await requireUser();
-  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  const gate = await rateLimit(rateLimitKey("gdpr-export", user.id), { limit: 5, windowSec: 3600 });
+  if (!gate.ok) return { ok: false, error: "Priveľa exportov za sebou. Skúste to znova o hodinu." };
   const cid = user.companyId;
 
-  const company = await prisma.company.findUnique({ where: { id: cid }, select: { name: true, ico: true } });
-  const myOrders = await prisma.order.findMany({ where: { companyId: cid, createdById: user.id }, orderBy: { createdAt: "desc" }, select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, items: { select: { nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } } });
+  const [me, company, myOrders, myCart, myRepeatDraft, myStatusEvents, myAudit, myInquiries, myAccessRequests] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { email: true, name: true, role: true, active: true, mfaEnabled: true, canOrderDirectly: true, approverId: true, lastLoginAt: true, createdAt: true, updatedAt: true },
+    }),
+    cid ? prisma.company.findUnique({ where: { id: cid }, select: { name: true, ico: true, dic: true, icDph: true, address: true, zip: true, city: true, splatDays: true } }) : Promise.resolve(null),
+    prisma.order.findMany({
+      where: cid ? { companyId: cid, createdById: user.id } : { createdById: user.id },
+      orderBy: { createdAt: "desc" },
+      select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true, deliveryAddressSnapshot: true, termsVersion: true, termsSha256: true, termsAcknowledgedAt: true, items: { select: { skuSnapshot: true, nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } },
+    }),
+    prisma.cart.findUnique({ where: { createdById: user.id }, select: { createdAt: true, updatedAt: true, items: { select: { qty: true, product: { select: { sku: true, name: true } } } } } }),
+    prisma.repeatDraftItem.findMany({ where: { userId: user.id }, select: { qty: true, product: { select: { sku: true, name: true } } } }),
+    prisma.orderStatusEvent.findMany({ where: { changedById: user.id }, orderBy: { occurredAt: "desc" }, select: { status: true, occurredAt: true, note: true, order: { select: { number: true } } } }),
+    prisma.auditLog.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, select: { action: true, entity: true, entityId: true, ip: true, userAgent: true, createdAt: true } }),
+    prisma.inquiry.findMany({ where: { email: { equals: user.email, mode: "insensitive" } }, orderBy: { createdAt: "desc" }, select: { name: true, company: true, email: true, phone: true, location: true, type: true, segment: true, message: true, createdAt: true, handledAt: true } }),
+    prisma.accessRequest.findMany({ where: { email: { equals: user.email, mode: "insensitive" } }, orderBy: { createdAt: "desc" }, select: { ico: true, companyName: true, contactName: true, email: true, phone: true, note: true, status: true, createdAt: true, resolvedAt: true } }),
+  ]);
+
   const payload = {
     exportedAt: new Date().toISOString(),
-    poznamka: "Export vašich osobných údajov v B2B portáli Moonid (GDPR čl. 15/20).",
-    konto: { email: user.email, meno: user.name, rola: user.role },
-    firma: { nazov: company?.name ?? null, ico: company?.ico ?? null },
+    poznamka: "Úplná kópia osobných údajov, ktoré o vás vedieme v B2B portáli Moonid (GDPR čl. 15 a 20). Údaje vašich kolegov export neobsahuje. Auditné záznamy neuvádzajú technické pole „meta“, pretože môže obsahovať údaje iných osôb (čl. 15 ods. 4 GDPR). Vystavené faktúry a účtovné doklady vedieme v účtovnom systéme mimo portálu — na požiadanie ich poskytneme samostatne.",
+    konto: {
+      email: me?.email ?? user.email,
+      meno: me?.name ?? null,
+      rola: me?.role ?? user.role,
+      aktivneKonto: me?.active ?? null,
+      dvojfaktoroveOverenie: me?.mfaEnabled ?? null,
+      objednavaPriamo: me?.canOrderDirectly ?? null,
+      idSchvalovatela: me?.approverId ?? null,
+      poslednePrihlasenie: me?.lastLoginAt ?? null,
+      kontoVytvorene: me?.createdAt ?? null,
+      kontoNaposledyZmenene: me?.updatedAt ?? null,
+    },
+    firma: company,
     mojeObjednavky: myOrders,
+    mojKosik: myCart,
+    mojKonceptOpakovanejObjednavky: myRepeatDraft,
+    mnouZmeneneStavyObjednavok: myStatusEvents,
+    mojaAuditnaStopa: myAudit,
+    mojeDopyty: myInquiries,
+    mojeZiadostiOPristup: myAccessRequests,
   };
   await writeAudit({ userId: user.id, companyId: cid, action: "GDPR_ACCESS", entity: "User", entityId: user.id });
   return { ok: true, data: JSON.stringify(payload, null, 2) };

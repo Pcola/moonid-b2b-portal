@@ -21,6 +21,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     where: { id, companyId: user.companyId ?? "__none__" },
     select: {
       number: true, status: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, hasBackorder: true, createdAt: true,
+      // nezmeniteľný zmluvný snapshot — kupujúci musí vidieť presné znenie, ktoré prijal
+      termsVersion: true, termsSha256: true, termsUrl: true, termsSnapshot: true, termsAcknowledgedAt: true,
       deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true,
       deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
       createdById: true, createdBy: { select: { approverId: true } },
@@ -117,6 +119,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             ))}
           </ol>
         </div>
+      )}
+
+      {order.termsSnapshot && (
+        <details className="mt-6 rounded-xl border border-line bg-white p-5">
+          <summary className="cursor-pointer text-[12px] font-semibold uppercase tracking-wide text-muted-2">Obchodné podmienky platné pre túto objednávku</summary>
+          <p className="mt-3 text-[13px] text-muted-2">
+            Verzia {order.termsVersion ?? "—"}
+            {order.termsAcknowledgedAt ? ` · potvrdené ${new Date(order.termsAcknowledgedAt).toLocaleString("sk")}` : ""}
+            {order.termsUrl ? (<> · <a href={order.termsUrl} className="font-medium text-brand hover:text-brand-2">aktuálne znenie na webe</a></>) : null}
+          </p>
+          {order.termsSha256 && <p className="mt-1 break-all font-mono text-[11.5px] text-muted-2">SHA-256: {order.termsSha256}</p>}
+          <pre tabIndex={0} aria-label="Text obchodných podmienok uložený k tejto objednávke" className="mt-3 max-h-[420px] overflow-auto whitespace-pre-wrap font-sans text-[13.5px] leading-relaxed text-muted">{order.termsSnapshot}</pre>
+          <p className="mt-3 text-[12.5px] text-muted-2">Toto znenie sme uložili pri odoslaní objednávky. Neskoršia zmena podmienok ho nemení.</p>
+        </details>
       )}
 
       <p className="mt-6 text-[13px] text-muted-2">Objednávku spracujeme a potvrdíme. O zmenách stavu vás budeme informovať.</p>
