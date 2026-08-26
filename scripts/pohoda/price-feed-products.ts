@@ -6,7 +6,10 @@ import { PrismaClient, Prisma } from "@prisma/client";
 import { readFileSync } from "node:fs";
 
 const prisma = new PrismaClient();
-const FEED = process.argv[2] || process.env.FEED_PATH || "C:/Users/lukas/Downloads/feed.xml";
+// repozitár je verejný — žiadne lokálne cesty; zadaj argumentom alebo cez FEED_PATH
+const FEED_INPUT = process.argv[2] || process.env.FEED_PATH;
+if (!FEED_INPUT) throw new Error("Zadaj cestu k feedu: `tsx <skript> <cesta>` alebo premenná FEED_PATH.");
+const FEED: string = FEED_INPUT;
 
 async function main() {
   const xml = readFileSync(FEED, "utf8");

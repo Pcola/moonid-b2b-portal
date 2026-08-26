@@ -19,7 +19,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Produkčné identifikátory, ktoré v testovacom connection stringu nemajú čo robiť.
-const PROD_MARKERS = ["gckvseqlaxydsbutsjhm"];
+// Ref tu ZOSTÁVA aj vo verejnom repozitári zámerne: je aj tak verejný (chodí v
+// NEXT_PUBLIC_SUPABASE_URL, teda ho vidí každý návštevník v prehliadači), takže jeho
+// skrývanie tu nič nechráni — zato tento zoznam reálne bráni tomu, aby deštruktívne
+// integračné testy bežali proti produkcii. Ďalšie markery sa dajú pridať cez env.
+const PROD_MARKERS = ["gckvseqlaxydsbutsjhm", ...(process.env.EXTRA_PROD_MARKERS ?? "").split(",").map((m) => m.trim()).filter(Boolean)];
 
 /** Minimalistický .env parser (bez závislosti na dotenv). */
 function parseEnvFile(file: string): Record<string, string> {

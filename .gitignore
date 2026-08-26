@@ -53,3 +53,22 @@ __pycache__/
 
 # .NET publish výstup (agent) — binárky nepatria do gitu
 /agent/publish-fd/
+
+# Repozitár je VEREJNÝ (kvôli branch protection na free účte). Nasledujúce artefakty
+# do neho nepatria — zálohy sú mimo repo v ../moonid_private/.
+
+# dizajnové prototypy: obsahujú názvy reálnych firiem s vymyslenými tržbami a cenovými
+# hladinami; appka ich nepoužíva
+/prototypes/
+
+# vyexportovaný katalóg dodávateľa (1955 položiek + hotlink na jeho CDN); appka ho nepoužíva
+/content/products.json
+
+# auditné dokumenty = mapa slabých miest, časť nálezov je stále otvorená
+/docs/SECURITY_AUDIT*.md
+/docs/ENTERPRISE_AUDIT*.md
+/docs/ENTERPRISE_DEEP_AUDIT*.md
+/docs/ENTERPRISE_GAPS*.md
+/docs/GO_LIVE_AUDIT*.md
+/docs/SECURITY_TRIAGE.md
+/docs/PRODUCTION_DB_ROLE_RUNBOOK.md

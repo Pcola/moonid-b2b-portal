@@ -5,8 +5,8 @@
 #  Spusti: powershell -ExecutionPolicy Bypass -File scripts\pohoda\export-catalog.ps1
 # ============================================================
 param(
-  [string]$MdbDir  = "C:\Users\lukas\Downloads\mdb",
-  [string]$OutFile = "C:\workspace\websites\moonid_b2b_portal\data\catalog.json"
+  [string]$MdbDir  = $(if ($env:MDB_DIR) { $env:MDB_DIR } else { throw "Nastav MDB_DIR alebo zadaj -MdbDir." }),
+  [string]$OutFile = "data/catalog.json"
 )
 $ErrorActionPreference = "Stop"
 $prov = "Microsoft.ACE.OLEDB.16.0"
