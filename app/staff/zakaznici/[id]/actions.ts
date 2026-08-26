@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
 import { writeAudit } from "@/lib/audit";
 
 const ID = z.string().min(1).max(100);
@@ -14,12 +15,16 @@ const companySchema = z.object({
   icDph: z.string().trim().max(20).optional().or(z.literal("")),
   address: z.string().trim().max(160).optional().or(z.literal("")),
   city: z.string().trim().max(80).optional().or(z.literal("")),
+  zip: z.string().trim().max(12).optional().or(z.literal("")),
   priceTierCode: z.string().trim().min(1, "Zvoľte cenovú úroveň").max(20),
   splatDays: z.coerce.number().int().min(0, "Min. 0").max(365, "Max. 365"),
   active: z.boolean(),
 });
 
-/** Úprava firemných údajov, cenovej úrovne, splatnosti a aktivity. Iba STAFF. */
+/** Úprava firemných údajov, cenovej úrovne, splatnosti a aktivity. STAFF.
+ *  ZMENA CENOVEJ ÚROVNE JE ADMIN-ONLY: presun zákazníka z „Štandard“ na „Gastro VIP“ je
+ *  zľava na celom sortimente, teda tá istá právomoc ako /staff/cenniky (requireAdmin).
+ *  Ostatné polia (názov, adresa, splatnosť, aktivita) STAFF meniť smie. */
 export async function updateCompany(companyId: string, input: unknown): Promise<{ ok: boolean; error?: string }> {
   const staff = await requireStaff();
   if (!ID.safeParse(companyId).success) return { ok: false, error: "Neplatný vstup." };
@@ -27,14 +32,20 @@ export async function updateCompany(companyId: string, input: unknown): Promise<
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Skontrolujte polia." };
   const d = parsed.data;
 
+  const company = await prisma.company.findUnique({ where: { id: companyId }, select: { priceTierId: true } });
+  if (!company) return { ok: false, error: "Firma neexistuje." };
+
   const tier = await prisma.priceTier.findUnique({ where: { code: d.priceTierCode }, select: { id: true } });
   if (!tier) return { ok: false, error: "Neznáma cenová úroveň." };
+  if (tier.id !== company.priceTierId && !canManagePriceTiers(staff.role)) {
+    return { ok: false, error: "Cenovú úroveň zákazníka môže zmeniť iba administrátor." };
+  }
 
   await prisma.company.update({
     where: { id: companyId },
     data: {
       name: d.name, dic: d.dic || null, icDph: d.icDph || null,
-      address: d.address || null, city: d.city || null,
+      address: d.address || null, city: d.city || null, zip: d.zip || null,
       priceTierId: tier.id, splatDays: d.splatDays, active: d.active,
     },
   });

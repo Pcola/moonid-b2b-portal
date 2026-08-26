@@ -35,7 +35,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
   const askQuote = () => startQuote(async () => {
     const r = await requestQuote(v.id);
     if (r.ok) { setQuoted(true); toast("Dopyt odoslaný — ozveme sa s cenovou ponukou"); }
-    else toast(r.error ?? "Dopyt sa nepodarilo odoslať");
+    else toast(r.error ?? "Dopyt sa nepodarilo odoslať", "error");
   });
 
   return (
@@ -47,7 +47,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
       <div className="mt-5 grid gap-[clamp(20px,3vw,44px)] lg:grid-cols-[1fr_1fr] lg:items-start">
         {/* obrázok */}
         <div className="lg:sticky lg:top-[88px]">
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-line bg-[#fafbfa] p-8">
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-8">
             <ProductImg src={v.img} alt={title} sizes="(max-width: 1024px) 92vw, 480px" priority iconSize={64} />
           </div>
         </div>
@@ -73,7 +73,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
             ) : (
               <div className="text-[18px] font-semibold text-brand-2">Cena na vyžiadanie</div>
             )}
-            <span className={`mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${v.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{v.stocked ? "Skladom" : "Na objednávku"}</span>
+            <span className={`mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${v.stocked ? "bg-success text-success-ink" : "bg-warning text-warning-ink"}`}>{v.stocked ? "Skladom" : "Na objednávku"}</span>
           </div>
 
           {/* varianty */}
@@ -94,9 +94,9 @@ export function ProductDetail({ title, category, brand, description, specs, vari
           {/* množstvo + do košíka */}
           {canBuy ? (
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center rounded-[10px] border border-line bg-white">
+              <div className="flex items-center rounded-[10px] border border-field bg-white">
                 <button type="button" aria-label="Znížiť množstvo" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">−</button>
-                <input aria-label="Množstvo" inputMode="numeric" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(9999, Math.floor(Number(e.target.value.replace(/[^0-9]/g, ""))) || 1)))} className="h-11 w-12 border-x border-line bg-transparent text-center text-[15px] font-semibold tabular-nums text-ink outline-none focus:bg-mintbg/30" />
+                <input aria-label="Množstvo" inputMode="numeric" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(9999, Math.floor(Number(e.target.value.replace(/[^0-9]/g, ""))) || 1)))} className="h-11 w-12 border-x border-field bg-transparent text-center text-[15px] font-semibold tabular-nums text-ink outline-none focus:bg-mintbg/30" />
                 <button type="button" aria-label="Zvýšiť množstvo" onClick={() => setQty((q) => Math.min(9999, q + 1))} className="flex h-11 w-11 items-center justify-center text-[18px] text-muted transition hover:text-ink">+</button>
               </div>
               <button type="button" onClick={add} disabled={pending} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-brand px-6 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">

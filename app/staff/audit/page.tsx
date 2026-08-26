@@ -74,14 +74,16 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-line bg-white">
           <table className="w-full min-w-[860px] text-left text-[13px]">
+            {/* popis tabuľky pre čítačky */}
+            <caption className="sr-only">Záznamy auditného logu — čas, akcia, entita, používateľ, IP adresa a detaily</caption>
             <thead>
               <tr className="border-b border-line bg-cream/60 text-[11px] uppercase tracking-wide text-muted-2">
-                <th className="px-4 py-2.5 font-semibold">Čas</th>
-                <th className="px-4 py-2.5 font-semibold">Akcia</th>
-                <th className="px-4 py-2.5 font-semibold">Entita</th>
-                <th className="px-4 py-2.5 font-semibold">Kto</th>
-                <th className="px-4 py-2.5 font-semibold">IP</th>
-                <th className="px-4 py-2.5 font-semibold">Detaily</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Čas</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Akcia</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Entita</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Kto</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">IP</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Detaily</th>
               </tr>
             </thead>
             <tbody>

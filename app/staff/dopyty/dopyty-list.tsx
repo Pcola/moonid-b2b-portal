@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setInquiryHandled } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = {
   id: string; name: string; company: string; email: string;
@@ -38,9 +39,9 @@ function Row({ it }: { it: Item }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[15px] font-semibold text-ink">{it.company}</span>
-            {!it.handled && <span className="rounded-full bg-[#fdf6e7] px-2 py-0.5 text-[11px] font-semibold text-[#8a5a00]">Nový</span>}
-            {it.handled && <span className="rounded-full bg-[#ecfdf3] px-2 py-0.5 text-[11px] font-semibold text-[#14633f]">Vybavené</span>}
-            {!it.emailSent && <span className="rounded-full bg-[#fdeceb] px-2 py-0.5 text-[11px] font-medium text-[#9a3025]" title="Notifikačný e-mail sa neodoslal (Resend neaktívny) — lead je len tu">mail neodišiel</span>}
+            {!it.handled && <span className="rounded-full bg-warning px-2 py-0.5 text-[11px] font-semibold text-warning-ink">Nový</span>}
+            {it.handled && <span className="rounded-full bg-success px-2 py-0.5 text-[11px] font-semibold text-success-ink">Vybavené</span>}
+            {!it.emailSent && <span className="rounded-full bg-danger px-2 py-0.5 text-[11px] font-medium text-danger-ink" title="Notifikačný e-mail sa neodoslal (Resend neaktívny) — lead je len tu">mail neodišiel</span>}
           </div>
           <div className="mt-1 text-[13.5px] text-muted">
             {it.name} · <a href={replyHref} className="font-medium text-brand hover:text-brand-2">{it.email}</a>
@@ -58,8 +59,10 @@ function Row({ it }: { it: Item }) {
           </div>
         </div>
       </div>
-      {it.message && <p className="mt-3 whitespace-pre-wrap rounded-lg bg-[#fafbfa] px-3.5 py-3 text-[13.5px] leading-relaxed text-muted-3">{it.message}</p>}
-      {err && <p className="mt-2 text-[12.5px] text-[#9a3025]">{err}</p>}
+      {it.message && <p className="mt-3 whitespace-pre-wrap rounded-lg bg-surface-2 px-3.5 py-3 text-[13.5px] leading-relaxed text-muted-3">{it.message}</p>}
+      <LiveMessage message={pending ? "Ukladám…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <p className="mt-2 text-[12.5px] text-danger-ink">{err}</p>}
     </div>
   );
 }

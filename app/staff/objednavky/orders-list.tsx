@@ -51,16 +51,17 @@ export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: {
           <a href="/api/staff/export?type=orders" download className="inline-flex items-center gap-1.5 rounded-[10px] border border-line bg-white px-3.5 py-2 text-[13.5px] font-semibold text-muted transition hover:border-brand/40 hover:text-ink">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4" /><path d="M5 21h14" /></svg>Export CSV
           </a>
-          <div className="flex items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Číslo alebo firma…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
+          <div className="flex items-center gap-2 rounded-[10px] border border-field bg-white px-3 py-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7f8d88" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať objednávku podľa čísla alebo firmy" placeholder="Číslo alebo firma…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
           </div>
         </div>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-line bg-white [scrollbar-width:thin]">
        <div className="min-w-[720px]">
-        <div className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+        {/* hlavička je vizuálna pomôcka; pre čítačky nesie kontext stĺpcov aria-label riadku (SC 1.3.1) */}
+        <div aria-hidden="true" className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
           <span>Číslo</span><span>Zákazník</span><span>Dátum</span><span>Úroveň</span><span>Stav</span><span className="text-right">Suma</span>
         </div>
         {filtered.length === 0 ? (
@@ -68,7 +69,7 @@ export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: {
         ) : filtered.map((o) => {
           const meta = STATUS_META[o.status as OrderStatus];
           return (
-            <Link key={o.id} href={`/staff/objednavky/${o.id}`} className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-[#f7f9f8]">
+            <Link key={o.id} href={`/staff/objednavky/${o.id}`} aria-label={`Objednávka ${o.number}, zákazník ${o.customer}, ${o.count} položiek, dátum ${new Date(o.date).toLocaleDateString("sk")}, cenová úroveň ${o.tier}, stav ${meta.label}, suma ${eur(o.total)}`} className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-surface-3">
               <span className="font-mono text-[13.5px] font-semibold text-ink">{o.number}</span>
               <div className="min-w-0">
                 <div className="truncate text-[14px] font-medium text-ink">{o.customer}</div>

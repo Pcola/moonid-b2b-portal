@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { advanceOrder, cancelOrder } from "../actions";
 import { advanceLabel, canCancel, nextStatus, type OrderStatus } from "@/lib/orders/transition";
+import { LiveMessage } from "@/components/ui/live-region";
 
 export function OrderActions({ orderId, status }: { orderId: string; status: OrderStatus }) {
   const router = useRouter();
@@ -44,6 +45,8 @@ export function OrderActions({ orderId, status }: { orderId: string; status: Ord
           </button>
         )}
       </div>
+      <LiveMessage message={pending ? "Pracujem…" : null} />
+      <LiveMessage message={err} tone="error" />
       {err && <span className="text-[12.5px] font-medium text-[#A23B2A]">{err}</span>}
     </div>
   );

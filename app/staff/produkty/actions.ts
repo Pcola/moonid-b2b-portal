@@ -3,11 +3,12 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin, requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
 import { writeAudit } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PRODUCT_BUCKET } from "@/lib/rehost-image";
-import { round2 } from "@/lib/money";
+import { dec, round2 } from "@/lib/money";
 import { normalizeImageFile } from "@/lib/safe-image";
 
 const ID = z.string().min(1).max(100);
@@ -23,6 +24,7 @@ const editSchema = z.object({
   descriptionLong: z.string().trim().max(4000).optional().or(z.literal("")),
   isPublished: z.boolean(),
   isSubsidized: z.boolean(),
+  isStocked: z.boolean(),
 });
 
 function revalidate(id: string) {
@@ -31,9 +33,13 @@ function revalidate(id: string) {
   revalidatePath("/katalog");
 }
 
-/** Úprava produktu (portál-strana: názov/kategória/publikovanie/obrázok…). Len STAFF.
- *  Pozn.: basePrice/vatRate sú editovateľné (zatiaľ niet Pohoda sync); po zavedení denného
- *  syncu sa cena/sklad budú ťahať z Pohody. sku sa nemení (identita/Pohoda kľúč). */
+/** Úprava produktu (portál-strana: názov/kategória/publikovanie/obrázok…). STAFF.
+ *  CENOTVORBA JE ADMIN-ONLY: basePrice a vatRate určujú, čo zákazník zaplatí, preto ich smie
+ *  meniť iba ADMIN (rovnaká hranica ako /staff/cenniky → requireAdmin). STAFF si tú istú
+ *  obrazovku otvorí a upraví názov/kategóriu/popis; cenové polia sa mu pri uložení ignorujú
+ *  a pokus o ich zmenu skončí zrozumiteľnou chybou (nie tichým zahodením).
+ *  Pozn.: po zavedení denného Pohoda syncu sa cena/sklad budú ťahať z Pohody.
+ *  sku sa nemení (identita/Pohoda kľúč). */
 export async function updateProduct(id: string, input: z.input<typeof editSchema>): Promise<{ ok: boolean; error?: string }> {
   const staff = await requireStaff();
   if (!ID.safeParse(id).success) return { ok: false, error: "Neplatný vstup." };
@@ -41,8 +47,18 @@ export async function updateProduct(id: string, input: z.input<typeof editSchema
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Skontrolujte polia." };
   const d = parsed.data;
 
-  const exists = await prisma.product.findUnique({ where: { id }, select: { id: true } });
+  const exists = await prisma.product.findUnique({ where: { id }, select: { id: true, basePrice: true, vatRate: true } });
   if (!exists) return { ok: false, error: "Produkt neexistuje." };
+
+  // Porovnávame v Decimal — float by na hraniciach hlásil falošnú zmenu (viď lib/money).
+  const mayPrice = canManagePriceTiers(staff.role);
+  const nextBase = d.basePrice ?? null;
+  const baseChanged = (exists.basePrice === null) !== (nextBase === null)
+    || (exists.basePrice !== null && nextBase !== null && !dec(exists.basePrice).equals(dec(nextBase)));
+  const vatChanged = !dec(exists.vatRate).equals(dec(d.vatRate));
+  if (!mayPrice && (baseChanged || vatChanged)) {
+    return { ok: false, error: "Nákupnú cenu a sadzbu DPH môže meniť iba administrátor." };
+  }
 
   if (d.categoryId) {
     const cat = await prisma.category.findUnique({ where: { id: d.categoryId }, select: { id: true } });
@@ -65,14 +81,17 @@ export async function updateProduct(id: string, input: z.input<typeof editSchema
       subcategoryId,
       unit: d.unit,
       brand: d.brand?.trim() || null,
-      basePrice: d.basePrice ?? null,
-      vatRate: d.vatRate,
+      // defence in depth: pre non-admina cenové polia do UPDATE vôbec nevstupujú
+      ...(mayPrice ? { basePrice: nextBase, vatRate: d.vatRate } : {}),
       descriptionLong: d.descriptionLong?.trim() || null,
       isPublished: d.isPublished,
       isSubsidized: d.isSubsidized,
+      // isStocked = „tovar bežne držíme skladom". Samo o sebe NEZNAMENÁ dostupnosť —
+      // isInStock() (lib/stock.ts) k tomu žiada čerstvý stockCache z Pohody.
+      isStocked: d.isStocked,
     },
   });
-  await writeAudit({ userId: staff.id, action: "PRODUCT_UPDATE", entity: "Product", entityId: id, meta: { isPublished: d.isPublished } });
+  await writeAudit({ userId: staff.id, action: "PRODUCT_UPDATE", entity: "Product", entityId: id, meta: { isPublished: d.isPublished, isStocked: d.isStocked, priceChanged: mayPrice && (baseChanged || vatChanged) } });
   revalidate(id);
   return { ok: true };
 }
@@ -83,14 +102,17 @@ const priceEntry = z.object({
 });
 
 /** Nastaví zmluvné (per-produkt) ceny pre jednotlivé cenové úrovne. Prázdna hodnota =
- *  zmaže override → úroveň sa vráti na výpočet basePrice × (1 − zľava). Len STAFF.
+ *  zmaže override → úroveň sa vráti na výpočet basePrice × (1 − zľava). LEN ADMIN.
+ *  Prečo ADMIN: override je zmluvná cena konkrétneho produktu pre celú cenovú hladinu, teda
+ *  rovnaká právomoc ako zľava v /staff/cenniky (requireAdmin). Kým to bolo requireStaff,
+ *  bola ADMIN-only cenotvorba obíditeľná touto cestou.
  *  Zapisuje sa do ProductPrice(source=MANUAL); money-path (resolveUnitPrice) uprednostní
  *  tento override pred tier zľavou. Batch = atomicky uloží všetky úrovne naraz. */
 export async function setProductPrices(
   productId: string,
   entries: z.input<typeof priceEntry>[],
 ): Promise<{ ok: boolean; error?: string }> {
-  const staff = await requireStaff();
+  const staff = await requireAdmin();
   if (!ID.safeParse(productId).success) return { ok: false, error: "Neplatný vstup." };
   const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
   if (!product) return { ok: false, error: "Produkt neexistuje." };

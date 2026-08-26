@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateTier, createTier, deleteTier } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Tier = { code: string; name: string; discountPct: number; companies: number };
 
@@ -52,7 +53,7 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
           <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Úroveň {tier.code}</span>
           {editable ? (
             <input value={name} onChange={(e) => setName(e.target.value)} aria-label={`Názov úrovne ${tier.code}`}
-              className="w-full rounded-lg border border-line bg-white px-2.5 py-1.5 text-[19px] font-normal text-ink outline-none transition focus:border-brand" />
+              className="field-lg w-full rounded-lg border border-field bg-white px-2.5 py-1.5 text-[19px] font-normal text-ink outline-none transition focus:border-brand" />
           ) : (
             <span className="text-[19px] font-normal text-ink">{tier.name}</span>
           )}
@@ -61,7 +62,7 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
           <span className="text-[22px] font-normal text-brand">−</span>
           {editable ? (
             <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} aria-label={`Zľava úrovne ${tier.code} v percentách`}
-              className="w-[68px] rounded-lg border border-line bg-white px-2 py-1 text-right text-[24px] font-normal text-brand outline-none transition focus:border-brand tabular-nums" />
+              className="field-xl w-[68px] rounded-lg border border-field bg-white px-2 py-1 text-right text-[24px] font-normal text-brand outline-none transition focus:border-brand tabular-nums" />
           ) : (
             <span className="text-right text-[24px] font-normal text-brand tabular-nums">{tier.discountPct}</span>
           )}
@@ -72,12 +73,14 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3.5">
         <div className="flex items-center gap-2">
           <span className="text-[13px] text-muted-2">{tier.companies} {tier.companies === 1 ? "zákazník" : tier.companies >= 2 && tier.companies <= 4 ? "zákazníci" : "zákazníkov"}</span>
-          {editable && canDelete && <button onClick={remove} disabled={pending} title="Zmazať úroveň" aria-label={`Zmazať úroveň ${tier.code}`} className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-40">
+          {editable && canDelete && <button onClick={remove} disabled={pending} title="Zmazať úroveň" aria-label={`Zmazať úroveň ${tier.code}`} className="text-muted-2 transition hover:text-danger-ink disabled:opacity-40">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" /></svg>
           </button>}
         </div>
         {editable && <div className="flex items-center gap-2.5">
-          {msg && <span className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+          <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
+          <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+          {msg && <span className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
           <button onClick={save} disabled={pending || !dirty}
             className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-40">
             {pending ? "…" : "Uložiť"}
@@ -120,13 +123,13 @@ function NewTierCard() {
     <div className="flex flex-col gap-3 rounded-2xl border border-brand/30 bg-white p-6">
       <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-2">Nová cenová úroveň</span>
       <div className="flex gap-2">
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="KÓD" className="w-[90px] rounded-lg border border-line bg-white px-2.5 py-2 text-[14px] font-semibold uppercase text-ink outline-none focus:border-brand" />
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Názov" className="flex-1 rounded-lg border border-line bg-white px-2.5 py-2 text-[14px] text-ink outline-none focus:border-brand" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} aria-label="Kód novej cenovej úrovne" placeholder="KÓD" className="w-[90px] rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] font-semibold uppercase text-ink outline-none focus:border-brand" />
+        <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Názov novej cenovej úrovne" placeholder="Názov" className="flex-1 rounded-lg border border-field bg-white px-2.5 py-2 text-[14px] text-ink outline-none focus:border-brand" />
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-baseline gap-1">
           <span className="text-[16px] text-brand">−</span>
-          <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} placeholder="0" className="w-[64px] rounded-lg border border-line bg-white px-2 py-1.5 text-right text-[16px] text-brand outline-none focus:border-brand tabular-nums" />
+          <input type="number" min={0} max={90} step={0.5} value={pct} onChange={(e) => setPct(e.target.value)} aria-label="Zľava novej úrovne v percentách" placeholder="0" className="w-[64px] rounded-lg border border-field bg-white px-2 py-1.5 text-right text-[16px] text-brand outline-none focus:border-brand tabular-nums" />
           <span className="text-[14px] text-brand">%</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
@@ -134,7 +137,9 @@ function NewTierCard() {
           <button onClick={create} disabled={pending || !code.trim() || !name.trim()} className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-40">{pending ? "…" : "Vytvoriť"}</button>
         </div>
       </div>
-      {err && <span className="text-[12.5px] text-[#9a3025]">{err}</span>}
+      <LiveMessage message={pending ? "Vytváram úroveň…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <span id="new-tier-error" className="text-[12.5px] text-danger-ink">{err}</span>}
     </div>
   );
 }

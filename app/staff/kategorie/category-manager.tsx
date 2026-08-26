@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory, renameCategory, moveCategory, reorderCategory, deleteCategory } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Node = { id: string; name: string; count: number };
 type Top = Node & { children: Node[] };
 
-const inp = "rounded-lg border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-lg border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
 const iconBtn = "flex h-7 w-7 flex-none items-center justify-center rounded-lg border border-line text-muted-2 transition hover:text-ink disabled:opacity-40";
 
 function ArrowUp() { return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>; }
@@ -28,7 +29,7 @@ function CatRow({
   return (
     <div className={`flex items-center gap-2 py-1.5 ${isChild ? "" : "font-medium"}`}>
       {editing ? (
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
+        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label={`Premenovať kategóriu ${node.name}`}
           onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) { onAct(() => renameCategory(node.id, name.trim())); setEditing(false); } if (e.key === "Escape") { setName(node.name); setEditing(false); } }}
           className={`${inp} flex-1`} />
       ) : (
@@ -48,12 +49,12 @@ function CatRow({
           <button type="button" onClick={() => onAct(() => reorderCategory(node.id, "up"))} disabled={!canUp} aria-label="Vyššie" className={iconBtn}><ArrowUp /></button>
           <button type="button" onClick={() => onAct(() => reorderCategory(node.id, "down"))} disabled={!canDown} aria-label="Nižšie" className={iconBtn}><ArrowDown /></button>
           {isChild && moveTargets && moveTargets.length > 0 && (
-            <select value="" onChange={(e) => { if (e.target.value) onAct(() => moveCategory(node.id, e.target.value)); }} title="Presunúť pod inú kategóriu" className={`${inp} max-w-[130px]`}>
+            <select value="" onChange={(e) => { if (e.target.value) onAct(() => moveCategory(node.id, e.target.value)); }} aria-label={`Presunúť „${node.name}" pod inú kategóriu`} title="Presunúť pod inú kategóriu" className={`${inp} max-w-[130px]`}>
               <option value="">Presunúť…</option>
               {moveTargets.map((t) => <option key={t.id} value={t.id}>→ {t.name}</option>)}
             </select>
           )}
-          <button type="button" onClick={() => { if (confirm(`Zmazať kategóriu „${node.name}"?`)) onAct(() => deleteCategory(node.id)); }} aria-label="Zmazať" className={`${iconBtn} hover:border-[#e0b0a8] hover:text-[#9a3025]`}><Trash /></button>
+          <button type="button" onClick={() => { if (confirm(`Zmazať kategóriu „${node.name}"?`)) onAct(() => deleteCategory(node.id)); }} aria-label="Zmazať" className={`${iconBtn} hover:border-[#e0b0a8] hover:text-danger-ink`}><Trash /></button>
         </>
       )}
     </div>
@@ -72,7 +73,7 @@ function AddRow({ parentId, label, onAct }: { parentId: string | null; label: st
   }
   return (
     <div className="flex items-center gap-2">
-      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(""); setOpen(false); } }} placeholder={label} className={`${inp} flex-1`} />
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(""); setOpen(false); } }} aria-label={label} placeholder={label} className={`${inp} flex-1`} />
       <button type="button" onClick={submit} disabled={!name.trim()} className="rounded-lg bg-brand px-3 py-1.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">Pridať</button>
       <button type="button" onClick={() => { setName(""); setOpen(false); }} className="text-[12.5px] font-medium text-muted transition hover:text-ink">Zrušiť</button>
     </div>
@@ -96,7 +97,9 @@ export function CategoryManager({ tree }: { tree: Top[] }) {
 
   return (
     <div className={`flex flex-col gap-3 ${pending ? "opacity-60" : ""}`}>
-      {err && <div className="rounded-lg border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13px] text-[#9a3025]">{err}</div>}
+      <LiveMessage message={pending ? "Ukladám zmenu kategórie…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <div className="rounded-lg border border-danger-line bg-danger px-3.5 py-2.5 text-[13px] text-danger-ink">{err}</div>}
 
       {tree.map((top, i) => (
         <section key={top.id} className="rounded-2xl border border-line bg-white p-4">

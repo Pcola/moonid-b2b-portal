@@ -21,6 +21,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     where: { id, companyId: user.companyId ?? "__none__" },
     select: {
       number: true, status: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, hasBackorder: true, createdAt: true,
+      // nezmeniteľný zmluvný snapshot — kupujúci musí vidieť presné znenie, ktoré prijal
+      termsVersion: true, termsSha256: true, termsUrl: true, termsSnapshot: true, termsAcknowledgedAt: true,
       deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true,
       deliveryLocation: { select: { label: true, street: true, city: true, zip: true } },
       createdById: true, createdBy: { select: { approverId: true } },
@@ -56,19 +58,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </div>
       {canCancel && <p className="mt-2 text-[13px] text-muted-2">Objednávku môžete zrušiť, kým ju nezačneme spracúvať. Po potvrdení nás kontaktujte na 0919 216 908.</p>}
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-white">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-line bg-cream/60 px-5 py-2.5 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
-          <span>Položka</span><span className="text-right">Ks</span><span className="text-right">Cena/ks</span><span className="text-right">Spolu</span>
+      {/* sémantika tabuľky cez ARIA — rozloženie ostáva CSS grid (SC 1.3.1) */}
+      <div role="table" aria-label="Položky objednávky" className="mt-6 overflow-hidden rounded-2xl border border-line bg-white">
+        <div role="row" className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-line bg-cream/60 px-5 py-2.5 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+          <span role="columnheader">Položka</span><span role="columnheader" className="text-right">Ks</span><span role="columnheader" className="text-right">Cena/ks</span><span role="columnheader" className="text-right">Spolu</span>
         </div>
         {order.items.map((it) => (
-          <div key={it.id} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-4 border-b border-line px-5 py-3 last:border-0">
-            <div className="min-w-0">
+          <div role="row" key={it.id} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-4 border-b border-line px-5 py-3 last:border-0">
+            <div role="cell" className="min-w-0">
               <div className="truncate text-[14px] text-ink">{it.nameSnapshot}</div>
               <div className="text-[12px] text-muted-2">{it.skuSnapshot} · {it.fulfillment === "SKLADOM" ? "Skladom" : "Na objednávku"}</div>
             </div>
-            <span className="text-right text-[14px] tabular-nums text-muted">{Math.round(Number(it.qty))}</span>
-            <span className="text-right text-[14px] tabular-nums text-muted">{eur(Number(it.unitPriceSnapshot))}</span>
-            <span className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(Number(it.lineTotal))}</span>
+            <span role="cell" className="text-right text-[14px] tabular-nums text-muted">{Math.round(Number(it.qty))}</span>
+            <span role="cell" className="text-right text-[14px] tabular-nums text-muted">{eur(Number(it.unitPriceSnapshot))}</span>
+            <span role="cell" className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(Number(it.lineTotal))}</span>
           </div>
         ))}
       </div>
@@ -116,6 +119,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             ))}
           </ol>
         </div>
+      )}
+
+      {order.termsSnapshot && (
+        <details className="mt-6 rounded-xl border border-line bg-white p-5">
+          <summary className="cursor-pointer text-[12px] font-semibold uppercase tracking-wide text-muted-2">Obchodné podmienky platné pre túto objednávku</summary>
+          <p className="mt-3 text-[13px] text-muted-2">
+            Verzia {order.termsVersion ?? "—"}
+            {order.termsAcknowledgedAt ? ` · potvrdené ${new Date(order.termsAcknowledgedAt).toLocaleString("sk")}` : ""}
+            {order.termsUrl ? (<> · <a href={order.termsUrl} className="font-medium text-brand hover:text-brand-2">aktuálne znenie na webe</a></>) : null}
+          </p>
+          {order.termsSha256 && <p className="mt-1 break-all font-mono text-[11.5px] text-muted-2">SHA-256: {order.termsSha256}</p>}
+          <pre tabIndex={0} aria-label="Text obchodných podmienok uložený k tejto objednávke" className="mt-3 max-h-[420px] overflow-auto whitespace-pre-wrap font-sans text-[13.5px] leading-relaxed text-muted">{order.termsSnapshot}</pre>
+          <p className="mt-3 text-[12.5px] text-muted-2">Toto znenie sme uložili pri odoslaní objednávky. Neskoršia zmena podmienok ho nemení.</p>
+        </details>
       )}
 
       <p className="mt-6 text-[13px] text-muted-2">Objednávku spracujeme a potvrdíme. O zmenách stavu vás budeme informovať.</p>

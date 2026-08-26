@@ -35,6 +35,20 @@ export function vatOf2(amount: number, vatRate: number): number {
   return Math.floor((cents(amount) * vr100 + 5000) / 10000) / 100;
 }
 
+/** Klientské zrkadlo serverového vatFromLines: základ dane zoskupený podľa sadzby, DPH z
+ *  celkového základu každej sadzby. Musí dať PRESNE ten istý výsledok ako lib/money.ts —
+ *  stráži to parita test v tests/money.test.ts. */
+export function vatFromLines2(lines: { net: number; vatRatePct: number }[]): number {
+  const baseByRate = new Map<number, number>();
+  for (const line of lines) {
+    const vr100 = Math.round(line.vatRatePct * 100);
+    baseByRate.set(vr100, (baseByRate.get(vr100) ?? 0) + cents(line.net));
+  }
+  let vatCents = 0;
+  for (const [vr100, baseCents] of baseByRate) vatCents += Math.floor((baseCents * vr100 + 5000) / 10000);
+  return vatCents / 100;
+}
+
 /** Netto po zľave: base × (1 − pct/100), polovica nahor — zhodné so serverovým
  *  resolveUnitPrice (najprv násobenie, až potom round2). base do 4 des. (feed ceny),
  *  pct do 2 des. Celočíselne v 10⁻⁴ €: u×(10000−pct·100), half-up na centy /10⁶. */

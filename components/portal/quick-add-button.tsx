@@ -10,7 +10,7 @@ export function QuickAddButton({ productId }: { productId: string }) {
   const toast = useToast();
   return (
     <button
-      onClick={() => start(async () => { const r = await addToCart(productId, 1); if (r.ok) { setAdded(true); toast("Pridané do košíka"); setTimeout(() => setAdded(false), 1400); } })}
+      onClick={() => start(async () => { const r = await addToCart(productId, 1); if (r.ok) { setAdded(true); toast("Pridané do košíka"); setTimeout(() => setAdded(false), 1400); } else { toast("Položku sa nepodarilo pridať. Skúste to znova.", "error"); } })}
       disabled={pending}
       title="Pridať do košíka"
       className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] border border-brand bg-brand text-white transition hover:bg-brand-2 disabled:opacity-60"

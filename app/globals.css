@@ -21,7 +21,53 @@
   --color-muted-2: #6b675f;
   --color-muted-3: #54514a;
   --color-line: #e5eae8;
+  /* WCAG 2.2 AA (1.4.11): --color-line je DEKORATÍVNY predel — 1,22:1 na bielej, čo je pre
+     oddeľovače v poriadku (netýka sa ich žiadne kontrastné minimum). Ohraničenie
+     formulárového prvku je ale „user interface component" a potrebuje 3:1, inak pole
+     prakticky nevidno. Preto samostatný token: #7f8d88 = 3,46:1 na bielej, 3,22:1 na creme,
+     3,06:1 na mintbg. Rovnaká chladno-zelená rodina, len tmavšia hodnota. */
+  --color-field: #7f8d88;
   --color-mintbg: #eaf3f0;
+
+  /* ---- sémantické stavové farby ----------------------------------------------------
+     Doteraz to boli ad-hoc hexy priamo v triedach: 406 výskytov, 99 rôznych hodnôt v app/
+     a components/. Tie, ktoré nesú VÝZNAM (úspech / upozornenie / chyba / informácia), sú
+     odteraz tokeny. Kontrasty počítané cez WCAG relatívnu luminanciu:
+       success-ink na success = 6,90:1   warning-ink na warning = 5,51:1
+       danger-ink  na danger  = 6,50:1   info-ink    na info    = 8,88:1
+     Všetky prechádzajú AA (1.4.3) aj pre 11px pilulky.
+     Vedľajší efekt: zjednotenie #fdeceb → #fdecea (rozdiel 1/255 v modrej, 5 miest) a
+     #9a6b0e/#fbf1dc → warning-ink/warning. Tá druhá dvojica mala 4,17:1, čo AA PADALO
+     (staff/faktury/page.tsx:10, staff/objednavky/[id]/page.tsx:60, staff/page.tsx:88). */
+  --color-success: #ecfdf3;
+  --color-success-ink: #14633f;
+  --color-warning: #fdf6e7;
+  --color-warning-ink: #8a5a00;
+  /* tmavší variant pre dlhší text v žltom paneli — 6,57:1 na warning */
+  --color-warning-ink-2: #6d5520;
+  --color-warning-line: #e7d7af;
+  --color-danger: #fdecea;
+  --color-danger-ink: #9a3025;
+  /* hover plného červeného tlačidla (cancel-order-button.tsx:42) */
+  --color-danger-ink-2: #832619;
+  /* ohraničenie červeného oznamu — 1,52:1, teda DEKORATÍVNE (nie je to ovládač) */
+  --color-danger-line: #f0c9c2;
+  --color-info: #eef2ff;
+  --color-info-ink: #3730a3;
+
+  /* ---- doplnkové plochy (podklad riadkov, hlavičiek tabuliek, neutrálnych pilúl) ---- */
+  --color-surface-2: #fafbfa;
+  --color-surface-3: #f7f9f8;
+  --color-cream-2: #f3f0ee;
+
+  /* ---- text na tmavých plochách (footer, staff sidebar, tmavé sekcie) ----
+     Rebrík odtieňov, ktorý dnes rastie divo (9 hodnôt od #eaf1ee po #6e908a). Tri stupne
+     stačia. Najhoršie kontrasty: on-dark 6,42:1, on-dark-2 4,99:1, on-dark-3 3,68:1
+     — merané voči najsvetlejšiemu tmavému podkladu #21564c; na #0c211d sú 12,84 / 9,97 / 7,36.
+     on-dark-3 preto patrí len na veľký alebo dekoratívny text. */
+  --color-on-dark: #d7e4e0;
+  --color-on-dark-2: #b7ccc6;
+  --color-on-dark-3: #8fb3ab;
 
   --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
   --font-display: var(--font-bricolage), var(--font-hanken), system-ui, sans-serif;
@@ -39,7 +85,11 @@
 
 html {
   scroll-behavior: smooth;
+  /* 96px zhora kryje najvyššiu lepkavú hlavičku (verejný web: 12px odsadenie + 62px pill).
+     168px zdola kryje fixnú cookie lištu (fixed bottom-4, ~150px aj s odsadením) — bez toho
+     ostane fokusovaný ovládač schovaný pod ňou. WCAG 2.2, 2.4.11 Focus Not Obscured. */
   scroll-padding-top: 96px;
+  scroll-padding-bottom: 168px;
 }
 body {
   background: #fff;
@@ -197,9 +247,41 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 @keyframes brandScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .brand-marquee { position: relative; width: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%); }
 .brand-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; padding-right: clamp(44px, 6vw, 84px); animation: brandScroll 34s linear infinite; }
-.brand-marquee:hover .brand-track { animation-play-state: paused; }
+.brand-marquee:hover .brand-track,
+.brand-marquee:focus-within .brand-track,
+.marquee-band:hover .marquee-track,
+.marquee-band:focus-within .marquee-track { animation-play-state: paused; }
+/* WCAG 2.2 SC 2.2.2 — globálny vypínač pohybu (MotionToggle prepína data-motion na <html>).
+   !important je nutné: prebíja `animation` shorthand na .brand-track/.marquee-track, ktorý
+   inak resetuje animation-play-state späť na running. */
+[data-motion="paused"] .brand-track,
+[data-motion="paused"] .marquee-track { animation-play-state: paused !important; }
 .brand-logo { height: 32px; width: auto; flex: none; object-fit: contain; filter: grayscale(1); opacity: .7; transition: filter .35s ease, opacity .35s ease; }
 .brand-marquee:hover .brand-logo { filter: grayscale(0); opacity: 1; }
+
+/* ---- ovládanie pohybu (WCAG 2.2 SC 2.2.2) — malý pill v značkovom štýle ----
+   Svetlý variant má orámovanie --color-brand, nie existujúce #b9cac4 z btnGhost:
+   to má na bielej 1,71:1 a ako ohraničenie ovládača by padlo na SC 1.4.11.
+   min 32×32 px kryje SC 2.5.8 Target Size. Focus ring dedí z :focus-visible. */
+.motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.motion-toggle-light { border: 1px solid var(--color-brand); background: #fff; color: var(--color-brand); }
+.motion-toggle-light:hover { background: var(--color-mintbg); }
+.motion-toggle-dark { border: 1px solid rgba(255,255,255,.55); background: rgba(12,33,29,.55); color: #fff; }
+.motion-toggle-dark:hover { border-color: #fff; background: rgba(255,255,255,.14); }
 
 /* ---- karty ---- */
 .card-hover { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
@@ -221,14 +303,54 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 .navlink::after { content: ""; position: absolute; left: 0; bottom: -5px; height: 1.5px; width: 0; background: currentColor; transition: width .3s cubic-bezier(.2,.7,.2,1); }
 .navlink:hover::after { width: 100%; }
 
-/* ---- prístupnosť (WCAG 2.4.7 / 2.4.1): viditeľný focus + skip-link ---- */
+/* ---- prístupnosť (WCAG 2.4.7 / 1.4.11 / 2.4.1): viditeľný focus + skip-link ----
+
+   DVOJFAREBNÝ ring, a to nie zo štýlu — je to matematická nutnosť. Aby mal jednofarebný
+   indikátor 3:1 voči --color-brand-2 (#1e5249), musí mať luminanciu ≥ 0,304; aby mal 3:1
+   voči bielej, musí mať ≤ 0,283. To okno je prázdne, teda ŽIADNA jedna farba nefunguje na
+   svetlom aj tmavom podklade naraz. Predtým tu bol len `2px solid var(--color-brand)`,
+   ktorý má na sidebare back-office (#0c211d) 1,44:1 — teda neviditeľný.
+
+   Riešenie: svetlý prstenec tesne na prvku + tmavý obrys hneď za ním.
+     • na svetlom podklade nesie kontrast tmavý obrys   (#163f38 vs biela = 11,65:1)
+     • na tmavom podklade nesie kontrast svetlý prstenec (biela vs #0c211d = 16,80:1)
+     • navzájom majú 11,65:1, takže dvojica je čitateľná na čomkoľvek medzi tým
+   box-shadow so spreadom 2px presne vyplní medzeru, ktorú robí outline-offset: 2px.
+   Overené: žiadny fokusovateľný prvok v projekte nemá vlastný box-shadow, takže niet čo
+   prebiť. Pravidlo je zámerne UNLAYERED (mimo @layer), preto vyhráva nad Tailwind
+   utilitou `outline-none`, ktorú má na sebe každý input.
+
+   `border-radius` je odstránený zámerne: nastavoval polomer SAMOTNÉHO prvku, takže
+   tlačidlo s rounded-[10px] pri fokuse skočilo na 3px a viditeľne sa zdeformovalo.
+   outline aj box-shadow polomer prvku rešpektujú samy. */
+   Pásy sú TRI, zvnútra von: 1px --color-ink, 2px biela, 2px --color-brand (outline).
+   Tmavý vlások je nutný pre SVETLÝ ovládač na TMAVOM podklade — `btnOnDark` (bg-white)
+   v sections.tsx:98 použitý na :122, :213, :286, biele CTA v footer.tsx:51 a
+   header.tsx:90 aj :140. Tam biely prstenec splynie s bielou výplňou tlačidla (1,00:1)
+   a zelený obrys s tmavým podkladom (1,31:1 na #0f2a26), takže bez vlásku by indikátor
+   zmizol úplne. Vlások má voči bielej výplni 18,25:1. */
 :focus-visible {
   outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
-  border-radius: 3px;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px var(--color-ink), 0 0 0 3px #fff;
+}
+
+/* iOS Safari zoomne stránku, keď má fokusovaný ovládač písmo pod 16 px — a v projekte je
+   pod 16 px prakticky každý input (32 rôznych veľkostí od 9 px vyššie). Namiesto zásahu do
+   ~40 volajúcich miest to riešime jedným pravidlom pre dotykové/úzke displeje; hustota na
+   desktope zostáva nedotknutá. Unlayered, takže prebije Tailwind utility text-[13px] a spol. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 .skip-link {
-  position: absolute;
+  /* fixed, nie absolute: žiadny predok skip-linku nie je pozicovaný, takže absolute by ho
+     ukotvilo k začiatku DOKUMENTU — po zoscrollovaní by sa pri fokuse musela stránka
+     šklbnúť úplne hore, alebo by odkaz ostal mimo obrazovky. WCAG 2.2, 2.4.1 + 2.4.7. */
+  position: fixed;
   left: 12px;
   top: -56px;
   z-index: 1000;
@@ -241,6 +363,25 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   transition: top .15s ease;
 }
 .skip-link:focus { top: 12px; }
+
+/* ---- iOS Safari auto-zoom pri fokuse ----
+   Safari na iPhone zväčší celú stránku, keď má fokusovaný textový prvok
+   font-size < 16px. Nie je to porušenie žiadneho SC, ale je to reálna
+   bariéra: po vyplnení poľa ostane stránka priblížená a používateľ sa musí
+   ručne oddialiť. Podlaha 16px platí IBA na dotykových zariadeniach, takže
+   desktopový vzhľad (text-[13.5px]…text-[15px]) ostáva presne taký, aký je.
+   Pravidlo je zámerne UNLAYERED — Tailwind utility text-[14px] sú v @layer
+   utilities, takže neprebijú nelayerované pravidlo.
+   Checkbox/radio/file/range sú vylúčené: nezadáva sa do nich text a zväčšenie
+   font-size by im rozbilo h-4 w-4 rozmer. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea { font-size: 16px; }
+  /* zámerne väčšie polia (OTP kód, % zľavy) ostávajú väčšie */
+  input.field-lg, select.field-lg, textarea.field-lg { font-size: 18px; }
+  input.field-xl, select.field-xl, textarea.field-xl { font-size: 24px; }
+}
 
 /* ---- portál: aktívna položka navigácie (svetlý shell) ---- */
 .pnav-item { position: relative; }
@@ -263,4 +404,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   .brand-track { flex-wrap: wrap; justify-content: center; width: auto; animation: none; padding-right: 0; }
   .brand-dup { display: none !important; }
   .marquee-track { animation: none; flex-wrap: wrap; width: auto; }
+  /* bez animácie by sa zdvojený pás vypísal dvakrát; duplikáty už nesú aria-hidden */
+  .marquee-track > [aria-hidden="true"] { display: none !important; }
+  .marquee-band { overflow: visible; }
 }

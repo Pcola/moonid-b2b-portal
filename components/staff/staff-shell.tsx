@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { focusFirst, trapTabKey } from "@/lib/focus-trap";
+import { canManageInternalUsers, canViewAuditLog } from "@/lib/permissions";
+import type { Role } from "@prisma/client";
 
 type Props = {
   name: string;
@@ -16,7 +18,10 @@ type Props = {
 };
 
 type StaffBadge = null | "orders" | "requests" | "inquiries";
-type StaffItem = { href: string; exact: boolean; label: string; badge: StaffBadge; icon: React.ReactNode; adminOnly?: boolean };
+// `gate` drží rozhodnutie v lib/permissions (jediný zdroj pravdy pre RBAC), nie v natvrdo
+// napísanom `role !== "ADMIN"` — inak sa navigácia a server actions môžu rozísť.
+// Toto je len skrytie odkazu; skutočnú kontrolu robí requireAdmin() v samotnej route/action.
+type StaffItem = { href: string; exact: boolean; label: string; badge: StaffBadge; icon: React.ReactNode; gate?: (role: Role) => boolean };
 const NAV_GROUPS: { label: string | null; items: StaffItem[] }[] = [
   {
     label: null,
@@ -52,8 +57,9 @@ const NAV_GROUPS: { label: string | null; items: StaffItem[] }[] = [
   {
     label: "Systém",
     items: [
-      { href: "/staff/pristupy", exact: false, label: "Tím a prístupy", badge: null, adminOnly: true, icon: <><circle cx="8" cy="8" r="3" /><path d="M2.5 20a5.5 5.5 0 0 1 11 0" /><path d="M16 11.5V9a3 3 0 0 1 6 0v2.5" /><rect x="14" y="11.5" width="10" height="8" rx="1.5" /></> },
-      { href: "/staff/audit", exact: false, label: "Audit log", badge: null, adminOnly: true, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
+      { href: "/staff/synchronizacia", exact: false, label: "Synchronizácia", badge: null, icon: <><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2" /><path d="M3 5v5h5M21 19v-5h-5" /></> },
+      { href: "/staff/pristupy", exact: false, label: "Tím a prístupy", badge: null, gate: canManageInternalUsers, icon: <><circle cx="8" cy="8" r="3" /><path d="M2.5 20a5.5 5.5 0 0 1 11 0" /><path d="M16 11.5V9a3 3 0 0 1 6 0v2.5" /><rect x="14" y="11.5" width="10" height="8" rx="1.5" /></> },
+      { href: "/staff/audit", exact: false, label: "Audit log", badge: null, gate: canViewAuditLog, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
       { href: "/staff/bezpecnost", exact: false, label: "Bezpečnosť", badge: null, icon: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> },
     ],
   },
@@ -73,6 +79,7 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => p.startsWith("/staff/cenniky"), crumb: "Nastavenia", title: "Cenníky a úrovne" },
   { test: (p) => p.startsWith("/staff/doprava-platba"), crumb: "Nastavenia", title: "Doprava a platba" },
   { test: (p) => p.startsWith("/staff/faktury"), crumb: "Účtovníctvo", title: "Faktúry" },
+  { test: (p) => p.startsWith("/staff/synchronizacia"), crumb: "Systém", title: "Synchronizácia s Pohodou" },
   { test: (p) => p.startsWith("/staff/pristupy"), crumb: "Systém", title: "Tím a prístupy" },
   { test: (p) => p.startsWith("/staff/audit"), crumb: "Bezpečnosť", title: "Audit log" },
   { test: (p) => p.startsWith("/staff/bezpecnost"), crumb: "Bezpečnosť", title: "Bezpečnosť konta" },
@@ -128,7 +135,7 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
           <div key={gi} className="flex flex-col gap-0.5">
             {g.label && <span className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#8fb3ab]">{g.label}</span>}
             {g.items.map((n) => {
-              if (n.adminOnly && role !== "ADMIN") return null;
+              if (n.gate && !n.gate(role as Role)) return null;
               const active = isActive(n.href, n.exact);
               const count = badgeFor(n.badge);
               return (
@@ -177,8 +184,8 @@ export function StaffShell({ name, role, newOrders, newRequests, newInquiries, c
             <span className="text-[12px] text-muted-2">{page.crumb}</span>
             <h1 className="font-display truncate text-[20px] font-semibold tracking-[-0.02em] text-ink">{page.title}</h1>
           </div>
-          <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2 sm:flex">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+          <div className="ml-auto hidden items-center gap-2 rounded-[10px] border border-field bg-white px-3 py-2 focus-within:border-brand sm:flex">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7f8d88" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/staff/objednavky?q=${encodeURIComponent(q.trim())}` : "/staff/objednavky"); }}>
               <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať objednávku alebo firmu" placeholder="Hľadať objednávku, firmu…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none lg:w-[230px]" />
             </form>

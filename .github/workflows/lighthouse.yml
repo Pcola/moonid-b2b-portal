@@ -6,7 +6,7 @@ name: lighthouse
 on:
   workflow_dispatch: {}
   pull_request:
-    branches: [main]
+    branches: [main, staging]
 
 permissions:
   contents: read

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { exportCompanyData, exportMyData, requestErasure } from "./actions";
+import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
 
 export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
   const [pending, start] = useTransition();
@@ -9,6 +10,7 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
   const [erasing, setErasing] = useState(false);
   const [reason, setReason] = useState("");
   const [erased, setErased] = useState(false);
+  const erasedRef = useFocusWhen<HTMLParagraphElement>(erased);
 
   function doExport() {
     setMsg(null);
@@ -77,29 +79,31 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
 
         <div className="border-t border-line pt-4">
           {erased ? (
-            <p className="text-[13.5px] text-brand-2">Žiadosť o výmaz bola odoslaná. Vybavíme ju do 30 dní a ozveme sa.</p>
+            <p role="status" ref={erasedRef} tabIndex={-1} className="text-[13.5px] text-brand-2">Žiadosť o výmaz bola odoslaná. Vybavíme ju do 30 dní a ozveme sa.</p>
           ) : !erasing ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-[14.5px] font-medium text-ink">Žiadosť o výmaz údajov</div>
                 <div className="text-[13px] text-muted-2">Právo na výmaz. Pozn.: vystavené faktúry podliehajú zákonnej archivácii (10 r.).</div>
               </div>
-              <button onClick={() => setErasing(true)} disabled={pending} className="rounded-[10px] border border-[#f0c9c2] px-4 py-2.5 text-[14px] font-semibold text-[#9a3025] transition hover:bg-[#fdf4f2] disabled:opacity-60">
+              <button onClick={() => setErasing(true)} disabled={pending} className="rounded-[10px] border border-danger-line px-4 py-2.5 text-[14px] font-semibold text-danger-ink transition hover:bg-[#fdf4f2] disabled:opacity-60">
                 Požiadať o výmaz
               </button>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <textarea aria-label="Dôvod alebo rozsah žiadosti o výmaz (nepovinné)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
+              <textarea aria-label="Dôvod alebo rozsah žiadosti o výmaz (nepovinné)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
               <div className="flex gap-2">
-                <button onClick={doErasure} disabled={pending} className="rounded-[10px] bg-[#9a3025] px-4 py-2 text-[13.5px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60">{pending ? "Odosielam…" : "Odoslať žiadosť"}</button>
+                <button onClick={doErasure} disabled={pending} className="rounded-[10px] bg-danger-ink px-4 py-2 text-[13.5px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60">{pending ? "Odosielam…" : "Odoslať žiadosť"}</button>
                 <button onClick={() => setErasing(false)} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40">Zrušiť</button>
               </div>
             </div>
           )}
         </div>
 
-        {msg && <p role="status" className="text-[13px] text-muted-3">{msg}</p>}
+        <LiveMessage message={pending ? "Pripravujem…" : null} />
+        <LiveMessage message={msg} />
+        {msg && <p className="text-[13px] text-muted-3">{msg}</p>}
       </div>
     </section>
   );

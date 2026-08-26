@@ -11,7 +11,7 @@ import { auditRequestContext, writeAuditRequired } from "@/lib/audit";
 import { reportError } from "@/lib/observability";
 import { resolveOrderCharges } from "@/lib/store-config";
 import { isInStock } from "@/lib/stock";
-import { lineTotal as moneyLine, lineVat, sumMoney } from "@/lib/money";
+import { lineTotal as moneyLine, sumMoney, vatFromLines } from "@/lib/money";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
@@ -241,7 +241,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
 
   type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
-  const lineVats: number[] = [];
+  const taxable: { net: number; vatRatePct: number }[] = [];
   let hasBackorder = false;
 
   for (const row of rows) {
@@ -261,7 +261,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
     const inStock = isInStock(p, qty, now.getTime()); // rovnaká podmienka ako badge v katalógu (lib/stock.ts)
     if (!inStock) hasBackorder = true;
     const lineTotal = moneyLine(price.net, qty);
-    lineVats.push(lineVat(price.net, price.gross, qty));
+    taxable.push({ net: lineTotal, vatRatePct: price.vatRate });
     // most do Pohody: zamkni kód karty (len ak je most ACTIVE), inak null = nepôjde do Pohody
     const pohodaSku = p.pohodaLink && p.pohodaLink.linkStatus === "ACTIVE" ? p.pohodaLink.pohodaSku : null;
     items.push({
@@ -279,7 +279,7 @@ export async function createOrder(opts?: string | CreateOrderOpts): Promise<{ ok
     newAddress = null;
     savedLocation = null;
   }
-  const vat = sumMoney([...lineVats, charges.extrasVat]);
+  const vat = sumMoney([vatFromLines(taxable), charges.extrasVat]);
   const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
   let order: { id: string; number: string } | null = null;
@@ -517,7 +517,7 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
   const year = now.getFullYear();
   type Snap = { productId: string; skuSnapshot: string; pohodaSkuSnapshot: string | null; nameSnapshot: string; unitPriceSnapshot: number; costSnapshot: number | null; qty: number; lineTotal: number; fulfillment: "SKLADOM" | "NA_OBJEDNAVKU" };
   const items: Snap[] = [];
-  const lineVats: number[] = [];
+  const taxable: { net: number; vatRatePct: number }[] = [];
   let hasBackorder = false;
 
   for (const [productId, qtyRaw] of qtyByPid) {
@@ -534,7 +534,7 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
     const inStock = isInStock(p, qty, now.getTime()); // rovnaká podmienka ako badge v katalógu (lib/stock.ts)
     if (!inStock) hasBackorder = true;
     const lineTotal = moneyLine(price.net, qty);
-    lineVats.push(lineVat(price.net, price.gross, qty));
+    taxable.push({ net: lineTotal, vatRatePct: price.vatRate });
     const pohodaSku = p.pohodaLink && p.pohodaLink.linkStatus === "ACTIVE" ? p.pohodaLink.pohodaSku : null;
     items.push({ productId: p.id, skuSnapshot: p.sku, pohodaSkuSnapshot: pohodaSku, nameSnapshot: p.nameDisplay || p.name, unitPriceSnapshot: price.net, costSnapshot: p.costPrice != null ? Number(p.costPrice) : null, qty, lineTotal, fulfillment: inStock ? "SKLADOM" : "NA_OBJEDNAVKU" });
   }
@@ -555,7 +555,7 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
     deliveryLocationId = null;
     savedLocation = null;
   }
-  const vat = sumMoney([...lineVats, charges.extrasVat]);
+  const vat = sumMoney([vatFromLines(taxable), charges.extrasVat]);
   const total = sumMoney([subtotal, charges.shippingFee, charges.paymentSurcharge, vat]);
 
   const auditCtx = await auditRequestContext();

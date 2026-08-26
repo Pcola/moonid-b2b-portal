@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
       }
     >
       <div className="flex flex-col gap-2.5">
-        <h2 className="text-[32px] tracking-[-0.01em] text-ink">Zabudnuté heslo</h2>
+        <h1 className="text-[32px] tracking-[-0.01em] text-ink">Zabudnuté heslo</h1>
         <p className="text-[15px] leading-relaxed text-muted">Zadajte e-mail a pošleme vám odkaz na obnovu hesla.</p>
       </div>
       <ForgotForm />

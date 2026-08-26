@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { approveRequest, rejectRequest } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Req = {
   id: string;
@@ -60,21 +61,21 @@ export function RequestList({ requests, tiers }: { requests: Req[]; tiers: Tier[
             </div>
 
             {link ? (
-              <div className="mt-4 rounded-xl border border-mint/40 bg-mintbg/60 p-3.5">
-                <div className="text-[13px] font-semibold text-brand">✓ Schválené — pošlite zákazníkovi odkaz na nastavenie hesla:</div>
-                <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="mt-2 w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-[12px] text-muted-3" />
+              <div role="status" className="mt-4 rounded-xl border border-mint/40 bg-mintbg/60 p-3.5">
+                <div className="text-[13px] font-semibold text-brand"><span aria-hidden="true">✓ </span>Schválené — pošlite zákazníkovi odkaz na nastavenie hesla:</div>
+                <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label="Odkaz na nastavenie hesla pre zákazníka" className="mt-2 w-full rounded-md border border-field bg-white px-2.5 py-1.5 text-[12px] text-muted-3" />
               </div>
             ) : (
               <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-line pt-4">
                 <label className="flex flex-col gap-1 text-[12px] font-medium text-muted-3">Cenová úroveň
                   <select value={tierSel[r.id] ?? tiers[0]?.code} onChange={(e) => setTierSel((t) => ({ ...t, [r.id]: e.target.value }))}
-                    className="rounded-[9px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none focus:border-brand">
+                    className="rounded-[9px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none focus:border-brand">
                     {tiers.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.name} (−{Number(t.discountPct)} %)</option>)}
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-[12px] font-medium text-muted-3">Splatnosť (dni)
                   <input type="number" min={0} value={splat[r.id] ?? 14} onChange={(e) => setSplat((s) => ({ ...s, [r.id]: Number(e.target.value) }))}
-                    className="w-24 rounded-[9px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none focus:border-brand" />
+                    className="w-24 rounded-[9px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none focus:border-brand" />
                 </label>
                 <button onClick={() => doApprove(r.id)} disabled={isBusy}
                   className="rounded-[9px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
@@ -84,7 +85,9 @@ export function RequestList({ requests, tiers }: { requests: Req[]; tiers: Tier[
                   className="rounded-[9px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40 hover:text-ink disabled:opacity-50">
                   Zamietnuť
                 </button>
-                {errs[r.id] && <span className="text-[13px] text-[#9a3025]">{errs[r.id]}</span>}
+                <LiveMessage message={isBusy ? "Spracúvam žiadosť…" : null} />
+                <LiveMessage message={errs[r.id] || null} tone="error" />
+                {errs[r.id] && <span className="text-[13px] text-danger-ink">{errs[r.id]}</span>}
               </div>
             )}
           </div>

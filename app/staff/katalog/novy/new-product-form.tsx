@@ -4,8 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createProduct } from "../actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
-const inputCls = "w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-[14.5px] text-ink outline-none transition focus:border-brand";
+const inputCls = "w-full rounded-[10px] border border-field bg-white px-3 py-2.5 text-[14.5px] text-ink outline-none transition focus:border-brand";
 const labelCls = "mb-1.5 block text-[12.5px] font-semibold uppercase tracking-wide text-muted-2";
 
 export function NewProductForm({ categories }: { categories: { id: string; name: string }[] }) {
@@ -34,8 +35,8 @@ export function NewProductForm({ categories }: { categories: { id: string; name:
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-6">
         <div>
-          <label className={labelCls}>Názov *</label>
-          <input name="name" required maxLength={200} className={inputCls} placeholder="napr. Tekuté mydlo 5 l" />
+          <label htmlFor="np-name" className={labelCls}>Názov *</label>
+          <input id="np-name" name="name" required maxLength={200} className={inputCls} placeholder="napr. Tekuté mydlo 5 l" />
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -87,7 +88,9 @@ export function NewProductForm({ categories }: { categories: { id: string; name:
           </label>
         </div>
 
-        {error && <p className="text-[13.5px] text-[#9a3025]">{error}</p>}
+        <LiveMessage message={pending ? "Ukladám produkt…" : null} />
+        <LiveMessage message={error} tone="error" />
+        {error && <p className="text-[13.5px] text-danger-ink">{error}</p>}
 
         <div className="flex gap-2">
           <button type="submit" disabled={pending} className="rounded-[10px] bg-brand px-5 py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { dec, round2, sumMoney, lineTotal, lineVat, vatOf } from "@/lib/money";
-import { lineTotal2, sumMoney2, grossUnit2, vatOf2, discountedNet2 } from "@/lib/money-client";
+import { dec, round2, sumMoney, lineTotal, vatFromLines, vatOf } from "@/lib/money";
+import { lineTotal2, sumMoney2, grossUnit2, vatOf2, vatFromLines2, discountedNet2 } from "@/lib/money-client";
 import { Prisma } from "@prisma/client";
 
 describe("round2 — obchodné zaokrúhľovanie (polovica nahor)", () => {
@@ -22,17 +22,40 @@ describe("round2 — obchodné zaokrúhľovanie (polovica nahor)", () => {
   });
 });
 
-describe("lineTotal / lineVat — riadok objednávky", () => {
+describe("lineTotal — riadok objednávky", () => {
   it("net × qty presne (žiadny float drift)", () => {
     expect(lineTotal(0.1, 3)).toBe(0.3); // 0.1*3 = 0.30000000000000004 vo floate
     expect(lineTotal(2.62, 7)).toBe(18.34);
   });
+});
 
-  it("DPH riadku = (gross − net) × qty", () => {
-    // net 1.50, DPH 23 % → gross 1.845 → pol-hore 1.85 (float dal 1.84!)
-    const gross = round2(dec(1.5).times(1.23));
-    expect(gross).toBe(1.85);
-    expect(lineVat(1.5, gross, 10)).toBe(3.5); // (1.85−1.50)×10
+describe("vatFromLines — DPH zo základu dane, nie z kusu", () => {
+  it("počíta zo súčtu základu, nie z jednotkovej ceny × množstvo", () => {
+    // Regresia: stará metóda (gross − net) × qty zaokrúhľovala DPH na KUS.
+    // 0,37 € × 23 % = 0,4551 → gross/kus 0,46 → DPH/kus 0,09 → ×100 = 9,00 €.
+    // Správne: základ 37,00 € × 23 % = 8,51 €.
+    expect(vatFromLines([{ net: lineTotal(0.37, 100), vatRatePct: 23 }])).toBe(8.51);
+    // Opačný smer: 0,35 € → gross/kus 0,43 → DPH/kus 0,08 → ×100 = 8,00 €; správne 8,05 €.
+    expect(vatFromLines([{ net: lineTotal(0.35, 100), vatRatePct: 23 }])).toBe(8.05);
+  });
+
+  it("zoskupuje základ podľa sadzby (rekapitulácia DPH)", () => {
+    const vat = vatFromLines([
+      { net: 100, vatRatePct: 23 },
+      { net: 50, vatRatePct: 23 },
+      { net: 80, vatRatePct: 10 },
+    ]);
+    expect(vat).toBe(sumMoney([vatOf(150, 23), vatOf(80, 10)])); // 34.50 + 8.00
+    expect(vat).toBe(42.5);
+  });
+
+  it("nulová sadzba a prázdny vstup", () => {
+    expect(vatFromLines([])).toBe(0);
+    expect(vatFromLines([{ net: 123.45, vatRatePct: 0 }])).toBe(0);
+  });
+
+  it("prijíma Decimal aj string rovnako ako zvyšok lib/money", () => {
+    expect(vatFromLines([{ net: new Prisma.Decimal("37.00"), vatRatePct: "23" }])).toBe(8.51);
   });
 });
 
@@ -106,12 +129,22 @@ describe("money-client — parita klientského náhľadu so serverovým Decimalo
       const netS = round2(new Prisma.Decimal(snap));
       const grossS = round2(dec(netS).times(dec(100).plus(vr).dividedBy(100)));
       const lineS = lineTotal(netS, q);
-      const vatS = lineVat(netS, grossS, q);
+      const vatS = vatFromLines([{ net: lineS, vatRatePct: vr }]);
       const netClient = round2(new Prisma.Decimal(snap)); // page.tsx posiela round2(snapshot)
       expect(lineTotal2(netClient, q), `line ${snap}×${q}`).toBe(lineS);
       expect(grossUnit2(netClient, vr), `gross ${snap}@${vr}%`).toBe(grossS);
-      expect(lineTotal2(grossUnit2(netClient, vr) - netClient, q), `vat ${snap}@${vr}%×${q}`).toBe(vatS);
+      expect(vatFromLines2([{ net: lineTotal2(netClient, q), vatRatePct: vr }]), `vat ${snap}@${vr}%×${q}`).toBe(vatS);
     }
+  });
+});
+
+describe("vatFromLines2 — klientske zrkadlo", () => {
+  it("zhodné so serverom aj pri viacerých sadzbách a stovkách riadkov", () => {
+    const lines: { net: number; vatRatePct: number }[] = [];
+    for (let i = 1; i <= 250; i++) {
+      lines.push({ net: lineTotal(i / 100, (i % 17) + 1), vatRatePct: [0, 5, 10, 19, 23][i % 5] });
+    }
+    expect(vatFromLines2(lines)).toBe(vatFromLines(lines));
   });
 });
 

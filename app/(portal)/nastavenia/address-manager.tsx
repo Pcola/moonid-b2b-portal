@@ -3,16 +3,24 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBillingAddress, addDeliveryLocation, updateDeliveryLocation, deleteDeliveryLocation, setDefaultDeliveryLocation } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { buttonClass } from "@/components/ui/button";
 
 type Loc = { id: string; label: string; street: string | null; zip: string | null; city: string | null; isDefault: boolean };
 type Billing = { street: string | null; zip: string | null; city: string | null };
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass();
 const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 function Msg({ m }: { m: { ok: boolean; text: string } | null }) {
-  if (!m) return null;
-  return <span className={`text-[13px] font-semibold ${m.ok ? "text-brand" : "text-[#9a3025]"}`}>{m.text}</span>;
+  return (
+    <>
+      <LiveMessage message={m?.ok ? m.text : null} />
+      <LiveMessage message={m && !m.ok ? m.text : null} tone="error" />
+      {m && <span className={`text-[13px] font-semibold ${m.ok ? "text-brand" : "text-danger-ink"}`}>{m.text}</span>}
+    </>
+  );
 }
 
 function fmt(a: { street: string | null; zip: string | null; city: string | null }) {
@@ -41,12 +49,12 @@ function BillingSection({ isAdmin, billing }: { isAdmin: boolean; billing: Billi
   return (
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-[1fr_120px_1fr]">
-        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} className={inp} /></label>
-        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
-        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
+        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} autoComplete="billing street-address" className={inp} /></label>
+        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} autoComplete="billing postal-code" className={inp} /></label>
+        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="billing address-level2" className={inp} /></label>
       </div>
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Ukladám…" : "Uložiť"}</button>
+        <button onClick={save} disabled={pending} className={buttonClass()}>{pending ? "Ukladám…" : "Uložiť"}</button>
         <Msg m={msg} />
       </div>
     </div>
@@ -83,13 +91,15 @@ function LocationRow({ loc, isAdmin }: { loc: Loc; isAdmin: boolean }) {
       <div className="flex flex-col gap-2.5 rounded-xl border border-brand/30 bg-white p-4">
         <div className="grid gap-2.5 sm:grid-cols-2">
           <label className={lbl}>Označenie<input value={label} onChange={(e) => setLabel(e.target.value)} className={inp} /></label>
-          <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} className={inp} /></label>
-          <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
-          <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
+          <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} autoComplete="shipping street-address" className={inp} /></label>
+          <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} autoComplete="shipping postal-code" className={inp} /></label>
+          <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="shipping address-level2" className={inp} /></label>
         </div>
-        {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
+        <LiveMessage message={pending ? "Ukladám…" : null} />
+        <LiveMessage message={err} tone="error" />
+        {err && <span className="text-[13px] text-danger-ink">{err}</span>}
         <div className="flex items-center gap-2.5">
-          <button onClick={save} disabled={pending} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Ukladám…" : "Uložiť"}</button>
+          <button onClick={save} disabled={pending} className={buttonClass({ size: "sm" })}>{pending ? "Ukladám…" : "Uložiť"}</button>
           <button onClick={() => { setEdit(false); setErr(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
         </div>
       </div>
@@ -103,13 +113,14 @@ function LocationRow({ loc, isAdmin }: { loc: Loc; isAdmin: boolean }) {
           {loc.isDefault && <span className="rounded-full bg-mintbg px-2 py-0.5 text-[11px] font-semibold text-brand">predvolená</span>}
         </div>
         <div className="text-[13px] text-muted-2">{fmt(loc)}</div>
-        {err && <div className="mt-1 text-[12.5px] text-[#9a3025]">{err}</div>}
+        <LiveMessage message={err} tone="error" />
+        {err && <div className="mt-1 text-[12.5px] text-danger-ink">{err}</div>}
       </div>
       {isAdmin && (
         <div className="flex flex-none items-center gap-1.5">
           {!loc.isDefault && <button onClick={makeDefault} disabled={pending} title="Nastaviť ako predvolenú" className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50">Predvolená</button>}
           <button onClick={() => setEdit(true)} title="Upraviť" className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-brand transition hover:border-mint-2">Upraviť</button>
-          <button onClick={remove} disabled={pending} title="Zmazať" className="rounded-lg border border-line px-2.5 py-1.5 text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">✕</button>
+          <button onClick={remove} disabled={pending} title="Zmazať" className="rounded-lg border border-line px-2.5 py-1.5 text-muted-2 transition hover:text-danger-ink disabled:opacity-50">✕</button>
         </div>
       )}
     </div>
@@ -141,13 +152,15 @@ function AddLocation() {
     <div className="flex flex-col gap-2.5 rounded-xl border border-brand/30 bg-white p-4">
       <div className="grid gap-2.5 sm:grid-cols-2">
         <label className={lbl}>Označenie<input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="napr. Prevádzka centrum" className={inp} /></label>
-        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} className={inp} /></label>
-        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} className={inp} /></label>
-        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></label>
+        <label className={lbl}>Ulica a číslo<input value={street} onChange={(e) => setStreet(e.target.value)} autoComplete="shipping street-address" className={inp} /></label>
+        <label className={lbl}>PSČ<input value={zip} onChange={(e) => setZip(e.target.value)} autoComplete="shipping postal-code" className={inp} /></label>
+        <label className={lbl}>Mesto<input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="shipping address-level2" className={inp} /></label>
       </div>
-      {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
+      <LiveMessage message={pending ? "Pridávam adresu…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <span className="text-[13px] text-danger-ink">{err}</span>}
       <div className="flex items-center gap-2.5">
-        <button onClick={add} disabled={pending} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Pridávam…" : "Pridať adresu"}</button>
+        <button onClick={add} disabled={pending} className={buttonClass({ size: "sm" })}>{pending ? "Pridávam…" : "Pridať adresu"}</button>
         <button onClick={() => { setOpen(false); setErr(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
       </div>
     </div>

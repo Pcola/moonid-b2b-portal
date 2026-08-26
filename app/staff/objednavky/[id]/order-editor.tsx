@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrder } from "../actions";
-import { lineTotal2, sumMoney2, grossUnit2, vatOf2 } from "@/lib/money-client";
+import { lineTotal2, sumMoney2, vatOf2, vatFromLines2 } from "@/lib/money-client";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = { id: string; name: string; sku: string; unit: string; unitPriceSnapshot: number; vatRate: number; qty: number };
 type Loc = { id: string; label: string | null; street: string | null; city: string | null; zip: string | null };
@@ -28,7 +29,7 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
   const usable = items.filter((i) => (qty[i.id] ?? 0) > 0);
   // náhľad počíta rovnako ako server (lib/money): centová aritmetika, polovica nahor
   const subtotal = sumMoney2(usable.map((i) => lineTotal2(i.unitPriceSnapshot, qty[i.id])));
-  const itemsVat = sumMoney2(usable.map((i) => lineTotal2(grossUnit2(i.unitPriceSnapshot, i.vatRate) - i.unitPriceSnapshot, qty[i.id])));
+  const itemsVat = vatFromLines2(usable.map((i) => ({ net: lineTotal2(i.unitPriceSnapshot, qty[i.id]), vatRatePct: i.vatRate })));
   const vat = sumMoney2([itemsVat, vatOf2(sumMoney2([shippingFee, paymentSurcharge]), vatRate)]);
   const total = sumMoney2([subtotal, shippingFee, paymentSurcharge, vat]); // doprava/príplatok ostávajú
 
@@ -78,12 +79,12 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
               </div>
               <div className="flex flex-none items-center gap-1">
                 <button onClick={() => set(it.id, q - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-muted hover:border-brand/40">−</button>
-                <input value={q} onChange={(e) => set(it.id, Number(e.target.value))} inputMode="numeric"
-                  className="w-[52px] rounded-lg border border-line bg-white px-1 py-1 text-center text-[13.5px] text-ink outline-none focus:border-brand tabular-nums" />
+                <input value={q} onChange={(e) => set(it.id, Number(e.target.value))} inputMode="numeric" aria-label={`Množstvo — ${it.name}`}
+                  className="w-[52px] rounded-lg border border-field bg-white px-1 py-1 text-center text-[13.5px] text-ink outline-none focus:border-brand tabular-nums" />
                 <button onClick={() => set(it.id, q + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-muted hover:border-brand/40">+</button>
               </div>
               <span className="w-[74px] flex-none text-right text-[13.5px] font-semibold tabular-nums text-ink">{removed ? "—" : eur(lineTotal2(it.unitPriceSnapshot, q))}</span>
-              <button onClick={() => set(it.id, removed ? it.qty || 1 : 0)} title={removed ? "Vrátiť" : "Odobrať"} className="flex-none text-muted-2 transition hover:text-[#9a3025]">
+              <button onClick={() => set(it.id, removed ? it.qty || 1 : 0)} title={removed ? "Vrátiť" : "Odobrať"} className="flex-none text-muted-2 transition hover:text-danger-ink">
                 {removed
                   ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.5 2.8L3 8" /><path d="M3 3v5h5" /></svg>
                   : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>}
@@ -95,20 +96,22 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Dodacia adresa
-          <select value={loc} onChange={(e) => setLoc(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand">
+          <select value={loc} onChange={(e) => setLoc(e.target.value)} className="rounded-lg border border-field bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand">
             <option value="">Fakturačná adresa firmy</option>
             {locations.map((l) => <option key={l.id} value={l.id}>{l.label ? l.label + " · " : ""}{[l.street, [l.zip, l.city].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</option>)}
           </select>
         </label>
         <label className="flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Poznámka
-          <input value={noteVal} onChange={(e) => setNoteVal(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand" />
+          <input value={noteVal} onChange={(e) => setNoteVal(e.target.value)} className="rounded-lg border border-field bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-brand" />
         </label>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3.5">
         <div className="text-[13.5px] text-muted">Nový súčet: <span className="font-semibold text-ink">{eur(subtotal)}</span> bez DPH · <span className="font-semibold text-brand">{eur(total)}</span> s DPH</div>
         <div className="flex items-center gap-2.5">
-          {err && <span className="text-[12.5px] text-[#9a3025]">{err}</span>}
+          <LiveMessage message={pending ? "Ukladám zmeny objednávky…" : null} />
+          <LiveMessage message={err} tone="error" />
+          {err && <span className="text-[12.5px] text-danger-ink">{err}</span>}
           <button onClick={() => { setOpen(false); reset(); }} className="rounded-lg border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
           <button onClick={save} disabled={pending} className="rounded-lg bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Ukladám…" : "Uložiť zmeny"}</button>
         </div>

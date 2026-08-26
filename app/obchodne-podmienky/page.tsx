@@ -23,7 +23,7 @@ export default function ObchodnePodmienky() {
 
       {TERMS_SECTIONS.map((section, index) => (
         <section key={section.title}>
-          <H2>{index + 1}. {section.title}</H2>
+          <H2 id={section.anchor}>{index + 1}. {section.title}</H2>
           {section.paragraphs.map((paragraph) => <P key={paragraph}>{paragraph}</P>)}
         </section>
       ))}

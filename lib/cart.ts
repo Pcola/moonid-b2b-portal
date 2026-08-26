@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { resolveUnitPrice, type PricedLine } from "@/lib/pricing";
-import { lineTotal, lineVat, sumMoney } from "@/lib/money";
+import { lineTotal, sumMoney, vatFromLines } from "@/lib/money";
 import { Prisma } from "@prisma/client";
 
 // Atomický get-or-create: 1 súkromný košík na používateľa (Cart @@unique([createdById])).
@@ -58,7 +58,8 @@ export async function getCartDetail(companyId: string, userId: string, tierCode:
     },
   });
 
-  const lineNets: number[] = [], lineVats: number[] = [];
+  const lineNets: number[] = [];
+  const taxable: { net: number; vatRatePct: number }[] = [];
   let hasOnRequest = false;
   const items: CartLine[] = rows.map((row) => {
     const p = row.product;
@@ -74,7 +75,7 @@ export async function getCartDetail(companyId: string, userId: string, tierCode:
     if (price.kind === "PRICE") {
       lineNet = lineTotal(price.net, qty);
       lineNets.push(lineNet);
-      lineVats.push(lineVat(price.net, price.gross, qty));
+      taxable.push({ net: lineNet, vatRatePct: price.vatRate });
     } else {
       hasOnRequest = true;
     }
@@ -82,6 +83,6 @@ export async function getCartDetail(companyId: string, userId: string, tierCode:
   });
 
   const subtotalNet = sumMoney(lineNets);
-  const vat = sumMoney(lineVats);
+  const vat = vatFromLines(taxable);
   return { items, subtotalNet, vat, totalGross: sumMoney([subtotalNet, vat]), hasOnRequest };
 }

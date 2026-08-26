@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addUserToCompany } from "../actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
-const inp = "rounded-lg border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-lg border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand";
 
 export function AddUserForm({ companyId }: { companyId: string }) {
   const router = useRouter();
@@ -39,15 +40,17 @@ export function AddUserForm({ companyId }: { companyId: string }) {
   return (
     <div className="mt-1 flex flex-col gap-2 rounded-xl border border-dashed border-line p-3">
       <div className="grid gap-2 sm:grid-cols-2">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="e-mail *" className={inp} />
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="meno (voliteľné)" className={inp} />
+        <label className="flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2">E-mail *<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="off" placeholder="objednavky@firma.sk" className={inp} /></label>
+        <label className="flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Meno (voliteľné)<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" placeholder="Meno a priezvisko" className={inp} /></label>
       </div>
       <div className="flex items-center gap-2">
         <button onClick={submit} disabled={pending || !email.trim()} className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
           {pending ? "Pozývam…" : "Pozvať"}
         </button>
         <button onClick={() => { setOpen(false); setMsg(null); setLink(null); }} className="text-[13px] font-medium text-muted transition hover:text-ink">Zrušiť</button>
-        {msg && <span className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        <LiveMessage message={pending ? "Pozývam…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+        {msg && <span id="add-user-error" className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
       {link && (
         <div className="rounded-lg border border-line bg-cream/50 p-2">

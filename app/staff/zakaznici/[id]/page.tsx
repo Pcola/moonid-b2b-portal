@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { CompanyEditForm } from "./company-edit-form";
 import { LocationsManager } from "./locations-manager";
@@ -13,13 +14,16 @@ function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireStaff();
+  const staff = await requireStaff();
+  // Zmenu cenovej úrovne vynucuje updateCompany na serveri; tu len nezobrazuj ovládač,
+  // ktorý by staffovi aj tak vrátil chybu.
+  const canEditPricing = canManagePriceTiers(staff.role);
 
   const [company, tiers, recentOrders] = await Promise.all([
     prisma.company.findUnique({
       where: { id },
       select: {
-        id: true, name: true, ico: true, dic: true, icDph: true, address: true, city: true,
+        id: true, name: true, ico: true, dic: true, icDph: true, address: true, city: true, zip: true,
         splatDays: true, active: true, createdAt: true,
         priceTier: { select: { code: true } },
         users: { orderBy: { createdAt: "asc" }, select: { id: true, name: true, email: true, role: true, active: true } },
@@ -35,7 +39,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   const tierList = tiers.map((t) => ({ code: t.code, name: t.name, discountPct: Number(t.discountPct) }));
   const editable = {
     id: company.id, name: company.name, ico: company.ico, dic: company.dic, icDph: company.icDph,
-    address: company.address, city: company.city, priceTierCode: company.priceTier?.code ?? tiers[0]?.code ?? "",
+    address: company.address, city: company.city, zip: company.zip, priceTierCode: company.priceTier?.code ?? tiers[0]?.code ?? "",
     splatDays: company.splatDays, active: company.active,
   };
 
@@ -48,14 +52,14 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-[clamp(22px,3vw,30px)] font-semibold text-ink">{company.name}</h2>
         {company.active
-          ? <span className="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-[12px] font-semibold text-[#14633f]">Aktívna</span>
-          : <span className="rounded-full bg-[#fdecea] px-2.5 py-1 text-[12px] font-semibold text-[#9a3025]">Neaktívna</span>}
+          ? <span className="rounded-full bg-success px-2.5 py-1 text-[12px] font-semibold text-success-ink">Aktívna</span>
+          : <span className="rounded-full bg-danger px-2.5 py-1 text-[12px] font-semibold text-danger-ink">Neaktívna</span>}
         <span className="text-[13px] text-muted-2">IČO {company.ico} · {company._count.orders} objednávok · zákazník od {new Date(company.createdAt).toLocaleDateString("sk")}</span>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr] lg:items-start">
         <div className="flex flex-col gap-5">
-          <CompanyEditForm company={editable} tiers={tierList} />
+          <CompanyEditForm company={editable} tiers={tierList} canEditPricing={canEditPricing} />
           <LocationsManager companyId={company.id} locations={company.locations} />
         </div>
 

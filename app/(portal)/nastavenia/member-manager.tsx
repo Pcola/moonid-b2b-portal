@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { inviteMember, resendMemberAccess, setMemberPermissions, setMemberActive } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Member = { id: string; name: string | null; email: string; role: string; active: boolean; canOrderDirectly: boolean; approverId: string | null };
 
 const ROLE: Record<string, string> = { CUSTOMER_ADMIN: "Správca firmy", CUSTOMER_USER: "Používateľ", STAFF: "Moonid tím", ADMIN: "Administrátor" };
-const inp = "rounded-[9px] border border-line bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[9px] border border-field bg-white px-2.5 py-2 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]; currentUserId: string }) {
   const router = useRouter();
@@ -51,7 +53,7 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
           {m.name && <div className="truncate text-[12.5px] text-muted-2">{m.email}</div>}
         </div>
         <span className="rounded-full bg-cream px-2.5 py-0.5 text-[11.5px] font-medium text-muted">{ROLE[m.role] ?? m.role}</span>
-        {!m.active && <span className="rounded-full bg-[#fdeceb] px-2.5 py-0.5 text-[11.5px] font-medium text-[#9a3025]">neaktívne</span>}
+        {!m.active && <span className="rounded-full bg-danger px-2.5 py-0.5 text-[11.5px] font-medium text-danger-ink">neaktívne</span>}
         {m.id !== currentUserId && (
           <button onClick={toggleActive} disabled={pending} className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50">{m.active ? "Deaktivovať" : "Aktivovať"}</button>
         )}
@@ -63,16 +65,16 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
       {isAdminRole ? (
         <div className="text-[12.5px] text-muted-2">Správca firmy — objednáva priamo a schvaľuje objednávky.</div>
       ) : m.active ? (
-        <div className="flex flex-wrap items-center gap-2.5 rounded-lg bg-[#fafbfa] px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5">
           <span className="text-[12.5px] font-semibold text-muted-3">Objednávanie:</span>
-          <select value={mode} onChange={(e) => setMode(e.target.value as "direct" | "approval")} className={inp}>
+          <select value={mode} onChange={(e) => setMode(e.target.value as "direct" | "approval")} aria-label={`Režim objednávania — ${m.name || m.email}`} className={inp}>
             <option value="direct">Objednáva priamo</option>
             <option value="approval">Vyžaduje schválenie</option>
           </select>
           {mode === "approval" && (
             <>
               <span className="text-[12.5px] text-muted-3">schvaľuje:</span>
-              <select value={approverId} onChange={(e) => setApproverId(e.target.value)} className={inp}>
+              <select value={approverId} onChange={(e) => setApproverId(e.target.value)} aria-label={`Schvaľovateľ objednávok — ${m.name || m.email}`} className={inp}>
                 <option value="">— vyberte —</option>
                 {approvers.map((a) => <option key={a.id} value={a.id}>{a.name || a.email}</option>)}
               </select>
@@ -81,8 +83,10 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
           {dirty && <button onClick={save} disabled={pending} className="rounded-[9px] bg-brand px-3.5 py-2 text-[12.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "…" : "Uložiť"}</button>}
         </div>
       ) : null}
-      {err && <div className="text-[12.5px] text-[#9a3025]">{err}</div>}
-      {notice && <div className="text-[12.5px] text-[#6d5520]" role="status">{notice}</div>}
+      <LiveMessage message={pending ? "Pracujem…" : notice} />
+      <LiveMessage message={err} tone="error" />
+      {err && <div className="text-[12.5px] text-danger-ink">{err}</div>}
+      {notice && <div className="text-[12.5px] text-warning-ink-2">{notice}</div>}
     </div>
   );
 }
@@ -109,13 +113,15 @@ function InviteMember() {
   return (
     <div className="flex flex-col gap-2.5 rounded-xl border border-brand/30 bg-white p-4">
       <div className="grid gap-2.5 sm:grid-cols-2">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="E-mail kolegu *" className={inp} />
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Meno (nepovinné)" className={inp} />
+        <label className={lbl}>E-mail kolegu *<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="kolega@firma.sk" autoComplete="off" aria-required="true" aria-invalid={(!!msg && !msg.ok) || undefined} aria-describedby={msg && !msg.ok ? "invite-member-error" : undefined} className={inp} /></label>
+        <label className={lbl}>Meno (nepovinné)<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Meno a priezvisko" autoComplete="off" className={inp} /></label>
       </div>
       <div className="flex items-center gap-2.5">
         <button onClick={invite} disabled={pending || !email.trim()} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Pozývam…" : "Pozvať"}</button>
         <button onClick={() => { setOpen(false); setMsg(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
-        {msg && <span className={`text-[13px] font-semibold ${msg.warning ? "text-[#6d5520]" : msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        <LiveMessage message={pending ? "Pozývam…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+        {msg && <span id="invite-member-error" className={`text-[13px] font-semibold ${msg.warning ? "text-warning-ink-2" : msg.ok ? "text-brand" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
     </div>
   );
@@ -140,7 +146,7 @@ export function MemberManager({ isAdmin, members, currentUserId }: { isAdmin: bo
                   {m.name && <div className="truncate text-[12.5px] text-muted-2">{m.email}</div>}
                 </div>
                 <span className="rounded-full bg-cream px-2.5 py-0.5 text-[11.5px] font-medium text-muted">{ROLE[m.role] ?? m.role}</span>
-                {!m.canOrderDirectly && <span className="rounded-full bg-[#fdf6e7] px-2.5 py-0.5 text-[11px] font-medium text-[#8a5a00]">na schválenie</span>}
+                {!m.canOrderDirectly && <span className="rounded-full bg-warning px-2.5 py-0.5 text-[11px] font-medium text-warning-ink">na schválenie</span>}
               </div>
             )
         ))}
