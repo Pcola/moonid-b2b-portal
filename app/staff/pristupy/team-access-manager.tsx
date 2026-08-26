@@ -350,12 +350,12 @@ export function TeamAccessManager({ users, currentUserId }: { users: TeamUser[];
         <caption className="sr-only">Interné účty Moonid, ich roly, MFA, stav a dostupné administrátorské akcie</caption>
         <thead>
           <tr className="border-b border-line bg-cream/60 text-[11px] uppercase tracking-wide text-muted-2">
-            <th className="px-4 py-2.5 font-semibold">Konto</th>
-            <th className="px-4 py-2.5 font-semibold">Rola</th>
-            <th className="px-4 py-2.5 font-semibold">MFA</th>
-            <th className="px-4 py-2.5 font-semibold">Posledné prihlásenie</th>
-            <th className="px-4 py-2.5 font-semibold">Stav</th>
-            <th className="px-4 py-2.5 font-semibold">Akcie</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Konto</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Rola</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">MFA</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Posledné prihlásenie</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Stav</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Akcie</th>
           </tr>
         </thead>
         <tbody>{users.map((user) => <TeamUserRow key={user.id} user={user} currentUserId={currentUserId} />)}</tbody>

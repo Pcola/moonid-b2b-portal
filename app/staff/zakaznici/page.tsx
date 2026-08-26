@@ -38,7 +38,8 @@ export default async function StaffCustomers() {
         </div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
-        <div className="grid grid-cols-[2fr_1fr_1fr_0.7fr_1fr] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+        {/* hlavička je vizuálna pomôcka; pre čítačky nesie kontext stĺpcov aria-label riadku (SC 1.3.1) */}
+        <div aria-hidden="true" className="grid grid-cols-[2fr_1fr_1fr_0.7fr_1fr] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
           <span>Firma</span><span>Mesto</span><span>Úroveň</span><span>Obj.</span><span className="text-right">Tržby {year}</span>
         </div>
         {companies.length === 0 ? (
@@ -47,7 +48,7 @@ export default async function StaffCustomers() {
           const initials = c.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
           const disc = c.priceTier ? Number(c.priceTier.discountPct) : 0;
           return (
-            <Link key={c.id} href={`/staff/zakaznici/${c.id}`} prefetch={false} className={`grid grid-cols-[2fr_1fr_1fr_0.7fr_1fr] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-cream/50 ${c.active ? "" : "opacity-60"}`}>
+            <Link key={c.id} href={`/staff/zakaznici/${c.id}`} prefetch={false} aria-label={`Zákazník ${c.name}${c.active ? "" : " (neaktívna firma)"}, mesto ${c.city ?? "neuvedené"}, cenová úroveň ${c.priceTier ? `${c.priceTier.code}, zľava ${disc.toFixed(0)} %` : "nepriradená"}, ${c._count.orders} objednávok, tržby ${year}: ${eur(rev.get(c.id) ?? 0)}`} className={`grid grid-cols-[2fr_1fr_1fr_0.7fr_1fr] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-cream/50 ${c.active ? "" : "opacity-60"}`}>
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] text-[13px] font-bold" style={{ background: i % 2 ? AV[1] : AV[0], color: i % 2 ? "#163F38" : "#fff" }}>{initials}</span>
                 <div className="min-w-0">

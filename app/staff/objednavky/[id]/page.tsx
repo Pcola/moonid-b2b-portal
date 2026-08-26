@@ -57,7 +57,8 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="font-mono text-[clamp(24px,3vw,32px)] font-semibold text-ink">{order.number}</h2>
             <span className="rounded-full px-3 py-1 text-[12px] font-semibold" style={{ color: meta.fg, background: meta.bg }}>{meta.label}</span>
-            {order.hasBackorder && <span className="rounded-full bg-[#FBF1DC] px-2.5 py-1 text-[11.5px] font-medium text-[#9A6B0E]">čiastočne na objednávku</span>}
+            {/* #9A6B0E na #FBF1DC = 4,18:1 (pod AA); #8A5A00 = 5,28:1 */}
+            {order.hasBackorder && <span className="rounded-full bg-[#FBF1DC] px-2.5 py-1 text-[11.5px] font-medium text-[#8A5A00]">čiastočne na objednávku</span>}
           </div>
           <span className="text-[14.5px] text-muted">{order.company.name} · {new Date(order.createdAt).toLocaleString("sk")} · {order.items.length} položiek</span>
         </div>
@@ -85,7 +86,12 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
                     </span>
                     {i < 4 && <span className="h-[2px] flex-1" style={{ background: i < curIdx ? "#163F38" : "#E2E7E4" }} />}
                   </div>
-                  <span className="text-[13px] font-semibold" style={{ color: done || active ? "#16201D" : "#9DB0AA" }}>{title}</span>
+                  <span className="text-[13px] font-semibold" style={{ color: done || active ? "#16201D" : "#6b675f" }}>
+                    {title}
+                    {/* stav kroku nesmie byť daný len farbou (SC 1.4.1) */}
+                    {done && <span className="sr-only"> — hotovo</span>}
+                    {active && <span className="sr-only"> — aktuálny stav</span>}
+                  </span>
                 </div>
               );
             })}

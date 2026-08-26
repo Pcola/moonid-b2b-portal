@@ -87,12 +87,14 @@ export function TierPricesEditor({
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse text-[13.5px]">
+          {/* popis tabuľky pre čítačky */}
+          <caption className="sr-only">Zmluvné ceny podľa cenovej úrovne — štandardná cena zo zľavy, zmluvná netto cena a výsledná brutto cena s DPH</caption>
           <thead>
             <tr className="border-b border-line text-left text-[11px] font-semibold uppercase tracking-wide text-muted-2">
-              <th className="py-2 pr-3 font-semibold">Úroveň</th>
-              <th className="py-2 pr-3 font-semibold">Štandardná (zo zľavy)</th>
-              <th className="py-2 pr-3 font-semibold">Zmluvná netto</th>
-              <th className="py-2 font-semibold">Brutto s DPH</th>
+              <th scope="col" className="py-2 pr-3 font-semibold">Úroveň</th>
+              <th scope="col" className="py-2 pr-3 font-semibold">Štandardná (zo zľavy)</th>
+              <th scope="col" className="py-2 pr-3 font-semibold">Zmluvná netto</th>
+              <th scope="col" className="py-2 font-semibold">Brutto s DPH</th>
             </tr>
           </thead>
           <tbody>
@@ -103,11 +105,11 @@ export function TierPricesEditor({
               const gross = effective != null ? grossUnit2(effective, vatRate) : null;
               return (
                 <tr key={t.code} className="border-b border-line/60">
-                  <td className="py-2.5 pr-3">
+                  <th scope="row" className="py-2.5 pr-3 text-left font-normal">
                     <span className="font-medium text-ink">{t.name}</span>
                     <span className="ml-2 rounded bg-cream px-1.5 py-0.5 font-mono text-[10.5px] font-semibold text-muted-2">{t.code}</span>
                     <span className="ml-2 text-[12px] text-muted-2">−{t.discountPct.toFixed(0)} %</span>
-                  </td>
+                  </th>
                   <td className="py-2.5 pr-3 text-muted-2">{def != null ? fmt(def) : "—"}</td>
                   <td className="py-2.5 pr-3">
                     <input

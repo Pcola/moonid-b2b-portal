@@ -59,7 +59,7 @@ export function AccessConfirmation() {
         </svg>
       </div>
       <div>
-        <h2 className="font-display text-[30px] font-semibold tracking-[-0.025em] text-ink">Potvrďte otvorenie prístupu</h2>
+        <h1 className="font-display text-[30px] font-semibold tracking-[-0.025em] text-ink">Potvrďte otvorenie prístupu</h1>
         <p className="mt-2 text-[14.5px] leading-relaxed text-muted">
           Odkaz sme zatiaľ nepoužili. Pokračujte iba vtedy, ak ste si vyžiadali prístup alebo obnovu hesla do Moonid B2B portálu.
         </p>

@@ -166,8 +166,9 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
         <div className="flex flex-col gap-4">
           {/* Doprava */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <h2 className={sectionH}>Doprava</h2>
-            <div className="flex flex-col gap-2">
+            <h2 id="kosik-doprava-label" className={sectionH}>Doprava</h2>
+            {/* skupina prepínačov musí mať názov — viditeľný nadpis sekcie (SC 1.3.1 / 3.3.2) */}
+            <div role="radiogroup" aria-labelledby="kosik-doprava-label" className="flex flex-col gap-2">
               {delivery.map((d) => {
                 const fee = shippingFor(d, cart.subtotalNet);
                 const active = selDel === d.code;
@@ -236,8 +237,9 @@ export function CartView({ cart, locations = [], billing = null, delivery, payme
 
           {/* Platba */}
           <section className="rounded-2xl border border-line bg-white p-5">
-            <h2 className={sectionH}>Platba</h2>
-            <div className="flex flex-col gap-2">
+            <h2 id="kosik-platba-label" className={sectionH}>Platba</h2>
+            {/* skupina prepínačov musí mať názov — viditeľný nadpis sekcie (SC 1.3.1 / 3.3.2) */}
+            <div role="radiogroup" aria-labelledby="kosik-platba-label" className="flex flex-col gap-2">
               {payment.map((p) => {
                 const active = selPay === p.code;
                 return (

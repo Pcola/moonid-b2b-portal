@@ -39,18 +39,20 @@ export default function Cookies() {
       <H2>Zoznam používaných cookies</H2>
       <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full min-w-[560px] border-collapse text-left text-[13.5px]">
+          {/* popis tabuľky pre čítačky — vizuálne skrytý, dizajn ostáva nezmenený */}
+          <caption className="sr-only">Zoznam nevyhnutných cookies na webe Moonid — názov, účel, doba platnosti a poskytovateľ</caption>
           <thead>
             <tr className="border-b border-line bg-[#f6f9f8] text-ink">
-              <th className="px-4 py-2.5 font-semibold">Názov</th>
-              <th className="px-4 py-2.5 font-semibold">Účel</th>
-              <th className="px-4 py-2.5 font-semibold">Doba platnosti</th>
-              <th className="px-4 py-2.5 font-semibold">Poskytovateľ</th>
+              <th scope="col" className="px-4 py-2.5 font-semibold">Názov</th>
+              <th scope="col" className="px-4 py-2.5 font-semibold">Účel</th>
+              <th scope="col" className="px-4 py-2.5 font-semibold">Doba platnosti</th>
+              <th scope="col" className="px-4 py-2.5 font-semibold">Poskytovateľ</th>
             </tr>
           </thead>
           <tbody>
             {COOKIES.map((c) => (
               <tr key={c.name} className="border-b border-line last:border-0 align-top">
-                <td className="px-4 py-3 font-medium text-ink">{c.name}</td>
+                <th scope="row" className="px-4 py-3 text-left font-medium text-ink">{c.name}</th>
                 <td className="px-4 py-3">{c.purpose}</td>
                 <td className="px-4 py-3 whitespace-nowrap">{c.duration}</td>
                 <td className="px-4 py-3">{c.provider}</td>

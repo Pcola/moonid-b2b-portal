@@ -117,7 +117,8 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
     <button key={label} type="button" onClick={onClick}
       className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[15px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
       <span className="truncate pr-2">{label}</span>
-      <span className={`text-[12px] tabular-nums ${on ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
+      {/* brand/60 na mintbg = 3,43:1 — pod AA; brand/80 = 5,88:1 */}
+      <span className={`text-[12px] tabular-nums ${on ? "text-brand/80" : "text-muted-2"}`}>{count}</span>
     </button>
   );
 
@@ -141,7 +142,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
                 <button type="button" onClick={() => go({ cat: catActive ? "" : c.name, sub: "" })}
                   className={`flex flex-1 items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[14px] transition ${catActive ? "font-semibold text-brand" : "text-muted hover:text-ink"}`}>
                   <span className="truncate pr-2">{c.name}</span>
-                  <span className={`text-[12px] tabular-nums ${catActive ? "text-brand/60" : "text-muted-2"}`}>{c.count}</span>
+                  <span className={`text-[12px] tabular-nums ${catActive ? "text-brand/80" : "text-muted-2"}`}>{c.count}</span>
                 </button>
                 {hasKids && (
                   <button type="button" onClick={() => toggleCat(c.name)} aria-expanded={open} aria-label={open ? `Zbaliť ${c.name}` : `Rozbaliť ${c.name}`}

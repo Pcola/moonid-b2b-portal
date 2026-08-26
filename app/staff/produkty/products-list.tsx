@@ -76,15 +76,16 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
 
       <p className="text-[13.5px] text-muted-2"><span className="font-semibold text-ink">{total}</span> produktov{total > 0 ? ` · ${from}–${to}` : ""}</p>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-white">
-        <div className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line bg-cream/60 px-[18px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
-          <span></span><span>Produkt</span><span>Kategória</span><span className="text-right">Cena</span><span>Stav</span><span></span>
+      {/* sémantika tabuľky cez ARIA — rozloženie ostáva CSS grid (SC 1.3.1) */}
+      <div role="table" aria-label="Produkty v katalógu" className="overflow-hidden rounded-2xl border border-line bg-white">
+        <div role="row" className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line bg-cream/60 px-[18px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+          <span role="columnheader"><span className="sr-only">Obrázok</span></span><span role="columnheader">Produkt</span><span role="columnheader">Kategória</span><span role="columnheader" className="text-right">Cena</span><span role="columnheader">Stav</span><span role="columnheader"><span className="sr-only">Akcia</span></span>
         </div>
         {items.length === 0 ? (
           <div className="px-[18px] py-14 text-center text-[14px] text-muted">Nič sa nenašlo.</div>
         ) : items.map((p) => (
-          <div key={p.id} className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[18px] py-3 last:border-0">
-            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa]">
+          <div role="row" key={p.id} className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[18px] py-3 last:border-0">
+            <span role="cell" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa]">
               {p.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={p.image} alt="" className="max-h-full max-w-full object-contain" />
@@ -92,14 +93,14 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2 opacity-40"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
               )}
             </span>
-            <div className="min-w-0">
+            <div role="cell" className="min-w-0">
               <div className="truncate text-[14px] font-medium text-ink">{p.name}</div>
               <div className="font-mono text-[12px] text-muted-2">{p.sku}{p.isSubsidized && <span className="ml-2 rounded bg-[#fdf6e7] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#8a5a00]">na vyžiadanie</span>}</div>
             </div>
-            <span className="truncate text-[13.5px] text-muted">{p.category ?? "—"}</span>
-            <span className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(p.basePrice)}<span className="ml-1 text-[11.5px] font-normal text-muted-2">/{p.unit}</span></span>
-            <PublishToggle id={p.id} published={p.isPublished} />
-            <Link href={`/staff/produkty/${p.id}`} className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-ink transition hover:border-brand/40">Upraviť</Link>
+            <span role="cell" className="truncate text-[13.5px] text-muted">{p.category ?? "—"}</span>
+            <span role="cell" className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(p.basePrice)}<span className="ml-1 text-[11.5px] font-normal text-muted-2">/{p.unit}</span></span>
+            <span role="cell"><PublishToggle id={p.id} published={p.isPublished} /></span>
+            <span role="cell"><Link href={`/staff/produkty/${p.id}`} className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-ink transition hover:border-brand/40">Upraviť</Link></span>
           </div>
         ))}
       </div>

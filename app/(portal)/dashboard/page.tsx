@@ -152,7 +152,7 @@ export default async function DashboardPage() {
             recent.map((o) => {
               const s = STATUS[o.status] ?? { label: o.status, cls: "bg-cream text-muted" };
               return (
-                <Link key={o.id} href={`/objednavky/${o.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-cream/60">
+                <Link key={o.id} href={`/objednavky/${o.id}`} aria-label={`Objednávka ${o.number} z ${new Date(o.createdAt).toLocaleDateString("sk")}, ${o._count.items} položiek, stav ${s.label}, suma ${eur(Number(o.total))}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-cream/60">
                   <span className="font-mono text-[14.5px] font-semibold text-ink">{o.number}</span>
                   <span className="text-[13.5px] text-muted-2">{new Date(o.createdAt).toLocaleDateString("sk")} · {o._count.items} pol.</span>
                   <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
@@ -166,7 +166,8 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-4 rounded-2xl bg-[radial-gradient(120%_120%_at_90%_-10%,#21564C_0%,#163F38_60%)] p-6 text-[#eaf1ee]">
           <div className="flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-mint-2/15 text-mint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></span>
-            <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-mint-2">Ako to funguje</span>
+            {/* mint-2 na #21564C = 4,27:1 (pod AA); mint = 5,48:1 */}
+            <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-mint">Ako to funguje</span>
           </div>
           <div className="flex flex-col gap-3 text-[15px] text-[#d7e4e0]">
             {["Objednáte z katalógu so svojimi cenami", "Potvrdíme dostupnosť a termín rozvozu", "Doručíme — bez platby vopred", "Faktúru uhradíte v dohodnutej splatnosti"].map((t, i) => (
