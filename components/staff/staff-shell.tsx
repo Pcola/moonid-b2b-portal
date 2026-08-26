@@ -57,6 +57,7 @@ const NAV_GROUPS: { label: string | null; items: StaffItem[] }[] = [
   {
     label: "Systém",
     items: [
+      { href: "/staff/synchronizacia", exact: false, label: "Synchronizácia", badge: null, icon: <><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2" /><path d="M3 5v5h5M21 19v-5h-5" /></> },
       { href: "/staff/pristupy", exact: false, label: "Tím a prístupy", badge: null, gate: canManageInternalUsers, icon: <><circle cx="8" cy="8" r="3" /><path d="M2.5 20a5.5 5.5 0 0 1 11 0" /><path d="M16 11.5V9a3 3 0 0 1 6 0v2.5" /><rect x="14" y="11.5" width="10" height="8" rx="1.5" /></> },
       { href: "/staff/audit", exact: false, label: "Audit log", badge: null, gate: canViewAuditLog, icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></> },
       { href: "/staff/bezpecnost", exact: false, label: "Bezpečnosť", badge: null, icon: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> },
@@ -78,6 +79,7 @@ const PAGES: { test: (p: string) => boolean; crumb: string; title: string }[] = 
   { test: (p) => p.startsWith("/staff/cenniky"), crumb: "Nastavenia", title: "Cenníky a úrovne" },
   { test: (p) => p.startsWith("/staff/doprava-platba"), crumb: "Nastavenia", title: "Doprava a platba" },
   { test: (p) => p.startsWith("/staff/faktury"), crumb: "Účtovníctvo", title: "Faktúry" },
+  { test: (p) => p.startsWith("/staff/synchronizacia"), crumb: "Systém", title: "Synchronizácia s Pohodou" },
   { test: (p) => p.startsWith("/staff/pristupy"), crumb: "Systém", title: "Tím a prístupy" },
   { test: (p) => p.startsWith("/staff/audit"), crumb: "Bezpečnosť", title: "Audit log" },
   { test: (p) => p.startsWith("/staff/bezpecnost"), crumb: "Bezpečnosť", title: "Bezpečnosť konta" },

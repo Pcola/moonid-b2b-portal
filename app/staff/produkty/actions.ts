@@ -24,6 +24,7 @@ const editSchema = z.object({
   descriptionLong: z.string().trim().max(4000).optional().or(z.literal("")),
   isPublished: z.boolean(),
   isSubsidized: z.boolean(),
+  isStocked: z.boolean(),
 });
 
 function revalidate(id: string) {
@@ -85,9 +86,12 @@ export async function updateProduct(id: string, input: z.input<typeof editSchema
       descriptionLong: d.descriptionLong?.trim() || null,
       isPublished: d.isPublished,
       isSubsidized: d.isSubsidized,
+      // isStocked = „tovar bežne držíme skladom". Samo o sebe NEZNAMENÁ dostupnosť —
+      // isInStock() (lib/stock.ts) k tomu žiada čerstvý stockCache z Pohody.
+      isStocked: d.isStocked,
     },
   });
-  await writeAudit({ userId: staff.id, action: "PRODUCT_UPDATE", entity: "Product", entityId: id, meta: { isPublished: d.isPublished, priceChanged: mayPrice && (baseChanged || vatChanged) } });
+  await writeAudit({ userId: staff.id, action: "PRODUCT_UPDATE", entity: "Product", entityId: id, meta: { isPublished: d.isPublished, isStocked: d.isStocked, priceChanged: mayPrice && (baseChanged || vatChanged) } });
   revalidate(id);
   return { ok: true };
 }

@@ -8,7 +8,8 @@ import { LiveMessage } from "@/components/ui/live-region";
 type Product = {
   id: string; sku: string; name: string; origin: string; nameDisplay: string; categoryId: string; subcategoryId: string;
   unit: string; brand: string; basePrice: number | null; vatRate: number; descriptionLong: string;
-  isPublished: boolean; isSubsidized: boolean; image: string; slug: string | null;
+  isPublished: boolean; isSubsidized: boolean; isStocked: boolean; image: string; slug: string | null;
+  stockCache: number | null; stockFresh: boolean; stockSyncedAt: string | null;
 };
 
 const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
@@ -19,6 +20,7 @@ export function ProductEditForm({ product, cats, canEditPricing }: { product: Pr
     nameDisplay: product.nameDisplay, categoryId: product.categoryId, subcategoryId: product.subcategoryId, unit: product.unit, brand: product.brand,
     basePrice: product.basePrice != null ? String(product.basePrice) : "", vatRate: String(product.vatRate),
     descriptionLong: product.descriptionLong, isPublished: product.isPublished, isSubsidized: product.isSubsidized,
+    isStocked: product.isStocked,
   });
   const topCats = cats.filter((c) => !c.parentId);
   const subCats = cats.filter((c) => c.parentId === f.categoryId);
@@ -37,7 +39,7 @@ export function ProductEditForm({ product, cats, canEditPricing }: { product: Pr
         nameDisplay: f.nameDisplay, categoryId: f.categoryId, subcategoryId: f.subcategoryId, unit: f.unit, brand: f.brand,
         basePrice: f.basePrice.trim() === "" ? null : Number(f.basePrice.replace(",", ".")),
         vatRate: Number(f.vatRate.replace(",", ".")), descriptionLong: f.descriptionLong,
-        isPublished: f.isPublished, isSubsidized: f.isSubsidized,
+        isPublished: f.isPublished, isSubsidized: f.isSubsidized, isStocked: f.isStocked,
       });
       setMsg(res.ok ? { ok: true, text: "Uložené." } : { ok: false, text: res.error ?? "Nepodarilo sa uložiť." });
     });
@@ -127,7 +129,27 @@ export function ProductEditForm({ product, cats, canEditPricing }: { product: Pr
               <input type="checkbox" checked={f.isSubsidized} onChange={(e) => setF({ ...f, isSubsidized: e.target.checked })} className="h-4 w-4" style={{ accentColor: "#163f38" }} />
               Cena na vyžiadanie
             </label>
+            <label className="flex items-center gap-2.5 text-[13.5px] text-ink">
+              <input type="checkbox" checked={f.isStocked} onChange={(e) => setF({ ...f, isStocked: e.target.checked })} className="h-4 w-4" style={{ accentColor: "#163f38" }} aria-describedby="stocked-help" />
+              Držíme skladom <span className="text-muted-2">(nie je to na objednávku)</span>
+            </label>
           </div>
+          {/* Čestné znenie: prepínač hovorí len o našom zámere držať tovar na sklade.
+              Badge „Skladom" v katalógu rozhoduje isInStock() (lib/stock.ts) — ten navyše
+              žiada kladný počet kusov a skladové dáta z Pohody nie staršie než 48 h. */}
+          <p id="stocked-help" className="-mt-2 text-[12.5px] leading-relaxed text-muted-3">
+            Znamená iba „tento tovar bežne držíme skladom“. Zákazník uvidí „Skladom“ len vtedy, keď z Pohody prídu čerstvé skladové dáta (do 48 h) a počet kusov je väčší než nula — inak sa položka správa ako na objednávku.
+            {" "}
+            <span className="text-muted-2">
+              Aktuálne: {f.isStocked
+                ? (product.stockFresh && product.stockCache != null && product.stockCache > 0
+                    ? `zobrazuje sa ako skladom (${product.stockCache} ks, sync ${new Date(product.stockSyncedAt!).toLocaleDateString("sk")})`
+                    : product.stockSyncedAt
+                      ? `zobrazuje sa ako na objednávku — skladové dáta sú z ${new Date(product.stockSyncedAt).toLocaleDateString("sk")}`
+                      : "zobrazuje sa ako na objednávku — z Pohody zatiaľ neprišli žiadne skladové dáta")
+                : "zobrazuje sa ako na objednávku"}.
+            </span>
+          </p>
           <div className="flex items-center gap-3">
             <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
               {pending ? "Ukladám…" : "Uložiť zmeny"}

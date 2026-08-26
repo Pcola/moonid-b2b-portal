@@ -11,7 +11,7 @@ const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-
 
 export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canEditPricing: boolean }) {
   const [f, setF] = useState({
-    name: "", ico: "", dic: "", icDph: "", city: "", address: "",
+    name: "", ico: "", dic: "", icDph: "", city: "", zip: "", address: "",
     tierCode: (canEditPricing ? tiers[0] : [...tiers].sort((a, b) => a.discountPct - b.discountPct)[0])?.code ?? "", splatDays: "14", contactEmail: "", contactName: "",
   });
   const [pending, start] = useTransition();
@@ -62,8 +62,11 @@ export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canE
           <label className={lbl}>IČO *<input value={f.ico} onChange={(e) => setF({ ...f, ico: e.target.value })} className={inp} /></label>
           <label className={lbl}>DIČ<input value={f.dic} onChange={(e) => setF({ ...f, dic: e.target.value })} className={inp} /></label>
           <label className={lbl}>IČ DPH<input value={f.icDph} onChange={(e) => setF({ ...f, icDph: e.target.value })} className={inp} /></label>
+          <label className={lbl}>PSČ<input value={f.zip} onChange={(e) => setF({ ...f, zip: e.target.value })} autoComplete="billing postal-code" className={inp} /></label>
           <label className={lbl}>Mesto<input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={inp} /></label>
-          <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} /></label>
+          <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} />
+            <span className="text-[12.5px] font-normal normal-case tracking-normal text-muted-3">Ulica, PSČ a mesto sú povinné pre objednávanie — bez nich košík objednávku neodošle.</span>
+          </label>
           <label className={lbl}>Cenová úroveň *
             <select value={f.tierCode} onChange={(e) => setF({ ...f, tierCode: e.target.value })} disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "new-tier-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}>
               {tiers.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.name} (−{t.discountPct.toFixed(0)} %)</option>)}

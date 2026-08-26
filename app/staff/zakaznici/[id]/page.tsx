@@ -23,7 +23,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
     prisma.company.findUnique({
       where: { id },
       select: {
-        id: true, name: true, ico: true, dic: true, icDph: true, address: true, city: true,
+        id: true, name: true, ico: true, dic: true, icDph: true, address: true, city: true, zip: true,
         splatDays: true, active: true, createdAt: true,
         priceTier: { select: { code: true } },
         users: { orderBy: { createdAt: "asc" }, select: { id: true, name: true, email: true, role: true, active: true } },
@@ -39,7 +39,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   const tierList = tiers.map((t) => ({ code: t.code, name: t.name, discountPct: Number(t.discountPct) }));
   const editable = {
     id: company.id, name: company.name, ico: company.ico, dic: company.dic, icDph: company.icDph,
-    address: company.address, city: company.city, priceTierCode: company.priceTier?.code ?? tiers[0]?.code ?? "",
+    address: company.address, city: company.city, zip: company.zip, priceTierCode: company.priceTier?.code ?? tiers[0]?.code ?? "",
     splatDays: company.splatDays, active: company.active,
   };
 

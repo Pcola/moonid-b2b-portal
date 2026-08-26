@@ -1,6 +1,6 @@
+import type { Prisma } from "@prisma/client";
 import { requireStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { sumMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Staff · Faktúry", robots: { index: false, follow: false } };
@@ -17,15 +17,24 @@ export default async function StaffInvoices() {
   await requireStaff();
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const invoices = await prisma.invoice.findMany({
-    orderBy: { issuedAt: "desc" }, take: 100,
-    select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true, company: { select: { name: true } } },
-  });
+  // KPI dlaždice sa NESMÚ počítať z načítanej stránky (take: 100) — od 101. faktúry by
+  // ukazovali menej, než je realita. Sumy preto ráta DB agregátom nad celou tabuľkou.
+  const sumTotal = (where: Prisma.InvoiceWhereInput) => prisma.invoice.aggregate({ _sum: { total: true }, where });
+  const [invoices, total, issuedMonthAgg, pendingAgg, overdueAgg] = await Promise.all([
+    prisma.invoice.findMany({
+      orderBy: { issuedAt: "desc" }, take: 100,
+      select: { id: true, pohodaNumber: true, status: true, issuedAt: true, dueAt: true, total: true, company: { select: { name: true } } },
+    }),
+    prisma.invoice.count(),
+    // stornovaná faktúra nie je „vystavené" — inak dlaždica nafukuje tržbu o doklady, ktoré zanikli
+    sumTotal({ issuedAt: { gte: monthStart }, status: { not: "CANCELLED" } }),
+    sumTotal({ status: "PENDING" }),
+    sumTotal({ status: "OVERDUE" }),
+  ]);
 
-  const sum = (arr: typeof invoices) => sumMoney(arr.map((i) => i.total));
-  const issuedMonth = sum(invoices.filter((i) => i.issuedAt >= monthStart));
-  const pending = sum(invoices.filter((i) => i.status === "PENDING"));
-  const overdue = sum(invoices.filter((i) => i.status === "OVERDUE"));
+  const issuedMonth = Number(issuedMonthAgg._sum.total ?? 0);
+  const pending = Number(pendingAgg._sum.total ?? 0);
+  const overdue = Number(overdueAgg._sum.total ?? 0);
 
   return (
     <div className="flex max-w-[1240px] flex-col gap-5">
@@ -63,6 +72,7 @@ export default async function StaffInvoices() {
           })}
         </div>
       )}
+      {total > invoices.length && <p className="text-center text-[12.5px] text-muted-2">Zobrazených najnovších {invoices.length} z {total} faktúr. Dlaždice hore rátajú zo všetkých.</p>}
     </div>
   );
 }

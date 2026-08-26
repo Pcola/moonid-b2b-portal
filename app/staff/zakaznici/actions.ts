@@ -19,6 +19,7 @@ const companySchema = z.object({
   dic: z.string().trim().max(20).optional().or(z.literal("")),
   icDph: z.string().trim().max(20).optional().or(z.literal("")),
   city: z.string().trim().max(80).optional().or(z.literal("")),
+  zip: z.string().trim().max(12).optional().or(z.literal("")),
   address: z.string().trim().max(160).optional().or(z.literal("")),
   tierCode: z.string().trim().min(1, "Vyberte cenovú úroveň").max(20),
   splatDays: z.coerce.number().int().min(0).max(365),
@@ -57,7 +58,7 @@ export async function createCustomer(input: z.input<typeof companySchema>): Prom
   }
 
   const company = await prisma.company.create({
-    data: { ico: d.ico, name: d.name, dic: d.dic || null, icDph: d.icDph || null, city: d.city || null, address: d.address || null, priceTierId: tier.id, splatDays: d.splatDays },
+    data: { ico: d.ico, name: d.name, dic: d.dic || null, icDph: d.icDph || null, city: d.city || null, zip: d.zip || null, address: d.address || null, priceTierId: tier.id, splatDays: d.splatDays },
   });
   await writeAudit({ userId: staff.id, companyId: company.id, action: "COMPANY_CREATE", entity: "Company", entityId: company.id, meta: { ico: d.ico, tier: d.tierCode } });
 

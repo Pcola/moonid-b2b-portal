@@ -30,6 +30,9 @@ export default async function StaffDashboard() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthName = now.toLocaleDateString("sk", { month: "long", year: "numeric" });
   const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+  // rebríček „najpredávanejšie" má mať rovnaké mantinely ako tržba: bez STORNO a bez
+  // neschválených objednávok, a v okne, ktoré niečo hovorí o dnešku (nie od začiatku sveta)
+  const topSince = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 89);
 
   const [monthAgg, newOrders, activeCustomers, lowStock, weekOrders, pending, topRows] = await Promise.all([
     prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: monthStart }, status: { notIn: ["STORNO", "CAKA_SCHVALENIE"] } } }),
@@ -42,7 +45,13 @@ export default async function StaffDashboard() {
       orderBy: { createdAt: "desc" }, take: 6,
       select: { id: true, number: true, status: true, total: true, createdAt: true, company: { select: { name: true, priceTier: { select: { code: true } } } }, _count: { select: { items: true } } },
     }),
-    prisma.orderItem.groupBy({ by: ["productId"], _sum: { qty: true, lineTotal: true }, orderBy: { _sum: { lineTotal: "desc" } }, take: 4 }),
+    prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: { order: { createdAt: { gte: topSince }, status: { notIn: ["STORNO", "CAKA_SCHVALENIE"] } } },
+      _sum: { qty: true, lineTotal: true },
+      orderBy: { _sum: { lineTotal: "desc" } },
+      take: 4,
+    }),
   ]);
 
   const monthRevenue = Number(monthAgg._sum.total ?? 0);
@@ -115,9 +124,9 @@ export default async function StaffDashboard() {
 
         {/* top produkty */}
         <div className="overflow-hidden rounded-2xl border border-line bg-white">
-          <div className="border-b border-line px-[22px] py-4"><h2 className="text-[19px] font-normal text-ink">Najpredávanejšie</h2></div>
+          <div className="border-b border-line px-[22px] py-4"><h2 className="text-[19px] font-normal text-ink">Najpredávanejšie</h2><span className="text-[12.5px] text-muted-2">posledných 90 dní, bez storien</span></div>
           {topProducts.length === 0 ? (
-            <div className="px-[22px] py-10 text-center text-[13.5px] text-muted">Zatiaľ žiadne predaje.</div>
+            <div className="px-[22px] py-10 text-center text-[13.5px] text-muted">Za posledných 90 dní žiadne predaje.</div>
           ) : topProducts.map((p) => (
             <div key={p.id} className="flex items-center gap-3.5 border-b border-line px-[22px] py-3.5 last:border-0">
               <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[9px] border border-line bg-[#f7f9f8] p-1.5">

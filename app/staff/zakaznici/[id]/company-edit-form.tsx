@@ -7,7 +7,7 @@ import { LiveMessage } from "@/components/ui/live-region";
 type Tier = { code: string; name: string; discountPct: number };
 type Company = {
   id: string; name: string; ico: string; dic: string | null; icDph: string | null;
-  address: string | null; city: string | null; priceTierCode: string; splatDays: number; active: boolean;
+  address: string | null; city: string | null; zip: string | null; priceTierCode: string; splatDays: number; active: boolean;
 };
 
 const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
@@ -17,7 +17,7 @@ export function CompanyEditForm({ company, tiers, canEditPricing }: { company: C
   const [pending, start] = useTransition();
   const [f, setF] = useState({
     name: company.name, dic: company.dic ?? "", icDph: company.icDph ?? "",
-    address: company.address ?? "", city: company.city ?? "",
+    address: company.address ?? "", city: company.city ?? "", zip: company.zip ?? "",
     priceTierCode: company.priceTierCode, splatDays: String(company.splatDays), active: company.active,
   });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -38,8 +38,11 @@ export function CompanyEditForm({ company, tiers, canEditPricing }: { company: C
         <label className={lbl}>IČO<input value={company.ico} disabled className={`${inp} bg-cream/60 text-muted`} /></label>
         <label className={lbl}>DIČ<input value={f.dic} onChange={(e) => setF({ ...f, dic: e.target.value })} className={inp} /></label>
         <label className={lbl}>IČ DPH<input value={f.icDph} onChange={(e) => setF({ ...f, icDph: e.target.value })} className={inp} /></label>
+        <label className={lbl}>PSČ<input value={f.zip} onChange={(e) => setF({ ...f, zip: e.target.value })} autoComplete="billing postal-code" className={inp} /></label>
         <label className={lbl}>Mesto<input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={inp} /></label>
-        <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa (ulica a číslo)<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} /></label>
+        <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa (ulica a číslo)<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} />
+          <span className="text-[12.5px] font-normal normal-case tracking-normal text-muted-3">Bez ulice, PSČ a mesta zákazník neodošle objednávku — košík to kontroluje pri odoslaní.</span>
+        </label>
         <label className={lbl}>Cenová úroveň
           <select value={f.priceTierCode} onChange={(e) => setF({ ...f, priceTierCode: e.target.value })} disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "tier-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}>
             {tiers.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.name} (−{Number(t.discountPct).toFixed(0)} %)</option>)}

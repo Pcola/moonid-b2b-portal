@@ -15,6 +15,7 @@ const companySchema = z.object({
   icDph: z.string().trim().max(20).optional().or(z.literal("")),
   address: z.string().trim().max(160).optional().or(z.literal("")),
   city: z.string().trim().max(80).optional().or(z.literal("")),
+  zip: z.string().trim().max(12).optional().or(z.literal("")),
   priceTierCode: z.string().trim().min(1, "Zvoľte cenovú úroveň").max(20),
   splatDays: z.coerce.number().int().min(0, "Min. 0").max(365, "Max. 365"),
   active: z.boolean(),
@@ -44,7 +45,7 @@ export async function updateCompany(companyId: string, input: unknown): Promise<
     where: { id: companyId },
     data: {
       name: d.name, dic: d.dic || null, icDph: d.icDph || null,
-      address: d.address || null, city: d.city || null,
+      address: d.address || null, city: d.city || null, zip: d.zip || null,
       priceTierId: tier.id, splatDays: d.splatDays, active: d.active,
     },
   });
