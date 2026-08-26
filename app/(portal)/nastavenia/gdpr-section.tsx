@@ -86,7 +86,7 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
                 <div className="text-[14.5px] font-medium text-ink">Žiadosť o výmaz údajov</div>
                 <div className="text-[13px] text-muted-2">Právo na výmaz. Pozn.: vystavené faktúry podliehajú zákonnej archivácii (10 r.).</div>
               </div>
-              <button onClick={() => setErasing(true)} disabled={pending} className="rounded-[10px] border border-[#f0c9c2] px-4 py-2.5 text-[14px] font-semibold text-[#9a3025] transition hover:bg-[#fdf4f2] disabled:opacity-60">
+              <button onClick={() => setErasing(true)} disabled={pending} className="rounded-[10px] border border-danger-line px-4 py-2.5 text-[14px] font-semibold text-danger-ink transition hover:bg-[#fdf4f2] disabled:opacity-60">
                 Požiadať o výmaz
               </button>
             </div>
@@ -94,7 +94,7 @@ export function GdprSection({ isCompanyAdmin }: { isCompanyAdmin: boolean }) {
             <div className="flex flex-col gap-2">
               <textarea aria-label="Dôvod alebo rozsah žiadosti o výmaz (nepovinné)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Dôvod alebo rozsah žiadosti (nepovinné)…" className="rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
               <div className="flex gap-2">
-                <button onClick={doErasure} disabled={pending} className="rounded-[10px] bg-[#9a3025] px-4 py-2 text-[13.5px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60">{pending ? "Odosielam…" : "Odoslať žiadosť"}</button>
+                <button onClick={doErasure} disabled={pending} className="rounded-[10px] bg-danger-ink px-4 py-2 text-[13.5px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60">{pending ? "Odosielam…" : "Odoslať žiadosť"}</button>
                 <button onClick={() => setErasing(false)} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40">Zrušiť</button>
               </div>
             </div>

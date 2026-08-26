@@ -73,14 +73,14 @@ function TierCard({ tier, desc, editable }: { tier: Tier; desc?: string; editabl
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3.5">
         <div className="flex items-center gap-2">
           <span className="text-[13px] text-muted-2">{tier.companies} {tier.companies === 1 ? "zákazník" : tier.companies >= 2 && tier.companies <= 4 ? "zákazníci" : "zákazníkov"}</span>
-          {editable && canDelete && <button onClick={remove} disabled={pending} title="Zmazať úroveň" aria-label={`Zmazať úroveň ${tier.code}`} className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-40">
+          {editable && canDelete && <button onClick={remove} disabled={pending} title="Zmazať úroveň" aria-label={`Zmazať úroveň ${tier.code}`} className="text-muted-2 transition hover:text-danger-ink disabled:opacity-40">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" /></svg>
           </button>}
         </div>
         {editable && <div className="flex items-center gap-2.5">
           <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
           <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-          {msg && <span className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+          {msg && <span className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
           <button onClick={save} disabled={pending || !dirty}
             className="rounded-lg bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-40">
             {pending ? "…" : "Uložiť"}
@@ -139,7 +139,7 @@ function NewTierCard() {
       </div>
       <LiveMessage message={pending ? "Vytváram úroveň…" : null} />
       <LiveMessage message={err} tone="error" />
-      {err && <span id="new-tier-error" className="text-[12.5px] text-[#9a3025]">{err}</span>}
+      {err && <span id="new-tier-error" className="text-[12.5px] text-danger-ink">{err}</span>}
     </div>
   );
 }

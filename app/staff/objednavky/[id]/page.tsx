@@ -58,7 +58,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
             <h2 className="font-mono text-[clamp(24px,3vw,32px)] font-semibold text-ink">{order.number}</h2>
             <span className="rounded-full px-3 py-1 text-[12px] font-semibold" style={{ color: meta.fg, background: meta.bg }}>{meta.label}</span>
             {/* #9A6B0E na #FBF1DC = 4,18:1 (pod AA); #8A5A00 = 5,28:1 */}
-            {order.hasBackorder && <span className="rounded-full bg-[#FBF1DC] px-2.5 py-1 text-[11.5px] font-medium text-[#8A5A00]">čiastočne na objednávku</span>}
+            {order.hasBackorder && <span className="rounded-full bg-warning px-2.5 py-1 text-[11.5px] font-medium text-warning-ink">čiastočne na objednávku</span>}
           </div>
           <span className="text-[14.5px] text-muted">{order.company.name} · {new Date(order.createdAt).toLocaleString("sk")} · {order.items.length} položiek</span>
         </div>
@@ -106,7 +106,7 @@ export default async function StaffOrderDetail({ params }: { params: Promise<{ i
           <div className="border-b border-line px-[22px] py-4"><h2 className="text-[19px] font-normal text-ink">Položky</h2></div>
           {order.items.map((it) => (
             <div key={it.id} className="flex items-center gap-4 border-b border-line px-[22px] py-4 last:border-0">
-              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[10px] border border-line bg-[#f7f9f8] p-1.5">
+              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[10px] border border-line bg-surface-3 p-1.5">
                 {it.product?.media[0]?.storagePath ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={it.product.media[0].storagePath} alt="" loading="lazy" className="max-h-full max-w-full object-contain" />

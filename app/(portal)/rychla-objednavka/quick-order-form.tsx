@@ -47,7 +47,7 @@ export function QuickOrderForm() {
       <LiveMessage message={res?.error ?? null} tone="error" />
       {res && (
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 text-[14px]">
-          {res.error && <p className="text-[#9a3025]">{res.error}</p>}
+          {res.error && <p className="text-danger-ink">{res.error}</p>}
           {res.ok && (
             <>
               {res.added.length > 0 ? (
@@ -59,7 +59,7 @@ export function QuickOrderForm() {
                 </div>
               ) : <p className="text-muted">Nič sa nepridalo.</p>}
               {res.notFound.length > 0 && (
-                <p className="text-[#9a6b0e]">Nenájdené SKU: <span className="font-mono text-[12.5px]">{res.notFound.join(", ")}</span></p>
+                <p className="text-warning-ink">Nenájdené SKU: <span className="font-mono text-[12.5px]">{res.notFound.join(", ")}</span></p>
               )}
               {res.onRequest.length > 0 && (
                 <p className="text-muted-2">Na vyžiadanie (nepridané): <span className="font-mono text-[12.5px]">{res.onRequest.join(", ")}</span></p>

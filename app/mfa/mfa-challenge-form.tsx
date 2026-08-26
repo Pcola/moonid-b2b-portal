@@ -31,7 +31,7 @@ export function MfaChallengeForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} aria-busy={loading} className="flex flex-col gap-4">
       <LiveMessage message={err} tone="error" />
-      {err && <div id="mfa-error" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
+      {err && <div id="mfa-error" className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Overovací kód
         <input type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} required autoFocus

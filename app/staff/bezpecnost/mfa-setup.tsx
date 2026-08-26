@@ -53,10 +53,10 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
     return (
       <div className="flex flex-col gap-3">
         <p className="text-[13.5px] text-muted-3">Konto <span className="font-medium text-ink">{email}</span> je chránené 2FA. Pri každom prihlásení budete zadávať kód z aplikácie.</p>
-        <button onClick={disable} disabled={busy} className={`${btn} w-fit border border-line text-[#9a3025] hover:border-[#e0b0a8]`}>{busy ? "…" : "Vypnúť 2FA"}</button>
+        <button onClick={disable} disabled={busy} className={`${btn} w-fit border border-line text-danger-ink hover:border-[#e0b0a8]`}>{busy ? "…" : "Vypnúť 2FA"}</button>
         <LiveMessage message={busy ? "Vypínam 2FA…" : null} />
         <LiveMessage message={err} tone="error" />
-        {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
+        {err && <p className="text-[13px] text-danger-ink">{err}</p>}
       </div>
     );
   }
@@ -86,7 +86,7 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
         </label>
         <LiveMessage message={busy ? "Overujem kód…" : null} />
         <LiveMessage message={err} tone="error" />
-        {err && <p id="mfa-enroll-error" className="text-[13px] text-[#9a3025]">{err}</p>}
+        {err && <p id="mfa-enroll-error" className="text-[13px] text-danger-ink">{err}</p>}
         <div className="flex items-center gap-2.5">
           <button onClick={confirmEnroll} disabled={busy || code.length < 6} className={`${btn} bg-brand text-white hover:bg-brand-2`}>{busy ? "Overujem…" : "Potvrdiť a zapnúť"}</button>
           <button onClick={() => { setEnroll(null); setCode(""); setErr(null); }} disabled={busy} className={`${btn} border border-line text-muted hover:text-ink`}>Zrušiť</button>
@@ -101,7 +101,7 @@ export function MfaSetup({ enrolled, email }: { enrolled: boolean; email: string
       <button onClick={startEnroll} disabled={busy} className={`${btn} w-fit bg-brand text-white hover:bg-brand-2`}>{busy ? "…" : "Zapnúť 2FA"}</button>
       <LiveMessage message={busy ? "Pripravujem zapnutie 2FA…" : null} />
       <LiveMessage message={err} tone="error" />
-      {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
+      {err && <p className="text-[13px] text-danger-ink">{err}</p>}
     </div>
   );
 }

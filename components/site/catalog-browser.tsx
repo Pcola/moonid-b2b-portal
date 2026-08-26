@@ -181,7 +181,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
                 href={`/produkt/${p.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_14px_34px_-16px_rgba(16,42,38,0.22)]"
               >
-                <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#fafbfa] p-5">
+                <div className="flex aspect-square items-center justify-center overflow-hidden bg-surface-2 p-5">
                   <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 220px" iconSize={38} imgClassName="transition duration-300 group-hover:scale-[1.04]" />
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">

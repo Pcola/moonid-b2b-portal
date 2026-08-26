@@ -87,7 +87,7 @@ export function RequestList({ requests, tiers }: { requests: Req[]; tiers: Tier[
                 </button>
                 <LiveMessage message={isBusy ? "Spracúvam žiadosť…" : null} />
                 <LiveMessage message={errs[r.id] || null} tone="error" />
-                {errs[r.id] && <span className="text-[13px] text-[#9a3025]">{errs[r.id]}</span>}
+                {errs[r.id] && <span className="text-[13px] text-danger-ink">{errs[r.id]}</span>}
               </div>
             )}
           </div>

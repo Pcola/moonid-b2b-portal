@@ -3,10 +3,12 @@
 import { useState, useTransition } from "react";
 import { addDeliveryLocation, removeDeliveryLocation } from "./actions";
 import { LiveMessage } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { buttonClass } from "@/components/ui/button";
 
 type Loc = { id: string; label: string; street: string | null; city: string | null; zip: string | null; isDefault: boolean };
 
-const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass();
 
 export function LocationsManager({ companyId, locations }: { companyId: string; locations: Loc[] }) {
   const [pending, start] = useTransition();
@@ -44,7 +46,7 @@ export function LocationsManager({ companyId, locations }: { companyId: string; 
             <div className="text-[14px] font-medium text-ink">{l.label}{l.isDefault && <span className="ml-2 rounded bg-mintbg px-1.5 py-0.5 text-[10.5px] font-semibold text-brand-2">predvolená</span>}</div>
             <div className="text-[12.5px] text-muted-2">{[l.street, [l.zip, l.city].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "—"}</div>
           </div>
-          <button onClick={() => remove(l.id)} disabled={pending} title="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-50">
+          <button onClick={() => remove(l.id)} disabled={pending} title="Odobrať" className="text-muted-2 transition hover:text-danger-ink disabled:opacity-50">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
           </button>
         </div>
@@ -60,9 +62,9 @@ export function LocationsManager({ companyId, locations }: { companyId: string; 
           </div>
           <LiveMessage message={pending ? "Pridávam adresu…" : null} />
           <LiveMessage message={err} tone="error" />
-          {err && <span id="staff-loc-error" className="text-[13px] text-[#9a3025]">{err}</span>}
+          {err && <span id="staff-loc-error" className="text-[13px] text-danger-ink">{err}</span>}
           <div className="flex gap-2">
-            <button onClick={add} disabled={pending} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Pridávam…" : "Pridať"}</button>
+            <button onClick={add} disabled={pending} className={buttonClass({ size: "sm" })}>{pending ? "Pridávam…" : "Pridať"}</button>
             <button onClick={() => { setAdding(false); setErr(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-medium text-muted transition hover:border-brand/40">Zrušiť</button>
           </div>
         </div>

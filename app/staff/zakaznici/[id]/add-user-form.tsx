@@ -50,7 +50,7 @@ export function AddUserForm({ companyId }: { companyId: string }) {
         <button onClick={() => { setOpen(false); setMsg(null); setLink(null); }} className="text-[13px] font-medium text-muted transition hover:text-ink">Zrušiť</button>
         <LiveMessage message={pending ? "Pozývam…" : msg?.ok ? msg.text : null} />
         <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-        {msg && <span id="add-user-error" className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        {msg && <span id="add-user-error" className={`text-[12.5px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
       {link && (
         <div className="rounded-lg border border-line bg-cream/50 p-2">

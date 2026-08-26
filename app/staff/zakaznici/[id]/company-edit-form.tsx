@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { updateCompany } from "./actions";
 import { LiveMessage } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { buttonClass } from "@/components/ui/button";
 
 type Tier = { code: string; name: string; discountPct: number };
 type Company = {
@@ -10,7 +12,7 @@ type Company = {
   address: string | null; city: string | null; zip: string | null; priceTierCode: string; splatDays: number; active: boolean;
 };
 
-const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass();
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 export function CompanyEditForm({ company, tiers, canEditPricing }: { company: Company; tiers: Tier[]; canEditPricing: boolean }) {
@@ -56,12 +58,12 @@ export function CompanyEditForm({ company, tiers, canEditPricing }: { company: C
         Aktívna firma <span className="text-muted-2">(neaktívna = zákazník sa nedostane do portálu)</span>
       </label>
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+        <button onClick={save} disabled={pending} className={buttonClass({ className: "self-start" })}>
           {pending ? "Ukladám…" : "Uložiť zmeny"}
         </button>
         <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
         <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-        {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
     </div>
   );

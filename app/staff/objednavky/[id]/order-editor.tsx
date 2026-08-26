@@ -84,7 +84,7 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
                 <button onClick={() => set(it.id, q + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border border-line text-muted hover:border-brand/40">+</button>
               </div>
               <span className="w-[74px] flex-none text-right text-[13.5px] font-semibold tabular-nums text-ink">{removed ? "—" : eur(lineTotal2(it.unitPriceSnapshot, q))}</span>
-              <button onClick={() => set(it.id, removed ? it.qty || 1 : 0)} title={removed ? "Vrátiť" : "Odobrať"} className="flex-none text-muted-2 transition hover:text-[#9a3025]">
+              <button onClick={() => set(it.id, removed ? it.qty || 1 : 0)} title={removed ? "Vrátiť" : "Odobrať"} className="flex-none text-muted-2 transition hover:text-danger-ink">
                 {removed
                   ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.5 2.8L3 8" /><path d="M3 3v5h5" /></svg>
                   : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>}
@@ -111,7 +111,7 @@ export function OrderEditor({ orderId, editable, items, locations, note, deliver
         <div className="flex items-center gap-2.5">
           <LiveMessage message={pending ? "Ukladám zmeny objednávky…" : null} />
           <LiveMessage message={err} tone="error" />
-          {err && <span className="text-[12.5px] text-[#9a3025]">{err}</span>}
+          {err && <span className="text-[12.5px] text-danger-ink">{err}</span>}
           <button onClick={() => { setOpen(false); reset(); }} className="rounded-lg border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
           <button onClick={save} disabled={pending} className="rounded-lg bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Ukladám…" : "Uložiť zmeny"}</button>
         </div>

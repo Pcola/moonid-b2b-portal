@@ -11,13 +11,13 @@ export const metadata = { title: "Prehľad — Moonid B2B portál", robots: { in
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 const STATUS: Record<string, { label: string; cls: string }> = {
-  CAKA_SCHVALENIE: { label: "Čaká na schválenie", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
-  PRIJATA: { label: "Prijatá", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
-  POTVRDENA: { label: "Potvrdená", cls: "bg-[#eef2ff] text-[#3730a3]" },
-  PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-[#eef2ff] text-[#3730a3]" },
-  NA_CESTE: { label: "Na ceste", cls: "bg-[#eef2ff] text-[#3730a3]" },
-  DORUCENA: { label: "Doručená", cls: "bg-[#ecfdf3] text-[#14633f]" },
-  STORNO: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-muted-2" },
+  CAKA_SCHVALENIE: { label: "Čaká na schválenie", cls: "bg-warning text-warning-ink" },
+  PRIJATA: { label: "Prijatá", cls: "bg-warning text-warning-ink" },
+  POTVRDENA: { label: "Potvrdená", cls: "bg-info text-info-ink" },
+  PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-info text-info-ink" },
+  NA_CESTE: { label: "Na ceste", cls: "bg-info text-info-ink" },
+  DORUCENA: { label: "Doručená", cls: "bg-success text-success-ink" },
+  STORNO: { label: "Stornovaná", cls: "bg-cream-2 text-muted-2" },
 };
 
 function StatCard({ icon, badge, badgeCls, value, label }: { icon: React.ReactNode; badge?: string; badgeCls?: string; value: string; label: string }) {
@@ -106,9 +106,9 @@ export default async function DashboardPage() {
       {/* štatistiky */}
       <div className="grid gap-[clamp(14px,1.6vw,20px)]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))" }}>
         <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4h6l1 3H8z" /><path d="M5 7h14l-1 13H6z" /></svg>} badge={year.toString()} value={String(ordersYear)} label={`Objednávok v ${year}`} />
-        <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h11v9H3z" /><path d="M14 9h3.5l3 3v3H14z" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17.5" cy="17.5" r="1.6" /></svg>} badge={active > 0 ? "prebieha" : undefined} badgeCls="bg-[#eef2ff] text-[#3730a3]" value={String(active)} label="Aktívne objednávky" />
-        {pendingApproval > 0 && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>} badge={isAdmin ? "na schválenie" : "čaká"} badgeCls="bg-[#fdf6e7] text-[#8a5a00]" value={String(pendingApproval)} label="Čaká na schválenie" />}
-        {isAdmin && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 9h6M9 13h4" /></svg>} value={eur(unpaid)} badge={unpaid > 0 ? "neuhradené" : undefined} badgeCls="bg-[#fdf6e7] text-[#8a5a00]" label="Čaká na úhradu" />}
+        <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h11v9H3z" /><path d="M14 9h3.5l3 3v3H14z" /><circle cx="7" cy="17.5" r="1.6" /><circle cx="17.5" cy="17.5" r="1.6" /></svg>} badge={active > 0 ? "prebieha" : undefined} badgeCls="bg-info text-info-ink" value={String(active)} label="Aktívne objednávky" />
+        {pendingApproval > 0 && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>} badge={isAdmin ? "na schválenie" : "čaká"} badgeCls="bg-warning text-warning-ink" value={String(pendingApproval)} label="Čaká na schválenie" />}
+        {isAdmin && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h9l3 3v15l-2-1.2L14 21l-2-1.2L10 21l-2-1.2L6 21z" /><path d="M9 9h6M9 13h4" /></svg>} value={eur(unpaid)} badge={unpaid > 0 ? "neuhradené" : undefined} badgeCls="bg-warning text-warning-ink" label="Čaká na úhradu" />}
         {isAdmin && <StatCard icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V7H4v10h9" /><path d="M16 3v4M8 3v4" /></svg>} badge={tierCode ? `úroveň ${tierCode}` : undefined} value={tierCode ? tierCode : "—"} label="Vaša cenová úroveň" />}
       </div>
 
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
           <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))" }}>
             {reorder.map((p) => (
               <div key={p.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4">
-                <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-[#fafbfa] p-2">
+                <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-surface-2 p-2">
                   <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, 180px" iconSize={28} />
                 </div>
                 <p className="line-clamp-2 min-h-[38px] text-[14px] font-medium leading-snug text-ink">{p.n}</p>

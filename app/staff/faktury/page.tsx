@@ -41,7 +41,7 @@ export default async function StaffInvoices() {
     <div className="flex max-w-[1240px] flex-col gap-5">
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
         <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Vystavené (tento mes.)</span><span className="text-[28px] font-normal text-ink">{eur(issuedMonth)}</span></div>
-        <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Čaká na úhradu</span><span className="text-[28px] font-normal text-[#9A6B0E]">{eur(pending)}</span></div>
+        <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Čaká na úhradu</span><span className="text-[28px] font-normal text-warning-ink">{eur(pending)}</span></div>
         <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Po splatnosti</span><span className="text-[28px] font-normal text-[#A23B2A]">{eur(overdue)}</span></div>
       </div>
 

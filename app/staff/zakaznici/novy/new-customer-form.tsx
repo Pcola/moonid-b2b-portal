@@ -4,9 +4,10 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { createCustomer } from "../actions";
 import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
 
 type Tier = { code: string; name: string; discountPct: number };
-const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass();
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canEditPricing: boolean }) {
@@ -36,7 +37,7 @@ export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canE
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         </div>
         <p className="text-[16px] font-medium text-ink">Zákazník <strong>{f.name}</strong> vytvorený.</p>
-        {err && <p className="text-[13px] text-[#9a3025]">{err}</p>}
+        {err && <p className="text-[13px] text-danger-ink">{err}</p>}
         {done.inviteLink && (
           <div className="mx-auto w-full max-w-[560px] rounded-xl border border-line bg-cream/50 p-3 text-left">
             <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2">Pozvánkový odkaz (pošlite zákazníkovi)</p>
@@ -94,7 +95,7 @@ export function NewCustomerForm({ tiers, canEditPricing }: { tiers: Tier[]; canE
         </button>
         <LiveMessage message={pending ? "Vytváram zákazníka…" : null} />
         <LiveMessage message={err} tone="error" />
-        {err && <span className="text-[13px] text-[#9a3025]">{err}</span>}
+        {err && <span className="text-[13px] text-danger-ink">{err}</span>}
       </div>
     </div>
   );

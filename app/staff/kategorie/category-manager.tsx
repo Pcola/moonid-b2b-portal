@@ -54,7 +54,7 @@ function CatRow({
               {moveTargets.map((t) => <option key={t.id} value={t.id}>→ {t.name}</option>)}
             </select>
           )}
-          <button type="button" onClick={() => { if (confirm(`Zmazať kategóriu „${node.name}"?`)) onAct(() => deleteCategory(node.id)); }} aria-label="Zmazať" className={`${iconBtn} hover:border-[#e0b0a8] hover:text-[#9a3025]`}><Trash /></button>
+          <button type="button" onClick={() => { if (confirm(`Zmazať kategóriu „${node.name}"?`)) onAct(() => deleteCategory(node.id)); }} aria-label="Zmazať" className={`${iconBtn} hover:border-[#e0b0a8] hover:text-danger-ink`}><Trash /></button>
         </>
       )}
     </div>
@@ -99,7 +99,7 @@ export function CategoryManager({ tree }: { tree: Top[] }) {
     <div className={`flex flex-col gap-3 ${pending ? "opacity-60" : ""}`}>
       <LiveMessage message={pending ? "Ukladám zmenu kategórie…" : null} />
       <LiveMessage message={err} tone="error" />
-      {err && <div className="rounded-lg border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13px] text-[#9a3025]">{err}</div>}
+      {err && <div className="rounded-lg border border-danger-line bg-danger px-3.5 py-2.5 text-[13px] text-danger-ink">{err}</div>}
 
       {tree.map((top, i) => (
         <section key={top.id} className="rounded-2xl border border-line bg-white p-4">

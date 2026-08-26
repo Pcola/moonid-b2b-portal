@@ -47,7 +47,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
       <div className="mt-5 grid gap-[clamp(20px,3vw,44px)] lg:grid-cols-[1fr_1fr] lg:items-start">
         {/* obrázok */}
         <div className="lg:sticky lg:top-[88px]">
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-line bg-[#fafbfa] p-8">
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-8">
             <ProductImg src={v.img} alt={title} sizes="(max-width: 1024px) 92vw, 480px" priority iconSize={64} />
           </div>
         </div>
@@ -73,7 +73,7 @@ export function ProductDetail({ title, category, brand, description, specs, vari
             ) : (
               <div className="text-[18px] font-semibold text-brand-2">Cena na vyžiadanie</div>
             )}
-            <span className={`mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${v.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{v.stocked ? "Skladom" : "Na objednávku"}</span>
+            <span className={`mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${v.stocked ? "bg-success text-success-ink" : "bg-warning text-warning-ink"}`}>{v.stocked ? "Skladom" : "Na objednávku"}</span>
           </div>
 
           {/* varianty */}

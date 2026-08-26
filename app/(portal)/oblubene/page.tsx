@@ -70,8 +70,8 @@ export default async function OblubenePage() {
           {items.map((p) => (
             <div key={p.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
               <FavoriteButton productId={p.id} initial={true} className="absolute right-2 top-2 z-10 bg-white/80 backdrop-blur-sm" />
-              <Link prefetch={false} href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
-                <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
+              <Link prefetch={false} href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-surface-2 p-5">
+                <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-success text-success-ink" : "bg-warning text-warning-ink"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
                 <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 208px" iconSize={36} />
               </Link>
               <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">

@@ -112,7 +112,7 @@ export function SetPasswordForm({ email }: { email?: string | null }) {
       {email && <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />}
       <LiveMessage message={!sessionReady && !err ? "Overujem odkaz…" : loading ? "Ukladám heslo…" : null} />
       <LiveMessage message={err} tone="error" />
-      {err && <div id="set-password-error" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
+      {err && <div id="set-password-error" className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">{err}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Nové heslo
         <input type="password" required disabled={!sessionReady} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}

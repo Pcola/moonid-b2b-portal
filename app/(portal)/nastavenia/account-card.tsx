@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { updateProfile } from "./actions";
 import { LiveMessage } from "@/components/ui/live-region";
+import { buttonClass } from "@/components/ui/button";
 
 /** Kontrola hesla voči HaveIBeenPwned (k-anonymity — posiela sa len 5-znakový SHA-1 prefix). */
 async function isPwned(pw: string): Promise<boolean> {
@@ -54,7 +55,7 @@ function NameEditor({ initialName, email }: { initialName: string | null; email:
         </button>
         <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
         <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-        {msg && <span className={`text-[13px] font-medium ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        {msg && <span className={`text-[13px] font-medium ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
       <p className="text-[12px] text-muted-2">E-mail je prihlasovacie meno — zmenu adresy rieši správca firmy / Moonid.</p>
     </div>
@@ -116,13 +117,13 @@ function PasswordChanger({ email }: { email: string }) {
         </label>
       </div>
       <div className="flex items-center gap-2.5">
-        <button type="submit" disabled={loading} className="rounded-[10px] bg-brand px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+        <button type="submit" disabled={loading} className={buttonClass({ size: "sm" })}>
           {loading ? "Ukladám…" : "Uložiť nové heslo"}
         </button>
         <button type="button" onClick={() => { setOpen(false); setMsg(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
         <LiveMessage message={loading ? "Ukladám…" : null} />
         <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-        {msg && !msg.ok && <span id="pw-change-error" className="text-[13px] font-medium text-[#9a3025]">{msg.text}</span>}
+        {msg && !msg.ok && <span id="pw-change-error" className="text-[13px] font-medium text-danger-ink">{msg.text}</span>}
       </div>
       <p className="text-[12px] text-muted-2">Min. 12 znakov. Heslo overujeme voči databáze uniknutých hesiel.</p>
     </form>

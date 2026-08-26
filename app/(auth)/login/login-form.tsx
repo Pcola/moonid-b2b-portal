@@ -46,7 +46,7 @@ export function LoginForm() {
     <form onSubmit={onSubmit} aria-busy={loading} className="flex flex-col gap-[22px]">
       <LiveMessage message={err} tone="error" />
       {err && (
-        <div id="login-error" className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>
+        <div id="login-error" className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">{err}</div>
       )}
       <label className={labelCls}>
         Firemný e-mail

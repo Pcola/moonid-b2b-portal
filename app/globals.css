@@ -29,6 +29,46 @@
   --color-field: #7f8d88;
   --color-mintbg: #eaf3f0;
 
+  /* ---- sémantické stavové farby ----------------------------------------------------
+     Doteraz to boli ad-hoc hexy priamo v triedach: 406 výskytov, 99 rôznych hodnôt v app/
+     a components/. Tie, ktoré nesú VÝZNAM (úspech / upozornenie / chyba / informácia), sú
+     odteraz tokeny. Kontrasty počítané cez WCAG relatívnu luminanciu:
+       success-ink na success = 6,90:1   warning-ink na warning = 5,51:1
+       danger-ink  na danger  = 6,50:1   info-ink    na info    = 8,88:1
+     Všetky prechádzajú AA (1.4.3) aj pre 11px pilulky.
+     Vedľajší efekt: zjednotenie #fdeceb → #fdecea (rozdiel 1/255 v modrej, 5 miest) a
+     #9a6b0e/#fbf1dc → warning-ink/warning. Tá druhá dvojica mala 4,17:1, čo AA PADALO
+     (staff/faktury/page.tsx:10, staff/objednavky/[id]/page.tsx:60, staff/page.tsx:88). */
+  --color-success: #ecfdf3;
+  --color-success-ink: #14633f;
+  --color-warning: #fdf6e7;
+  --color-warning-ink: #8a5a00;
+  /* tmavší variant pre dlhší text v žltom paneli — 6,57:1 na warning */
+  --color-warning-ink-2: #6d5520;
+  --color-warning-line: #e7d7af;
+  --color-danger: #fdecea;
+  --color-danger-ink: #9a3025;
+  /* hover plného červeného tlačidla (cancel-order-button.tsx:42) */
+  --color-danger-ink-2: #832619;
+  /* ohraničenie červeného oznamu — 1,52:1, teda DEKORATÍVNE (nie je to ovládač) */
+  --color-danger-line: #f0c9c2;
+  --color-info: #eef2ff;
+  --color-info-ink: #3730a3;
+
+  /* ---- doplnkové plochy (podklad riadkov, hlavičiek tabuliek, neutrálnych pilúl) ---- */
+  --color-surface-2: #fafbfa;
+  --color-surface-3: #f7f9f8;
+  --color-cream-2: #f3f0ee;
+
+  /* ---- text na tmavých plochách (footer, staff sidebar, tmavé sekcie) ----
+     Rebrík odtieňov, ktorý dnes rastie divo (9 hodnôt od #eaf1ee po #6e908a). Tri stupne
+     stačia. Najhoršie kontrasty: on-dark 6,42:1, on-dark-2 4,99:1, on-dark-3 3,68:1
+     — merané voči najsvetlejšiemu tmavému podkladu #21564c; na #0c211d sú 12,84 / 9,97 / 7,36.
+     on-dark-3 preto patrí len na veľký alebo dekoratívny text. */
+  --color-on-dark: #d7e4e0;
+  --color-on-dark-2: #b7ccc6;
+  --color-on-dark-3: #8fb3ab;
+
   --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
   --font-display: var(--font-bricolage), var(--font-hanken), system-ui, sans-serif;
 }

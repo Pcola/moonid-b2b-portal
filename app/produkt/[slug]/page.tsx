@@ -115,7 +115,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
           <div className="lg:sticky lg:top-[100px]">
             <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-line p-[clamp(34px,5vw,68px)] shadow-[0_36px_70px_-46px_rgba(16,42,38,0.45)]" style={{ background: "radial-gradient(125% 120% at 28% 0%, #ffffff 0%, #f1f5f3 100%)" }}>
               <span className="absolute left-4 top-4 z-10 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-2 backdrop-blur">{cat}</span>
-              <span className={`absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${inStock ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>
+              <span className={`absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${inStock ? "bg-success text-success-ink" : "bg-warning text-warning-ink"}`}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: inStock ? "#1aa15f" : "#c98a14" }} />{inStock ? "Skladom" : "Na objednávku"}
               </span>
               <ProductImg src={img} alt={name} sizes="(max-width: 1024px) 92vw, 520px" priority iconSize={72} />

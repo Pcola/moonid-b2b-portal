@@ -139,7 +139,7 @@ export function TierPricesEditor({
         {!canEditPricing && <span id="tier-prices-locked" className="text-[13px] text-muted-3">Zmluvné ceny nastavuje administrátor.</span>}
         <LiveMessage message={pending ? "Ukladám ceny…" : msg?.ok ? msg.text : null} />
         <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-        {msg && <span id="tier-prices-error" className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        {msg && <span id="tier-prices-error" className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
     </div>
   );

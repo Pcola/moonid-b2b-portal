@@ -44,16 +44,16 @@ function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
     }
   }
   return (
-    <div className="rounded-xl border border-[#e7d7af] bg-[#fffaf0] p-3">
-      <div className="text-[12.5px] font-semibold text-[#6d5520]">E-mail nebol doručený — citlivý jednorazový odkaz</div>
+    <div className="rounded-xl border border-warning-line bg-[#fffaf0] p-3">
+      <div className="text-[12.5px] font-semibold text-warning-ink-2">E-mail nebol doručený — citlivý jednorazový odkaz</div>
       <p className="mt-1 text-[12px] leading-relaxed text-[#786331]">{warning ?? "Odkaz odošlite používateľovi bezpečným kanálom a nikde ho trvalo neukladajte."}</p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <input readOnly value={url} aria-label="Jednorazový prístupový odkaz" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#a08946] bg-white px-2.5 py-1.5 font-mono text-[12px] text-ink outline-none" />
-        <button type="button" onClick={copy} aria-label="Kopírovať jednorazový prístupový odkaz" className="min-h-11 rounded-lg bg-[#6d5520] px-3 py-2 text-[12px] font-semibold text-white">{copyState === "copied" ? "Skopírované" : "Kopírovať"}</button>
+        <button type="button" onClick={copy} aria-label="Kopírovať jednorazový prístupový odkaz" className="min-h-11 rounded-lg bg-warning-ink-2 px-3 py-2 text-[12px] font-semibold text-white">{copyState === "copied" ? "Skopírované" : "Kopírovať"}</button>
       </div>
       <div className="mt-1 min-h-[18px] text-[11.5px]" aria-live="polite">
-        {copyState === "copied" && <span className="font-medium text-[#14633f]">Odkaz bol skopírovaný.</span>}
-        {copyState === "failed" && <span className="font-medium text-[#9a3025]">Odkaz sa nepodarilo skopírovať. Označte ho a skopírujte ručne.</span>}
+        {copyState === "copied" && <span className="font-medium text-success-ink">Odkaz bol skopírovaný.</span>}
+        {copyState === "failed" && <span className="font-medium text-danger-ink">Odkaz sa nepodarilo skopírovať. Označte ho a skopírujte ručne.</span>}
       </div>
     </div>
   );
@@ -161,7 +161,7 @@ export function InviteInternalUserForm() {
       </div>
       <div aria-live="polite">
         {role === "ADMIN" && (
-          <div className="mt-3 rounded-lg border border-[#e7d7af] bg-[#fffaf0] px-3 py-2 text-[12.5px] text-[#6d5520]">
+          <div className="mt-3 rounded-lg border border-warning-line bg-[#fffaf0] px-3 py-2 text-[12.5px] text-warning-ink-2">
             Administrátor uvidí všetko čo staff a navyše môže meniť globálne nastavenia, roly a bezpečnostné prístupy.
           </div>
         )}
@@ -170,8 +170,8 @@ export function InviteInternalUserForm() {
         <LiveMessage message={pending ? "Pozývam…" : result?.ok ? (result.emailSent ? "Pozvánka bola odoslaná e-mailom." : "Konto je vytvorené. E-mail neodišiel — nižšie je jednorazový odkaz na bezpečné odovzdanie.") : null} />
         <LiveMessage message={result && !result.ok ? result.error : null} tone="error" />
         <button type="submit" disabled={pending || !email.trim()} className="min-h-11 rounded-[10px] bg-brand px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Pozývam…" : "Odoslať pozvánku"}</button>
-        {result?.ok && result.emailSent && <span className="text-[13px] font-medium text-[#14633f]">Pozvánka bola odoslaná e-mailom.</span>}
-        {result && !result.ok && <span id="invite-internal-error" className="text-[13px] font-medium text-[#9a3025]">{result.error}</span>}
+        {result?.ok && result.emailSent && <span className="text-[13px] font-medium text-success-ink">Pozvánka bola odoslaná e-mailom.</span>}
+        {result && !result.ok && <span id="invite-internal-error" className="text-[13px] font-medium text-danger-ink">{result.error}</span>}
       </div>
       {result?.inviteLink && <div className="mt-3"><ManualAccessLink url={result.inviteLink} warning={result.warning} /></div>}
     </form>
@@ -203,9 +203,9 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
   const statusClass = authSyncPending
     ? "bg-[#fff5dc] text-[#805b0b]"
     : !user.active
-      ? "bg-[#fdeceb] text-[#9a3025]"
+      ? "bg-danger text-danger-ink"
       : user.lastLoginAt
-        ? "bg-[#ecfdf3] text-[#14633f]"
+        ? "bg-success text-success-ink"
         : "bg-[#fff5dc] text-[#805b0b]";
   const authStatusId = `auth-status-${user.id}`;
   const authDetail = authSyncPending
@@ -298,7 +298,7 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
       <td className="px-4 py-3.5">
         <div className="max-w-[260px] truncate text-[13.5px] font-semibold text-ink">{user.name || user.email}{self && <span className="ml-1 font-normal text-brand-2">(vy)</span>}</div>
         <div className="max-w-[280px] truncate text-[12px] text-muted-2">{user.email}</div>
-        {inconsistent && <div className="mt-1 text-[11.5px] font-medium text-[#9a3025]">Nekonzistentné konto: priradené k firme</div>}
+        {inconsistent && <div className="mt-1 text-[11.5px] font-medium text-danger-ink">Nekonzistentné konto: priradené k firme</div>}
       </td>
       <td className="px-4 py-3.5">
         <select value={user.role} onChange={(event) => changeRole(event.target.value as InternalRole)} disabled={mutationDisabled || self}
@@ -309,7 +309,7 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
         </select>
       </td>
       <td className="px-4 py-3.5">
-        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${user.mfaEnabled ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fff5dc] text-[#805b0b]"}`}>
+        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${user.mfaEnabled ? "bg-success text-success-ink" : "bg-[#fff5dc] text-[#805b0b]"}`}>
           {user.mfaEnabled ? "MFA aktívne" : "MFA čaká"}
         </span>
       </td>
@@ -321,7 +321,7 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
       <td className="min-w-[310px] px-4 py-3.5">
         <div className="flex flex-wrap gap-1.5">
           {authSyncPending ? (
-            <button type="button" onClick={retryAuthSync} disabled={baseDisabled || user.authDesiredActive === null} aria-describedby={authStatusId} aria-label={`Dokončiť synchronizáciu Supabase Auth pre účet ${user.email}`} className={`${secondaryButton} border-[#dfce9e] text-[#6d5520]`}>{pending ? "Synchronizujem…" : "Dokončiť synchronizáciu"}</button>
+            <button type="button" onClick={retryAuthSync} disabled={baseDisabled || user.authDesiredActive === null} aria-describedby={authStatusId} aria-label={`Dokončiť synchronizáciu Supabase Auth pre účet ${user.email}`} className={`${secondaryButton} border-[#dfce9e] text-warning-ink-2`}>{pending ? "Synchronizujem…" : "Dokončiť synchronizáciu"}</button>
           ) : (
             <button type="button" onClick={changeActive} disabled={baseDisabled || self} aria-label={`${user.active ? "Deaktivovať" : "Aktivovať"} konto ${user.email}`} title={self ? "Vlastné konto nemožno deaktivovať" : undefined} className={secondaryButton}>{pending ? "Pracujem…" : user.active ? "Deaktivovať" : "Aktivovať"}</button>
           )}
@@ -331,8 +331,8 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
         </div>
         <div className="mt-2 min-h-[18px]" aria-live="polite" aria-atomic="true">
           {pending && <span className="text-[11.5px] text-muted-2">Pracujem…</span>}
-          {result?.ok && successMessage && <span className="text-[11.5px] font-medium text-[#14633f]">{successMessage}</span>}
-          {result && !result.ok && <span className="text-[11.5px] font-medium text-[#9a3025]">{result.error}</span>}
+          {result?.ok && successMessage && <span className="text-[11.5px] font-medium text-success-ink">{successMessage}</span>}
+          {result && !result.ok && <span className="text-[11.5px] font-medium text-danger-ink">{result.error}</span>}
         </div>
         {result?.inviteLink && <ManualAccessLink url={result.inviteLink} warning={result.warning} />}
       </td>

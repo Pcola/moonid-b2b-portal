@@ -70,7 +70,7 @@ function FiremneUdaje() {
             </div>
           ))}
         </dl>
-        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-[#f6f9f8] p-6 sm:p-8">
+        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface-3 p-6 sm:p-8">
           <h3 className="text-[15px] font-bold text-ink">Právne dokumenty</h3>
           <ul className="flex flex-col gap-2.5">
             {DOKUMENTY.map((d) => (

@@ -42,7 +42,7 @@ export default function Cookies() {
           {/* popis tabuľky pre čítačky — vizuálne skrytý, dizajn ostáva nezmenený */}
           <caption className="sr-only">Zoznam nevyhnutných cookies na webe Moonid — názov, účel, doba platnosti a poskytovateľ</caption>
           <thead>
-            <tr className="border-b border-line bg-[#f6f9f8] text-ink">
+            <tr className="border-b border-line bg-surface-3 text-ink">
               <th scope="col" className="px-4 py-2.5 font-semibold">Názov</th>
               <th scope="col" className="px-4 py-2.5 font-semibold">Účel</th>
               <th scope="col" className="px-4 py-2.5 font-semibold">Doba platnosti</th>

@@ -35,7 +35,7 @@ function UserRow({ u }: { u: U }) {
           <div className="truncate text-[14px] font-medium text-ink">{u.name ?? u.email}</div>
           <div className="truncate text-[12.5px] text-muted-2">{u.email}</div>
         </div>
-        {!u.active && <span className="whitespace-nowrap rounded-full bg-[#fdeceb] px-2 py-0.5 text-[11px] font-medium text-[#9a3025]">neaktívne</span>}
+        {!u.active && <span className="whitespace-nowrap rounded-full bg-danger px-2 py-0.5 text-[11px] font-medium text-danger-ink">neaktívne</span>}
       </div>
 
       {isInternal ? (
@@ -65,7 +65,7 @@ function UserRow({ u }: { u: U }) {
 
       <LiveMessage message={pending ? "Pracujem…" : null} />
       <LiveMessage message={err} tone="error" />
-      {err && <span className="text-[12px] text-[#9a3025]">{err}</span>}
+      {err && <span className="text-[12px] text-danger-ink">{err}</span>}
       {link && (
         <div className="rounded-lg border border-line bg-cream/50 p-2">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Prístupový odkaz (pošlite používateľovi)</p>

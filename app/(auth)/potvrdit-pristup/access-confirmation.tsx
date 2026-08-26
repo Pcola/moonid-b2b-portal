@@ -65,7 +65,7 @@ export function AccessConfirmation() {
         </p>
       </div>
       {error && (
-        <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">
+        <div className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">
           {error}
           <p className="mt-1.5">
             <a href="/zabudnute-heslo" className="font-semibold underline underline-offset-2">Požiadať o nový odkaz</a>

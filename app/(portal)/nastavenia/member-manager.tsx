@@ -53,7 +53,7 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
           {m.name && <div className="truncate text-[12.5px] text-muted-2">{m.email}</div>}
         </div>
         <span className="rounded-full bg-cream px-2.5 py-0.5 text-[11.5px] font-medium text-muted">{ROLE[m.role] ?? m.role}</span>
-        {!m.active && <span className="rounded-full bg-[#fdeceb] px-2.5 py-0.5 text-[11.5px] font-medium text-[#9a3025]">neaktívne</span>}
+        {!m.active && <span className="rounded-full bg-danger px-2.5 py-0.5 text-[11.5px] font-medium text-danger-ink">neaktívne</span>}
         {m.id !== currentUserId && (
           <button onClick={toggleActive} disabled={pending} className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50">{m.active ? "Deaktivovať" : "Aktivovať"}</button>
         )}
@@ -65,7 +65,7 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
       {isAdminRole ? (
         <div className="text-[12.5px] text-muted-2">Správca firmy — objednáva priamo a schvaľuje objednávky.</div>
       ) : m.active ? (
-        <div className="flex flex-wrap items-center gap-2.5 rounded-lg bg-[#fafbfa] px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5">
           <span className="text-[12.5px] font-semibold text-muted-3">Objednávanie:</span>
           <select value={mode} onChange={(e) => setMode(e.target.value as "direct" | "approval")} aria-label={`Režim objednávania — ${m.name || m.email}`} className={inp}>
             <option value="direct">Objednáva priamo</option>
@@ -85,8 +85,8 @@ function MemberRow({ m, members, currentUserId }: { m: Member; members: Member[]
       ) : null}
       <LiveMessage message={pending ? "Pracujem…" : notice} />
       <LiveMessage message={err} tone="error" />
-      {err && <div className="text-[12.5px] text-[#9a3025]">{err}</div>}
-      {notice && <div className="text-[12.5px] text-[#6d5520]">{notice}</div>}
+      {err && <div className="text-[12.5px] text-danger-ink">{err}</div>}
+      {notice && <div className="text-[12.5px] text-warning-ink-2">{notice}</div>}
     </div>
   );
 }
@@ -121,7 +121,7 @@ function InviteMember() {
         <button onClick={() => { setOpen(false); setMsg(null); }} className="rounded-[10px] border border-line px-4 py-2 text-[13.5px] font-semibold text-muted transition hover:text-ink">Zrušiť</button>
         <LiveMessage message={pending ? "Pozývam…" : msg?.ok ? msg.text : null} />
         <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-        {msg && <span id="invite-member-error" className={`text-[13px] font-semibold ${msg.warning ? "text-[#6d5520]" : msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        {msg && <span id="invite-member-error" className={`text-[13px] font-semibold ${msg.warning ? "text-warning-ink-2" : msg.ok ? "text-brand" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
     </div>
   );
@@ -146,7 +146,7 @@ export function MemberManager({ isAdmin, members, currentUserId }: { isAdmin: bo
                   {m.name && <div className="truncate text-[12.5px] text-muted-2">{m.email}</div>}
                 </div>
                 <span className="rounded-full bg-cream px-2.5 py-0.5 text-[11.5px] font-medium text-muted">{ROLE[m.role] ?? m.role}</span>
-                {!m.canOrderDirectly && <span className="rounded-full bg-[#fdf6e7] px-2.5 py-0.5 text-[11px] font-medium text-[#8a5a00]">na schválenie</span>}
+                {!m.canOrderDirectly && <span className="rounded-full bg-warning px-2.5 py-0.5 text-[11px] font-medium text-warning-ink">na schválenie</span>}
               </div>
             )
         ))}

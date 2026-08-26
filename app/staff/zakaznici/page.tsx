@@ -52,7 +52,7 @@ export default async function StaffCustomers() {
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] text-[13px] font-bold" style={{ background: i % 2 ? AV[1] : AV[0], color: i % 2 ? "#163F38" : "#fff" }}>{initials}</span>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2"><span className="truncate text-[14px] font-medium text-ink">{c.name}</span>{!c.active && <span className="flex-none rounded bg-[#fdecea] px-1.5 py-0.5 text-[10px] font-semibold text-[#9a3025]">neaktívna</span>}</div>
+                  <div className="flex items-center gap-2"><span className="truncate text-[14px] font-medium text-ink">{c.name}</span>{!c.active && <span className="flex-none rounded bg-danger px-1.5 py-0.5 text-[10px] font-semibold text-danger-ink">neaktívna</span>}</div>
                   <div className="truncate text-[12px] text-muted-2">{c.users[0]?.email ?? "—"}</div>
                 </div>
               </div>

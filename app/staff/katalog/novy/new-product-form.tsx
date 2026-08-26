@@ -90,7 +90,7 @@ export function NewProductForm({ categories }: { categories: { id: string; name:
 
         <LiveMessage message={pending ? "Ukladám produkt…" : null} />
         <LiveMessage message={error} tone="error" />
-        {error && <p className="text-[13.5px] text-[#9a3025]">{error}</p>}
+        {error && <p className="text-[13.5px] text-danger-ink">{error}</p>}
 
         <div className="flex gap-2">
           <button type="submit" disabled={pending} className="rounded-[10px] bg-brand px-5 py-3 text-[14.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">

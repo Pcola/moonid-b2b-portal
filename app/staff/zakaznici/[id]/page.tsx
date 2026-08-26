@@ -52,8 +52,8 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-[clamp(22px,3vw,30px)] font-semibold text-ink">{company.name}</h2>
         {company.active
-          ? <span className="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-[12px] font-semibold text-[#14633f]">Aktívna</span>
-          : <span className="rounded-full bg-[#fdecea] px-2.5 py-1 text-[12px] font-semibold text-[#9a3025]">Neaktívna</span>}
+          ? <span className="rounded-full bg-success px-2.5 py-1 text-[12px] font-semibold text-success-ink">Aktívna</span>
+          : <span className="rounded-full bg-danger px-2.5 py-1 text-[12px] font-semibold text-danger-ink">Neaktívna</span>}
         <span className="text-[13px] text-muted-2">IČO {company.ico} · {company._count.orders} objednávok · zákazník od {new Date(company.createdAt).toLocaleDateString("sk")}</span>
       </div>
 

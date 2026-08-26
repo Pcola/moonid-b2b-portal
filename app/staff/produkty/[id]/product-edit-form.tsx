@@ -4,6 +4,8 @@ import { useState, useRef, useTransition } from "react";
 import Link from "next/link";
 import { updateProduct, updateProductImage } from "../actions";
 import { LiveMessage } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { buttonClass } from "@/components/ui/button";
 
 type Product = {
   id: string; sku: string; name: string; origin: string; nameDisplay: string; categoryId: string; subcategoryId: string;
@@ -12,7 +14,7 @@ type Product = {
   stockCache: number | null; stockFresh: boolean; stockSyncedAt: string | null;
 };
 
-const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass();
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
 export function ProductEditForm({ product, cats, canEditPricing }: { product: Product; cats: { id: string; name: string; parentId: string | null }[]; canEditPricing: boolean }) {
@@ -73,7 +75,7 @@ export function ProductEditForm({ product, cats, canEditPricing }: { product: Pr
       <div className="grid gap-5 md:grid-cols-[220px_1fr]">
         {/* obrázok */}
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4">
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-line bg-[#fafbfa]">
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-line bg-surface-2">
             {img ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={img} alt="" className="max-h-full max-w-full object-contain p-2" />
@@ -87,7 +89,7 @@ export function ProductEditForm({ product, cats, canEditPricing }: { product: Pr
           </button>
           <LiveMessage message={imgBusy ? "Nahrávam obrázok…" : null} />
           <LiveMessage message={imgMsg} tone="error" />
-          {imgMsg && <span className="text-[12px] text-[#9a3025]">{imgMsg}</span>}
+          {imgMsg && <span className="text-[12px] text-danger-ink">{imgMsg}</span>}
           <p className="text-[11.5px] text-muted-2">JPG/PNG/WEBP, max 5 MB. Ukladá sa do vlastného úložiska.</p>
         </div>
 
@@ -151,12 +153,12 @@ export function ProductEditForm({ product, cats, canEditPricing }: { product: Pr
             </span>
           </p>
           <div className="flex items-center gap-3">
-            <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+            <button onClick={save} disabled={pending} className={buttonClass({ className: "self-start" })}>
               {pending ? "Ukladám…" : "Uložiť zmeny"}
             </button>
             <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
             <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
-            {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+            {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
           </div>
         </div>
       </div>

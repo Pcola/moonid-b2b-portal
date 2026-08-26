@@ -72,7 +72,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
           <div key={`s${i}`} className={`flex items-center justify-between gap-4 px-5 py-3 ${i ? "border-t border-line" : ""} ${l.usable ? "" : "opacity-60"}`}>
             <div className="min-w-0">
               <div className="truncate text-[14.5px] text-ink">{l.name}</div>
-              {!l.usable && <div className="text-[12px] text-[#9a6b0e]">nedostupné / na vyžiadanie — vynechá sa</div>}
+              {!l.usable && <div className="text-[12px] text-warning-ink">nedostupné / na vyžiadanie — vynechá sa</div>}
             </div>
             <div className="flex flex-none items-center gap-4 text-right">
               <span className="text-[13.5px] text-muted-2">{l.qty} ks</span>
@@ -88,12 +88,12 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
           <div key={l.id} className={`flex items-center justify-between gap-4 border-t border-line bg-mintbg/15 px-5 py-3 ${l.usable ? "" : "opacity-60"}`}>
             <div className="min-w-0">
               <div className="truncate text-[14.5px] text-ink">{l.name}</div>
-              {!l.usable && <div className="text-[12px] text-[#9a6b0e]">na vyžiadanie — vynechá sa</div>}
+              {!l.usable && <div className="text-[12px] text-warning-ink">na vyžiadanie — vynechá sa</div>}
             </div>
             <div className="flex flex-none items-center gap-4 text-right">
               <span className="text-[13.5px] text-muted-2">{l.qty} ks</span>
               <span className="w-[90px] text-[14px] font-semibold tabular-nums text-ink">{l.usable ? eur(lineTotal2(l.net ?? 0, l.qty)) : "—"}</span>
-              <button onClick={() => removeExtra(l.id)} disabled={busy} aria-label="Odobrať" className="text-muted-2 transition hover:text-[#9a3025] disabled:opacity-40">✕</button>
+              <button onClick={() => removeExtra(l.id)} disabled={busy} aria-label="Odobrať" className="text-muted-2 transition hover:text-danger-ink disabled:opacity-40">✕</button>
             </div>
           </div>
         ))}
@@ -126,7 +126,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
           </button>
         </div>
         <LiveMessage message={busy ? "Pridávam položku…" : msg} />
-        {msg && <p className="mt-1.5 text-[12.5px] text-[#9a6b0e]">{msg}</p>}
+        {msg && <p className="mt-1.5 text-[12.5px] text-warning-ink">{msg}</p>}
         <p className="mt-1.5 text-[12px] text-muted-2">Doobjednané položky sa pripočítajú k tejto objednávke (nie do bežného košíka).</p>
       </div>
 
@@ -141,7 +141,7 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
           <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)}
             aria-invalid={!!err && !termsAccepted}
             aria-describedby={err && !termsAccepted ? "repeat-error" : undefined}
-            className="mt-0.5 h-4 w-4 flex-none accent-[#163f38]" />
+            className="mt-0.5 h-4 w-4 flex-none accent-brand" />
           <span>Potvrdzujem, že som sa oboznámil s <Link href="/obchodne-podmienky" target="_blank" className="font-semibold text-brand underline underline-offset-2">obchodnými podmienkami</Link> a súhlasím s nimi. Opakovaná objednávka používa aktuálne ceny a aktuálnu verziu podmienok.</span>
         </label>
         <button onClick={confirm} disabled={placing || usableCount === 0} className="inline-flex w-fit items-center gap-2 rounded-[11px] bg-brand px-6 py-3.5 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">
@@ -150,8 +150,8 @@ export function RepeatOrderConfirm({ sourceOrderId, idempotencyKey, items, extra
         </button>
         <LiveMessage message={placing ? "Odosielam objednávku…" : null} />
         <LiveMessage message={err} tone="error" />
-        {err && <span id="repeat-error" className="text-[13px] text-[#9a3025]">{err}</span>}
-        {usableCount === 0 && <span className="text-[13px] text-[#9a3025]">Žiadna položka nie je dostupná na objednanie.</span>}
+        {err && <span id="repeat-error" className="text-[13px] text-danger-ink">{err}</span>}
+        {usableCount === 0 && <span className="text-[13px] text-danger-ink">Žiadna položka nie je dostupná na objednanie.</span>}
         <p className="text-[12.5px] text-muted-2">Bez platby vopred — platíte faktúrou so splatnosťou. Termín rozvozu potvrdíme.</p>
       </div>
     </>

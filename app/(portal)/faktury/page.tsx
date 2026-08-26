@@ -8,10 +8,10 @@ export const metadata = { title: "Faktúry — Moonid portál", robots: { index:
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 const STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: "Čaká na úhradu", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
-  PAID: { label: "Uhradená", cls: "bg-[#ecfdf3] text-[#14633f]" },
-  OVERDUE: { label: "Po splatnosti", cls: "bg-[#fdeceb] text-[#9a3025]" },
-  CANCELLED: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-muted-2" },
+  PENDING: { label: "Čaká na úhradu", cls: "bg-warning text-warning-ink" },
+  PAID: { label: "Uhradená", cls: "bg-success text-success-ink" },
+  OVERDUE: { label: "Po splatnosti", cls: "bg-danger text-danger-ink" },
+  CANCELLED: { label: "Stornovaná", cls: "bg-cream-2 text-muted-2" },
 };
 
 function SummaryCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
@@ -50,7 +50,7 @@ export default async function FakturyPage() {
   return (
     <div className="flex max-w-[1080px] flex-col gap-5">
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
-        <SummaryCard label="Po splatnosti" value={eur(overdue)} accent={overdue > 0 ? "text-[#9a3025]" : "text-ink"} />
+        <SummaryCard label="Po splatnosti" value={eur(overdue)} accent={overdue > 0 ? "text-danger-ink" : "text-ink"} />
         <SummaryCard label="Čaká na úhradu" value={eur(pending)} />
         <SummaryCard label={`Uhradené (${year})`} value={eur(paidYear)} />
       </div>

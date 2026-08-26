@@ -68,7 +68,7 @@ export default async function SyncJobsPage({ searchParams }: { searchParams: Pro
 
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
         <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Zlyhané úlohy</span><span className="text-[28px] font-normal text-[#A23B2A]">{readiness.failedJobs}</span></div>
-        <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Zaseknuté úlohy</span><span className="text-[28px] font-normal text-[#9A6B0E]">{readiness.stalledJobs}</span></div>
+        <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Zaseknuté úlohy</span><span className="text-[28px] font-normal text-warning-ink">{readiness.stalledJobs}</span></div>
         <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Posledný signál agenta</span><span className="text-[15px] font-medium text-ink">{dt(readiness.lastHeartbeatAt)}</span></div>
         <div className="flex flex-col gap-1.5 rounded-2xl border border-line bg-white p-5"><span className="text-[13px] text-muted">Posledný sklad</span><span className="text-[15px] font-medium text-ink">{dt(readiness.lastStockSyncAt)}</span></div>
       </div>

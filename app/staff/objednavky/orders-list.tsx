@@ -69,7 +69,7 @@ export function StaffOrders({ items, initialQ = "", capped = false, cap = 0 }: {
         ) : filtered.map((o) => {
           const meta = STATUS_META[o.status as OrderStatus];
           return (
-            <Link key={o.id} href={`/staff/objednavky/${o.id}`} aria-label={`Objednávka ${o.number}, zákazník ${o.customer}, ${o.count} položiek, dátum ${new Date(o.date).toLocaleDateString("sk")}, cenová úroveň ${o.tier}, stav ${meta.label}, suma ${eur(o.total)}`} className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-[#f7f9f8]">
+            <Link key={o.id} href={`/staff/objednavky/${o.id}`} aria-label={`Objednávka ${o.number}, zákazník ${o.customer}, ${o.count} položiek, dátum ${new Date(o.date).toLocaleDateString("sk")}, cenová úroveň ${o.tier}, stav ${meta.label}, suma ${eur(o.total)}`} className="grid grid-cols-[auto_1.6fr_1fr_0.8fr_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 transition last:border-0 hover:bg-surface-3">
               <span className="font-mono text-[13.5px] font-semibold text-ink">{o.number}</span>
               <div className="min-w-0">
                 <div className="truncate text-[14px] font-medium text-ink">{o.customer}</div>

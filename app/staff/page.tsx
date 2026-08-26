@@ -129,7 +129,7 @@ export default async function StaffDashboard() {
             <div className="px-[22px] py-10 text-center text-[13.5px] text-muted">Za posledných 90 dní žiadne predaje.</div>
           ) : topProducts.map((p) => (
             <div key={p.id} className="flex items-center gap-3.5 border-b border-line px-[22px] py-3.5 last:border-0">
-              <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[9px] border border-line bg-[#f7f9f8] p-1.5">
+              <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[9px] border border-line bg-surface-3 p-1.5">
                 {p.img ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.img} alt="" loading="lazy" className="max-h-full max-w-full object-contain" />

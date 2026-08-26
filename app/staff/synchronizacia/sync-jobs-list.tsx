@@ -92,7 +92,7 @@ function Row({ it, canRetry }: { it: SyncJobItem; canRetry: boolean }) {
       )}
       <LiveMessage message={pending ? "Vraciam úlohu do fronty…" : okMsg} />
       <LiveMessage message={err} tone="error" />
-      {err && <p className="mt-2 text-[12.5px] text-[#9a3025]">{err}</p>}
+      {err && <p className="mt-2 text-[12.5px] text-danger-ink">{err}</p>}
       {okMsg && <p className="mt-2 text-[12.5px] text-brand-2">{okMsg}</p>}
     </div>
   );

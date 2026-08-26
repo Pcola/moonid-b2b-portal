@@ -177,7 +177,7 @@ export default async function TeamAccessPage({ searchParams }: { searchParams: P
         </div>
       )}
 
-      <div className="rounded-xl border border-[#e7d7af] bg-[#fffaf0] px-4 py-3 text-[12.5px] leading-relaxed text-[#6d5520]">
+      <div className="rounded-xl border border-warning-line bg-[#fffaf0] px-4 py-3 text-[12.5px] leading-relaxed text-warning-ink-2">
         <strong>Bezpečnostná poznámka:</strong> účet sa nikdy nemaže. Deaktivácia ho okamžite zablokuje v portáli a zároveň zablokuje nové prihlásenia v Supabase Auth. Už vydaný token sa na každom serverovom requeste znovu kontroluje proti aktívnemu stavu a priama Data API vrstva je default-deny.
       </div>
     </div>

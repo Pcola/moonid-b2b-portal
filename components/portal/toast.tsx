@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.filter((t) => t.tone === "error").map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto flex items-center gap-2.5 rounded-[12px] border border-[#f0c9c2] bg-[#fdecea] px-4 py-2.5 text-[14px] font-semibold text-[#9a3025] shadow-[0_10px_30px_-8px_rgba(154,48,37,0.35)]"
+            className="pointer-events-auto flex items-center gap-2.5 rounded-[12px] border border-danger-line bg-danger px-4 py-2.5 text-[14px] font-semibold text-danger-ink shadow-[0_10px_30px_-8px_rgba(154,48,37,0.35)]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" /></svg>
             {t.msg}

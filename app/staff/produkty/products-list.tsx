@@ -85,7 +85,7 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
           <div className="px-[18px] py-14 text-center text-[14px] text-muted">Nič sa nenašlo.</div>
         ) : items.map((p) => (
           <div role="row" key={p.id} className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[18px] py-3 last:border-0">
-            <span role="cell" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa]">
+            <span role="cell" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line bg-surface-2">
               {p.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={p.image} alt="" className="max-h-full max-w-full object-contain" />
@@ -95,7 +95,7 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
             </span>
             <div role="cell" className="min-w-0">
               <div className="truncate text-[14px] font-medium text-ink">{p.name}</div>
-              <div className="font-mono text-[12px] text-muted-2">{p.sku}{p.isSubsidized && <span className="ml-2 rounded bg-[#fdf6e7] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#8a5a00]">na vyžiadanie</span>}</div>
+              <div className="font-mono text-[12px] text-muted-2">{p.sku}{p.isSubsidized && <span className="ml-2 rounded bg-warning px-1.5 py-0.5 text-[10.5px] font-semibold text-warning-ink">na vyžiadanie</span>}</div>
             </div>
             <span role="cell" className="truncate text-[13.5px] text-muted">{p.category ?? "—"}</span>
             <span role="cell" className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(p.basePrice)}<span className="ml-1 text-[11.5px] font-normal text-muted-2">/{p.unit}</span></span>
@@ -129,8 +129,8 @@ function PublishToggle({ id, published }: { id: string; published: boolean }) {
   }
   return (
     <button type="button" onClick={toggle} disabled={pending} title={published ? "Skryť z katalógu" : "Publikovať"}
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-[#ecfdf3] text-[#14633f] hover:bg-[#d6f5e4]" : "bg-[#f3f0ee] text-muted-2 hover:bg-[#e9e5e1]"}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-[#14633f]" : "bg-muted-2"}`} />
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-success text-success-ink hover:bg-[#d6f5e4]" : "bg-cream-2 text-muted-2 hover:bg-[#e9e5e1]"}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-success-ink" : "bg-muted-2"}`} />
       {pending ? "…" : published ? "Publikované" : "Skryté"}
       <LiveMessage message={announce} />
     </button>

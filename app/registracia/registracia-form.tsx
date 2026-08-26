@@ -4,8 +4,10 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { createAccessRequest } from "./actions";
 import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
 
-const inputCls = "rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand";
+const inputCls = inputClass({ size: "lg" });
 const labelCls = "flex flex-col gap-1.5 text-[13px] font-medium text-muted-3";
 
 export function RegistraciaForm() {
@@ -51,7 +53,7 @@ export function RegistraciaForm() {
       <input type="text" name="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
       <LiveMessage message={loading ? "Odosielam žiadosť…" : null} />
       <LiveMessage message={err} tone="error" />
-      {err && <div className="rounded-[10px] border border-[#f0c9c2] bg-[#fdecea] px-3.5 py-2.5 text-[13.5px] text-[#9a3025]">{err}</div>}
+      {err && <Alert>{err}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={labelCls}>Názov firmy<input name="companyName" required autoComplete="organization" className={inputCls} /></label>
         <label className={labelCls}>IČO<input name="ico" required inputMode="numeric" autoComplete="off" className={inputCls} /></label>
