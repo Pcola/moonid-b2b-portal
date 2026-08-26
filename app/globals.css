@@ -305,30 +305,27 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 
 /* ---- prístupnosť (WCAG 2.4.7 / 1.4.11 / 2.4.1): viditeľný focus + skip-link ----
 
-   DVOJFAREBNÝ ring, a to nie zo štýlu — je to matematická nutnosť. Aby mal jednofarebný
-   indikátor 3:1 voči --color-brand-2 (#1e5249), musí mať luminanciu ≥ 0,304; aby mal 3:1
-   voči bielej, musí mať ≤ 0,283. To okno je prázdne, teda ŽIADNA jedna farba nefunguje na
+   TROJPÁSOVÝ ring, a nie zo štýlu — je to matematická nutnosť. Aby mal jednofarebný
+   indikátor 3:1 voči --color-brand-2 (#1e5249), musí mať luminanciu >= 0,304; aby mal 3:1
+   voči bielej, musí mať <= 0,283. To okno je prázdne, teda ŽIADNA jedna farba nefunguje na
    svetlom aj tmavom podklade naraz. Predtým tu bol len `2px solid var(--color-brand)`,
    ktorý má na sidebare back-office (#0c211d) 1,44:1 — teda neviditeľný.
 
-   Riešenie: svetlý prstenec tesne na prvku + tmavý obrys hneď za ním.
-     • na svetlom podklade nesie kontrast tmavý obrys   (#163f38 vs biela = 11,65:1)
-     • na tmavom podklade nesie kontrast svetlý prstenec (biela vs #0c211d = 16,80:1)
-     • navzájom majú 11,65:1, takže dvojica je čitateľná na čomkoľvek medzi tým
-   box-shadow so spreadom 2px presne vyplní medzeru, ktorú robí outline-offset: 2px.
-   Overené: žiadny fokusovateľný prvok v projekte nemá vlastný box-shadow, takže niet čo
-   prebiť. Pravidlo je zámerne UNLAYERED (mimo @layer), preto vyhráva nad Tailwind
-   utilitou `outline-none`, ktorú má na sebe každý input.
+   Pásy zvnútra von: 1px --color-ink, 2px biela, 2px --color-brand (outline).
+     • na svetlom podklade nesie kontrast zelený obrys   #163f38 vs biela   = 11,65:1
+     • na tmavom podklade nesie kontrast biely prstenec  biela   vs #0c211d = 16,80:1
+     • na SVETLOM OVLÁDAČI na tmavom podklade tmavý vlások #0d1715 vs biela = 18,25:1
+   Tretí pás je nutný pre `btnOnDark` (bg-white) v sections.tsx:98, použitý na :122, :213
+   a :286, a pre biele CTA vo footer.tsx:51 a header.tsx:90 aj :140 — tam by biely prstenec
+   splynul s bielou výplňou tlačidla (1,00:1) a zelený obrys s podkladom (1,31:1).
 
-   `border-radius` je odstránený zámerne: nastavoval polomer SAMOTNÉHO prvku, takže
-   tlačidlo s rounded-[10px] pri fokuse skočilo na 3px a viditeľne sa zdeformovalo.
-   outline aj box-shadow polomer prvku rešpektujú samy. */
-   Pásy sú TRI, zvnútra von: 1px --color-ink, 2px biela, 2px --color-brand (outline).
-   Tmavý vlások je nutný pre SVETLÝ ovládač na TMAVOM podklade — `btnOnDark` (bg-white)
-   v sections.tsx:98 použitý na :122, :213, :286, biele CTA v footer.tsx:51 a
-   header.tsx:90 aj :140. Tam biely prstenec splynie s bielou výplňou tlačidla (1,00:1)
-   a zelený obrys s tmavým podkladom (1,31:1 na #0f2a26), takže bez vlásku by indikátor
-   zmizol úplne. Vlások má voči bielej výplni 18,25:1. */
+   Pravidlo je zámerne UNLAYERED (mimo @layer), preto vyhráva nad Tailwind utilitou
+   `outline-none`, ktorú má na sebe každý input. Žiadny fokusovateľný prvok v projekte
+   nemá vlastný box-shadow, takže niet čo prebiť.
+
+   `border-radius` tu zámerne NIE JE: nastavoval by polomer SAMOTNÉHO prvku, takže tlačidlo
+   s rounded-[10px] by pri fokuse skočilo na 3px a viditeľne sa zdeformovalo. outline aj
+   box-shadow polomer prvku rešpektujú samy. */
 :focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 3px;
