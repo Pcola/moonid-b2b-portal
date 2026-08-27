@@ -600,7 +600,12 @@ export async function placeRepeatOrder(sourceOrderId: string, idempotencyKey?: s
     // odmietne 2. insert (transakcia sa vráti vrátane counter incrementu). Vrátime PÔVODNÚ objednávku
     // idempotentne — bez druhého e-mailu/auditu, takže nikdy nevzniknú dve identické objednávky.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      const existing = await prisma.order.findUnique({ where: { idempotencyKey: idemKey }, select: { id: true, number: true } });
+      // Idempotency odpoveď smie vrátiť iba objednávku toho istého používateľa a firmy.
+      // Globálny lookup podľa kľúča by pri úmyselnej UUID kolízii prezradil cudzie ID/číslo.
+      const existing = await prisma.order.findFirst({
+        where: { idempotencyKey: idemKey, companyId: user.companyId!, createdById: user.id },
+        select: { id: true, number: true },
+      });
       if (existing) {
         revalidatePath("/objednavky");
         return { ok: true, number: existing.number, id: existing.id };

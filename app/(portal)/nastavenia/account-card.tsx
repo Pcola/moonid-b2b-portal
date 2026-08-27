@@ -2,23 +2,9 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { updateProfile } from "./actions";
+import { changeOwnPassword, updateProfile } from "./actions";
 import { LiveMessage } from "@/components/ui/live-region";
 import { buttonClass } from "@/components/ui/button";
-
-/** Kontrola hesla voči HaveIBeenPwned (k-anonymity — posiela sa len 5-znakový SHA-1 prefix). */
-async function isPwned(pw: string): Promise<boolean> {
-  try {
-    const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(pw));
-    const hash = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
-    const res = await fetch(`https://api.pwnedpasswords.com/range/${hash.slice(0, 5)}`);
-    if (!res.ok) return false;
-    return (await res.text()).split("\n").some((line) => line.split(":")[0].trim() === hash.slice(5));
-  } catch {
-    return false;
-  }
-}
 
 const inp = "rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[14.5px] text-ink outline-none transition focus:border-brand";
 const lbl = "flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3";
@@ -63,6 +49,7 @@ function NameEditor({ initialName, email }: { initialName: string | null; email:
 }
 
 function PasswordChanger({ email }: { email: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -77,17 +64,15 @@ function PasswordChanger({ email }: { email: string }) {
     if (next !== confirm) { setMsg({ ok: false, text: "Nové heslá sa nezhodujú." }); return; }
     if (next === current) { setMsg({ ok: false, text: "Nové heslo sa musí líšiť od súčasného." }); return; }
     setLoading(true);
-    const supabase = createClient();
-    // re-auth: over súčasné heslo predtým, než ho zmeníme (ASVS — zmena hesla vyžaduje re-autentifikáciu)
-    const { error: reauthErr } = await supabase.auth.signInWithPassword({ email, password: current });
-    if (reauthErr) { setMsg({ ok: false, text: "Súčasné heslo je nesprávne." }); setLoading(false); return; }
-    if (await isPwned(next)) { setMsg({ ok: false, text: "Toto heslo sa našlo v známych únikoch dát. Zvoľte iné." }); setLoading(false); return; }
-    const { error } = await supabase.auth.updateUser({ password: next });
-    if (error) { setMsg({ ok: false, text: "Heslo sa nepodarilo zmeniť. Skúste znova." }); setLoading(false); return; }
-    // zruš ostatné relácie (možné kompromitované zariadenia), aktuálnu nechaj
-    await supabase.auth.signOut({ scope: "others" }).catch(() => {});
-    setMsg({ ok: true, text: "Heslo zmenené ✓ Ostatné relácie boli odhlásené." });
-    setCurrent(""); setNext(""); setConfirm(""); setLoading(false); setOpen(false);
+    const result = await changeOwnPassword({ currentPassword: current, newPassword: next });
+    if (!result.ok) {
+      setMsg({ ok: false, text: result.error ?? "Heslo sa nepodarilo zmeniť. Skúste znova." });
+      setLoading(false);
+      return;
+    }
+    setCurrent(""); setNext(""); setConfirm("");
+    router.replace("/login?password=changed");
+    router.refresh();
   }
 
   if (!open) {

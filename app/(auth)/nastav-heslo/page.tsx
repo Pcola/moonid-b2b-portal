@@ -2,16 +2,19 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthPanel } from "@/components/auth/auth-panel";
 import { createClient } from "@/lib/supabase/server";
+import { hasRecentPasswordSetupGrant } from "@/lib/password-setup-session";
+import { PasswordSetupBootstrap } from "./password-setup-bootstrap";
 import { SetPasswordForm } from "./set-password-form";
 
 export const metadata: Metadata = { title: "Nastavenie hesla — Moonid B2B portál" };
 export const dynamic = "force-dynamic";
 
 export default async function SetPasswordPage() {
-  // e-mail z aktuálnej (recovery/invite) session — nech user vidí, pre aký účet heslo nastavuje
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const email = user?.email ?? null;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  const canSetPassword = hasRecentPasswordSetupGrant(claims);
+  const email = canSetPassword && typeof claims?.email === "string" ? claims.email : null;
 
   return (
     <AuthShell
@@ -28,7 +31,7 @@ export default async function SetPasswordPage() {
           {email ? <>Nastavujete heslo pre účet <strong className="font-semibold text-ink">{email}</strong>.</> : "Zadajte nové heslo k vášmu firemnému účtu."}
         </p>
       </div>
-      <SetPasswordForm email={email} />
+      {canSetPassword ? <SetPasswordForm email={email} /> : <PasswordSetupBootstrap />}
     </AuthShell>
   );
 }

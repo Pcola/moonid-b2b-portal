@@ -1,128 +1,61 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { LiveMessage } from "@/components/ui/live-region";
-
-/** Kontrola hesla voči HaveIBeenPwned (k-anonymity — posiela sa len 5-znakový SHA-1 prefix). */
-async function isPwned(pw: string): Promise<boolean> {
-  try {
-    const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(pw));
-    const hash = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
-    const res = await fetch(`https://api.pwnedpasswords.com/range/${hash.slice(0, 5)}`);
-    if (!res.ok) return false;
-    const suffix = hash.slice(5);
-    return (await res.text()).split("\n").some((line) => line.split(":")[0].trim() === suffix);
-  } catch {
-    return false; // ak je HIBP nedostupné, registráciu nezablokujeme
-  }
-}
+import { setPasswordFromGrant } from "./actions";
 
 export function SetPasswordForm({ email }: { email?: string | null }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-
-    async function initializeSession() {
-      try {
-        const params = new URLSearchParams(window.location.hash.slice(1));
-        const accessToken = params.get("access_token");
-        const refreshToken = params.get("refresh_token");
-        const type = params.get("type");
-        const passwordFlow = type === "invite" || type === "recovery";
-
-        if (passwordFlow) {
-          // Remove the implicit fragment before creating the PKCE client. This also
-          // keeps Auth tokens out of browser history and accidentally copied URLs.
-          window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-          if (!accessToken || !refreshToken) {
-            if (active) setErr("Odkaz vypršal alebo je neplatný. Požiadajte o nový odkaz.");
-            return;
-          }
-
-          const supabase = createClient();
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (!active) return;
-          if (error) {
-            setErr("Odkaz vypršal alebo je neplatný. Požiadajte o nový odkaz.");
-            return;
-          }
-          setSessionReady(true);
-          return;
-        }
-
-        const supabase = createClient();
-        const { data } = await supabase.auth.getSession();
-        if (!active) return;
-        if (!data.session) {
-          setErr("Odkaz vypršal alebo je neplatný. Požiadajte o nový odkaz.");
-          return;
-        }
-        setSessionReady(true);
-      } catch {
-        if (active) setErr("Odkaz sa nepodarilo overiť. Skúste to znova alebo požiadajte o nový odkaz.");
-      }
-    }
-
-    void initializeSession();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    setErr(null);
-    if (password.length < 12) {
-      setErr("Heslo musí mať aspoň 12 znakov.");
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    if (password.length < 12 || password.length > 256) {
+      setError("Heslo musí mať 12 až 256 znakov.");
       return;
     }
+
     setLoading(true);
-    if (await isPwned(password)) {
-      setErr("Toto heslo sa našlo v známych únikoch dát. Zvoľte iné, bezpečnejšie heslo.");
+    const result = await setPasswordFromGrant(password);
+    if (!result.ok) {
+      setError(result.error ?? "Heslo sa nepodarilo nastaviť.");
       setLoading(false);
       return;
     }
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setErr("Odkaz vypršal alebo je neplatný. Skúste obnovu hesla znova.");
-      setLoading(false);
-      return;
-    }
-    // bezpečnosť: po zmene hesla zruš ostatné relácie (kompromitované zariadenia), aktuálnu nechaj
-    await supabase.auth.signOut({ scope: "others" }).catch(() => {});
-    router.replace("/dashboard");
+
+    router.replace("/login?password=changed");
     router.refresh();
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      {/* skryté používateľské meno pre správcov hesiel (autofill/a11y) */}
+    <form onSubmit={onSubmit} aria-busy={loading} className="flex flex-col gap-4">
       {email && <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />}
-      <LiveMessage message={!sessionReady && !err ? "Overujem odkaz…" : loading ? "Ukladám heslo…" : null} />
-      <LiveMessage message={err} tone="error" />
-      {err && <div id="set-password-error" className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">{err}</div>}
+      <LiveMessage message={loading ? "Ukladám heslo…" : null} />
+      <LiveMessage message={error} tone="error" />
+      {error && <div id="set-password-error" className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">{error}</div>}
       <label className="flex flex-col gap-1.5 text-[13px] font-medium text-muted-3">
         Nové heslo
-        <input type="password" required disabled={!sessionReady} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={12}
-          aria-invalid={!!err} aria-describedby={err ? "set-password-error" : "set-password-rules"}
-          className="rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand" />
+        <input
+          type="password"
+          required
+          disabled={loading}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+          minLength={12}
+          maxLength={256}
+          aria-invalid={!!error}
+          aria-describedby={error ? "set-password-error" : "set-password-rules"}
+          className="rounded-[10px] border border-field bg-white px-3.5 py-2.5 text-[15px] text-ink outline-none transition focus:border-brand"
+        />
         <span id="set-password-rules" className="text-[12px] font-normal text-muted-2">Minimálne 12 znakov. Heslo overujeme voči databáze uniknutých hesiel.</span>
       </label>
-      <button type="submit" disabled={loading || !sessionReady}
-        className="rounded-[10px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
-        {!sessionReady && !err ? "Overujem odkaz…" : loading ? "Ukladám…" : "Uložiť heslo a prihlásiť"}
+      <button type="submit" disabled={loading} className="rounded-[10px] bg-brand px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+        {loading ? "Ukladám…" : "Uložiť heslo"}
       </button>
     </form>
   );

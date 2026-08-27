@@ -20,16 +20,21 @@ export function LoginForm() {
       : params.get("error") === "auth"
         ? "Prihlasovací odkaz je neplatný alebo vypršal. Skúste sa prihlásiť nižšie."
         : null;
+  const initialNotice = params.get("password") === "changed"
+    ? "Heslo bolo zmenené. Prihláste sa novým heslom."
+    : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState<string | null>(initialErr);
+  const [notice, setNotice] = useState<string | null>(initialNotice);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     setErr(null);
+    setNotice(null);
     const result = await authenticate({ email: email.trim(), password });
     if (!result.ok) {
       setErr(result.error === "rate_limited"
@@ -45,6 +50,10 @@ export function LoginForm() {
   return (
     <form onSubmit={onSubmit} aria-busy={loading} className="flex flex-col gap-[22px]">
       <LiveMessage message={err} tone="error" />
+      <LiveMessage message={notice} />
+      {notice && (
+        <div id="login-notice" className="rounded-[10px] border border-brand/25 bg-cream/50 px-3.5 py-2.5 text-[13.5px] text-brand-2">{notice}</div>
+      )}
       {err && (
         <div id="login-error" className="rounded-[10px] border border-danger-line bg-danger px-3.5 py-2.5 text-[13.5px] text-danger-ink">{err}</div>
       )}

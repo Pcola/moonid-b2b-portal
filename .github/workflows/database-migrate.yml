@@ -37,14 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     env:
-      DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
-      DIRECT_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
-      RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
       TARGET_ENVIRONMENT: ${{ inputs.environment }}
       OPERATION: ${{ inputs.operation }}
       CONFIRMATION: ${{ inputs.confirmation }}
     steps:
-      - name: Validate confirmation and credentials
+      - name: Validate requested operation
         shell: bash
         run: |
           set -euo pipefail
@@ -52,65 +49,77 @@ jobs:
             echo "Confirmation must exactly match the selected environment."
             exit 1
           fi
-          if [[ -z "${DATABASE_URL:-}" ]]; then
-            echo "MIGRATOR_DATABASE_URL is required."
-            exit 1
-          fi
           if [[ "$OPERATION" == "bootstrap" && "$TARGET_ENVIRONMENT" != "staging" ]]; then
             echo "Bootstrap is intentionally restricted to staging."
             exit 1
-          fi
-          if [[ "$OPERATION" == "migrate" || "$OPERATION" == "sync-runtime-credential" ]]; then
-            if [[ -z "${RUNTIME_DATABASE_URL:-}" ]]; then
-              echo "RUNTIME_DATABASE_URL is required for migrate and credential sync."
-              exit 1
-            fi
-            if [[ "$DATABASE_URL" == "$RUNTIME_DATABASE_URL" ]]; then
-              echo "Migrator and runtime credentials must be different."
-              exit 1
-            fi
           fi
           if [[ "$OPERATION" == "sync-runtime-credential" && "$TARGET_ENVIRONMENT" != "staging" ]]; then
             echo "Runtime credential sync is intentionally restricted to staging."
             exit 1
           fi
 
-      # Migrácie berú ACCESS EXCLUSIVE na "User" (identity triggery v 20260824170000). Bez
-      # lock_timeout by `migrate deploy` čakal v zámkovej fronte neobmedzene a každý ďalší
-      # dotaz na "User" by sa zaradil za neho — teda výpadok prihlásenia na celý čas čakania.
-      # 5 s = radšej zlyhaj rýchlo a zopakuj v tichom okne, než ticho zhodiť portál.
-      #
-      # lock_timeout sa NEDÁ pridať do samotného migračného SQL: migrácia 20260824170000 je
-      # už aplikovaná na stagingu a úprava súboru by zmenila jej checksum → `migrate deploy`
-      # by spadol na "migration modified after being applied". Preto sa nastavuje na spojení,
-      # čím zároveň pokrýva všetky budúce migrácie, nielen túto jednu.
-      - name: Bound DDL lock waits for the migrator session
-        shell: bash
-        run: |
-          set -euo pipefail
-          sep='?'
-          [[ "$DATABASE_URL" == *'?'* ]] && sep='&'
-          bounded="${DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
-          echo "::add-mask::$bounded"
-          echo "DATABASE_URL=$bounded" >> "$GITHUB_ENV"
-          echo "DIRECT_URL=$bounded" >> "$GITHUB_ENV"
-          echo "Migrator session bounded with lock_timeout=5s."
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm
 
       - name: Install locked dependencies
+        env:
+          # `npm ci` spúšťa `prisma generate`; syntakticky platný lokálny placeholder
+          # zabráni tomu, aby install skripty dostali produkčné/stagingové secrets.
+          DATABASE_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
+          DIRECT_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
         run: npm ci
 
-      - name: Preflight active internal admin invariant
-        if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'
+      - name: Validate migrator database credential
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ -z "${MIGRATOR_DATABASE_URL:-}" ]]; then
+            echo "MIGRATOR_DATABASE_URL is required."
+            exit 1
+          fi
+
+      - name: Validate isolated runtime database credential
+        if: inputs.operation == 'migrate' || inputs.operation == 'sync-runtime-credential'
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+          RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${RUNTIME_DATABASE_URL:-}" ]]; then
+            echo "RUNTIME_DATABASE_URL is required for migrate and credential sync."
+            exit 1
+          fi
+          if [[ "$MIGRATOR_DATABASE_URL" == "$RUNTIME_DATABASE_URL" ]]; then
+            echo "Migrator and runtime credentials must be different."
+            exit 1
+          fi
+
+      # Migrácie berú ACCESS EXCLUSIVE na "User" (identity triggery v 20260824170000). Bez
+      # lock_timeout by `migrate deploy` čakal v zámkovej fronte neobmedzene a každý ďalší
+      # dotaz na "User" by sa zaradil za neho — teda výpadok prihlásenia na celý čas čakania.
+      # Bounded URL sa vytvára znova iba v krokoch, ktoré databázu skutočne používajú; secret
+      # preto nie je dostupný checkout/setup/install krokom ani uložený job-wide v GITHUB_ENV.
+      - name: Preflight active internal admin invariant
+        if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sep='?'
+          [[ "$MIGRATOR_DATABASE_URL" == *'?'* ]] && sep='&'
+          export DATABASE_URL="${MIGRATOR_DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
+          export DIRECT_URL="$DATABASE_URL"
+          echo "::add-mask::$DATABASE_URL"
           if [[ "$OPERATION" == "migrate" ]]; then
             npm run security:admin-invariant
             exit 0
@@ -148,21 +157,58 @@ jobs:
 
       - name: Apply Prisma migrations with migrator credential
         if: inputs.operation != 'sync-runtime-credential'
-        run: npx prisma migrate deploy
-
-      - name: Apply least-privilege runtime grants
-        if: inputs.operation != 'sync-runtime-credential'
-        run: npx prisma db execute --file database/runtime-role.sql --schema prisma/schema.prisma
-
-      - name: Verify migration state
-        if: inputs.operation != 'sync-runtime-credential'
-        run: npx prisma migrate status
-
-      - name: Verify active internal admin invariant
-        if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
         shell: bash
         run: |
           set -euo pipefail
+          sep='?'
+          [[ "$MIGRATOR_DATABASE_URL" == *'?'* ]] && sep='&'
+          export DATABASE_URL="${MIGRATOR_DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
+          export DIRECT_URL="$DATABASE_URL"
+          echo "::add-mask::$DATABASE_URL"
+          npx prisma migrate deploy
+
+      - name: Apply least-privilege runtime grants
+        if: inputs.operation != 'sync-runtime-credential'
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sep='?'
+          [[ "$MIGRATOR_DATABASE_URL" == *'?'* ]] && sep='&'
+          export DATABASE_URL="${MIGRATOR_DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
+          export DIRECT_URL="$DATABASE_URL"
+          echo "::add-mask::$DATABASE_URL"
+          npx prisma db execute --file database/runtime-role.sql --schema prisma/schema.prisma
+
+      - name: Verify migration state
+        if: inputs.operation != 'sync-runtime-credential'
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sep='?'
+          [[ "$MIGRATOR_DATABASE_URL" == *'?'* ]] && sep='&'
+          export DATABASE_URL="${MIGRATOR_DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
+          export DIRECT_URL="$DATABASE_URL"
+          echo "::add-mask::$DATABASE_URL"
+          npx prisma migrate status
+
+      - name: Verify active internal admin invariant
+        if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sep='?'
+          [[ "$MIGRATOR_DATABASE_URL" == *'?'* ]] && sep='&'
+          export DATABASE_URL="${MIGRATOR_DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
+          export DIRECT_URL="$DATABASE_URL"
+          echo "::add-mask::$DATABASE_URL"
           if [[ "$OPERATION" == "bootstrap" ]]; then
             # A pristine bootstrap intentionally has no users yet. A retry over any
             # populated User table must preserve the same ADMIN invariant as migrate.
@@ -173,7 +219,17 @@ jobs:
 
       - name: Synchronize staging runtime credential
         if: inputs.operation == 'sync-runtime-credential'
-        run: npm run security:sync-runtime-credential
+        env:
+          MIGRATOR_DATABASE_URL: ${{ secrets.MIGRATOR_DATABASE_URL }}
+          RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sep='?'
+          [[ "$MIGRATOR_DATABASE_URL" == *'?'* ]] && sep='&'
+          export MIGRATOR_DATABASE_URL="${MIGRATOR_DATABASE_URL}${sep}options=-c%20lock_timeout%3D5000"
+          echo "::add-mask::$MIGRATOR_DATABASE_URL"
+          npm run security:sync-runtime-credential
 
       - name: Verify least-privilege runtime credential
         if: inputs.operation == 'migrate' || inputs.operation == 'sync-runtime-credential'

@@ -22,7 +22,7 @@ export type SyncJobItem = {
 };
 
 const STATUS_META: Record<string, { label: string; fg: string; bg: string }> = {
-  QUEUED: { label: "Vo fronte", fg: "#9A6B0E", bg: "#FBF1DC" },
+  QUEUED: { label: "Vo fronte", fg: "#8A5A00", bg: "#FBF1DC" },
   CLAIMED: { label: "Prevzatá agentom", fg: "#1E5249", bg: "#EAF1EE" },
   PUSHED: { label: "Odoslaná", fg: "#1E5249", bg: "#EAF1EE" },
   FAILED: { label: "Zlyhala", fg: "#A23B2A", bg: "#F7E4E0" },

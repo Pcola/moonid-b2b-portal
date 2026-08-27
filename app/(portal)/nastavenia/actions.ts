@@ -9,8 +9,11 @@ import { writeAudit } from "@/lib/audit";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
 import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { inviteUser } from "@/lib/invite";
-import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
+import { normalizeInternalEmail } from "@/lib/internal-user-policy";
 import { isLastCustomerAdminConstraint } from "@/lib/user-lifecycle-errors";
+import { passwordCompromiseStatus } from "@/lib/password-security";
+import { reportError } from "@/lib/observability";
+import { createClient } from "@/lib/supabase/server";
 
 // ---------- Správa adries (fakturačná + dodacie) — len správca firmy (CUSTOMER_ADMIN) ----------
 
@@ -223,17 +226,20 @@ export async function inviteMember(input: { email: string; name?: string }): Pro
   const ev = z.string().trim().email("Neplatný e-mail").max(160).safeParse(String(input.email ?? "").trim());
   if (!ev.success) return { ok: false, error: "Neplatný e-mail." };
   const normalizedEmail = normalizeInternalEmail(ev.data);
-  const existing = await prisma.user.findFirst({ where: { email: { equals: normalizedEmail, mode: "insensitive" } }, select: { companyId: true, role: true } });
-  if (existing && isInternalRole(existing.role)) return { ok: false, error: "Tento e-mail nemožno pozvať do zákazníckej firmy." };
-  if (existing?.companyId) {
-    if (existing.companyId !== user.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
+  const existing = await prisma.user.findFirst({
+    where: { companyId: user.companyId!, email: { equals: normalizedEmail, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (existing) {
     // už je členom TEJTO firmy — opätovné „pozvanie" by cez inviteUser potichu prepísalo rolu
     // (CUSTOMER_ADMIN → CUSTOMER_USER) a reaktivovalo konto; správu robte v sekcii Používatelia
     return { ok: false, error: "Tento používateľ už je členom vašej firmy — spravujte ho v sekcii Používatelia." };
   }
   const company = await prisma.company.findUnique({ where: { id: user.companyId! }, select: { name: true } });
   const res = await inviteUser(normalizedEmail, String(input.name ?? "").trim() || null, "CUSTOMER_USER", user.companyId!, company?.name ?? "Moonid", { id: user.id, kind: "COMPANY_ADMIN" });
-  if (!res.ok) return { ok: false, error: res.error };
+  // Customer admin nesmie z rozdielnych hlášok zistiť, či e-mail patrí inej firme
+  // alebo internému Moonid účtu. Vlastných členov sme bezpečne rozlíšili vyššie.
+  if (!res.ok) return { ok: false, error: "Pozvánku sa nepodarilo spracovať. Skontrolujte zoznam členov firmy alebo skúste neskôr." };
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_INVITE", entity: "User", meta: { email: ev.data } });
   revalidatePath("/nastavenia");
   return { ok: true, warning: res.warning, inviteLink: null };
@@ -320,7 +326,7 @@ export async function setMemberActive(userId: string, active: boolean): Promise<
 
 const profileSchema = z.object({ name: z.string().trim().min(1, "Zadajte meno").max(120) });
 
-/** Upraví vlastné meno prihláseného používateľa (heslo mení klient cez Supabase). */
+/** Upraví vlastné meno prihláseného používateľa. */
 export async function updateProfile(input: z.input<typeof profileSchema>): Promise<{ ok: boolean; error?: string }> {
   const user = await requireUser();
   const p = profileSchema.safeParse(input);
@@ -328,5 +334,55 @@ export async function updateProfile(input: z.input<typeof profileSchema>): Promi
   await prisma.user.update({ where: { id: user.id }, data: { name: p.data.name } });
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "PROFILE_UPDATE", entity: "User", entityId: user.id });
   revalidatePath("/nastavenia");
+  return { ok: true };
+}
+
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1).max(1024),
+  newPassword: z.string().min(12).max(256),
+});
+
+/** Zmena hesla s povinnou re-autentifikáciou a serverovou kontrolou kompromitácie. */
+export async function changeOwnPassword(input: z.input<typeof passwordChangeSchema>): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  const parsed = passwordChangeSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Nové heslo musí mať 12 až 256 znakov." };
+  if (parsed.data.currentPassword === parsed.data.newPassword) {
+    return { ok: false, error: "Nové heslo sa musí líšiť od súčasného." };
+  }
+
+  const gate = await rateLimit(rateLimitKey("password-change", user.id), { limit: 10, windowSec: 900 });
+  if (!gate.ok) return { ok: false, error: "Priveľa pokusov. Skúste to neskôr." };
+
+  const compromise = await passwordCompromiseStatus(parsed.data.newPassword);
+  if (compromise === "pwned") {
+    return { ok: false, error: "Toto heslo sa našlo v známych únikoch dát. Zvoľte iné." };
+  }
+  if (compromise === "unavailable") {
+    return { ok: false, error: "Bezpečnosť hesla sa teraz nedá overiť. Skúste to o chvíľu znova." };
+  }
+
+  const supabase = await createClient();
+  const { data: reauthenticated, error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+  if (reauthError || reauthenticated.user?.id !== user.authId) {
+    return { ok: false, error: "Súčasné heslo je nesprávne." };
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    current_password: parsed.data.currentPassword,
+    password: parsed.data.newPassword,
+  });
+  if (updateError) return { ok: false, error: "Heslo sa nepodarilo zmeniť. Skúste to znova." };
+
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "PASSWORD_CHANGED", entity: "User", entityId: user.id });
+
+  const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
+  if (signOutError) {
+    reportError("passwordChange.globalSignOut", signOutError, { action: "password_change" });
+    await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+  }
   return { ok: true };
 }

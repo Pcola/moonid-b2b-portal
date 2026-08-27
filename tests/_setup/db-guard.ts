@@ -1,8 +1,8 @@
 /**
  * Guard: integračné testy robia `deleteMany` a spotrebúvajú OrderCounter — NESMÚ bežať proti
- * produkčnej DB. Príčina existencie: pri go-live audite (docs/GO_LIVE_AUDIT_2026-07-25.md, B9)
- * sa zistilo, že `vitest` nemal žiadny env override, takže lokálne spustenia mierili na
- * produkčný Supabase projekt a spálili ~312 čísel objednávok.
+ * produkčnej DB. Príčina existencie: pri go-live audite sa zistilo, že `vitest` nemal
+ * žiadny env override, takže lokálne spustenia mierili na produkčný Supabase projekt a
+ * spálili ~312 čísel objednávok.
  *
  * DÔLEŽITÉ: vitest .env súbory NEnačítava, ale Prisma Client si `.env` načíta sám. Guard preto
  * musí zistiť *efektívnu* URL rovnako ako Prisma — teda aj z `.env` na disku, nielen z
@@ -69,7 +69,7 @@ if (hitsProd) {
       "Rieš jedným z týchto spôsobov:",
       "  1) Odporúčané — vytvor si testovaciu DB a do .env.test pridaj:",
       "       TEST_DATABASE_URL=postgresql://…   (samostatný Supabase projekt/branch alebo lokálny Postgres)",
-      "Detail: docs/GO_LIVE_AUDIT_2026-07-25.md, blocker B9.",
+      "Detail: docs/PRODUCTION_DB_ROLE_RUNBOOK.md.",
       "",
     ].join("\n")
   );

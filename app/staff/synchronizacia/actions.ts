@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { writeAudit } from "@/lib/audit";
+import { auditRequestContext, writeAuditRequired } from "@/lib/audit";
 
 const ID = z.string().min(1).max(100);
 
@@ -19,26 +19,32 @@ export async function retrySyncJob(id: string): Promise<{ ok: boolean; error?: s
   const parsed = ID.safeParse(id);
   if (!parsed.success) return { ok: false, error: "Neplatný vstup." };
 
-  const job = await prisma.pohodaSyncJob.findUnique({
-    where: { id: parsed.data },
-    select: { id: true, kind: true, status: true, attempts: true, orderId: true },
-  });
-  if (!job) return { ok: false, error: "Úloha neexistuje." };
-  if (job.status !== "FAILED") return { ok: false, error: "Opakovať sa dá iba úloha v stave FAILED." };
+  const auditCtx = await auditRequestContext();
+  const result = await prisma.$transaction(async (tx) => {
+    const job = await tx.pohodaSyncJob.findUnique({
+      where: { id: parsed.data },
+      select: { id: true, kind: true, status: true, attempts: true, orderId: true },
+    });
+    if (!job) return { ok: false, error: "Úloha neexistuje." } as const;
+    if (job.status !== "FAILED") return { ok: false, error: "Opakovať sa dá iba úloha v stave FAILED." } as const;
 
-  const res = await prisma.pohodaSyncJob.updateMany({
-    where: { id: parsed.data, status: "FAILED" },
-    data: { status: "QUEUED", nextAttemptAt: null, claimedBy: null, claimedAt: null },
-  });
-  if (res.count === 0) return { ok: false, error: "Úlohu medzitým prevzal agent. Obnovte stránku." };
+    const res = await tx.pohodaSyncJob.updateMany({
+      where: { id: parsed.data, status: "FAILED" },
+      data: { status: "QUEUED", nextAttemptAt: null, claimedBy: null, claimedAt: null },
+    });
+    if (res.count === 0) return { ok: false, error: "Úlohu medzitým prevzal agent. Obnovte stránku." } as const;
 
-  await writeAudit({
-    userId: staff.id,
-    action: "SYNC_JOB_RETRY",
-    entity: "PohodaSyncJob",
-    entityId: job.id,
-    meta: { kind: job.kind, orderId: job.orderId, attempts: job.attempts },
+    await writeAuditRequired(tx, {
+      userId: staff.id,
+      action: "SYNC_JOB_RETRY",
+      entity: "PohodaSyncJob",
+      entityId: job.id,
+      meta: { kind: job.kind, orderId: job.orderId, attempts: job.attempts },
+    }, auditCtx);
+    return { ok: true } as const;
   });
+  if (!result.ok) return result;
+
   revalidatePath("/staff/synchronizacia");
   return { ok: true };
 }

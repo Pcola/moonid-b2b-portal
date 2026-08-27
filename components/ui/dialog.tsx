@@ -43,6 +43,11 @@ export function Dialog({
   const descId = description ? `dlg-${uid}-desc` : undefined;
   const panelRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -53,7 +58,7 @@ export function Dialog({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       trapTabKey(e, panelRef.current);
@@ -69,7 +74,7 @@ export function Dialog({
       const opener = openerRef.current;
       if (opener) requestAnimationFrame(() => opener.focus());
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
