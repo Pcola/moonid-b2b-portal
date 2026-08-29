@@ -10,6 +10,9 @@ describe("hasRecentPasswordSetupGrant", () => {
 
   it.each([
     { label: "normal password session", claims: { amr: [{ method: "password", timestamp: now }] } },
+    { label: "MFA session", claims: { amr: [{ method: "totp", timestamp: now }] } },
+    { label: "purpose-ambiguous OTP session", claims: { amr: [{ method: "otp", timestamp: now }] } },
+    { label: "magic-link login session", claims: { amr: [{ method: "magiclink", timestamp: now }] } },
     { label: "old recovery", claims: { amr: [{ method: "recovery", timestamp: now - PASSWORD_SETUP_GRANT_MAX_AGE_SEC - 1 }] } },
     { label: "future invite", claims: { amr: [{ method: "invite", timestamp: now + 61 }] } },
     { label: "untimestamped RFC AMR", claims: { amr: ["recovery"] } },

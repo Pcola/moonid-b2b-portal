@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { LiveMessage } from "@/components/ui/live-region";
 import { isPasswordSetupFragment } from "@/lib/auth-email-fragment";
 import { createClient } from "@/lib/supabase/client";
@@ -10,11 +9,11 @@ const INVALID_LINK = "Odkaz vypršal alebo je neplatný. Požiadajte o nový odk
 
 /** Consumes a legacy implicit Supabase fragment, then lets the server verify its JWT claims. */
 export function PasswordSetupBootstrap() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
+    let navigationTimeout: number | undefined;
 
     async function consumeFragment() {
       try {
@@ -42,7 +41,15 @@ export function PasswordSetupBootstrap() {
           setError(INVALID_LINK);
           return;
         }
-        router.refresh();
+        // A full navigation guarantees that the server receives the freshly
+        // written auth cookies. A client-only refresh could keep this bootstrap
+        // mounted forever when the server rejected the previous render.
+        navigationTimeout = window.setTimeout(() => {
+          if (active) {
+            setError("Odkaz bol overený, ale reláciu sa nepodarilo potvrdiť. Požiadajte o nový odkaz.");
+          }
+        }, 8_000);
+        window.location.replace("/nastav-heslo");
       } catch {
         if (active) setError("Odkaz sa nepodarilo overiť. Skúste to znova alebo požiadajte o nový odkaz.");
       }
@@ -51,8 +58,9 @@ export function PasswordSetupBootstrap() {
     void consumeFragment();
     return () => {
       active = false;
+      if (navigationTimeout !== undefined) window.clearTimeout(navigationTimeout);
     };
-  }, [router]);
+  }, []);
 
   return (
     <div className="flex flex-col gap-3">
