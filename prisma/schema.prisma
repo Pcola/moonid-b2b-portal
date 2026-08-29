@@ -707,6 +707,7 @@ model PasswordSetupGrant {
 
   @@index([authId, status])
   @@index([sessionId, status])
+  @@index([userId])
   @@index([expiresAt])
 }
 
