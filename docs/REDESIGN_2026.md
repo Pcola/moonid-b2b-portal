@@ -595,11 +595,24 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 
 Lokálny preview (`.claude/launch.json` → `moonid`) potrebuje `.env.local` so staging hodnotami. Nikdy nepoužívať produkčný `.env` z hlavného checkoutu.
 
+**Odporúčaný spôsob (raz, v koreni repa):** stiahnuť presne tie hodnoty, s ktorými beží staging nasadenie na Verceli:
+
+```bash
+npx vercel link
+npx vercel env pull .env.staging --environment=preview --git-branch=staging
+```
+
+Výsledok `C:\workspace\websites\moonid_b2b_portal\.env.staging` je gitignored. Každá session si ho skopíruje do svojho worktree ako `.env.local`.
+
+⚠️ **Heslo staging DB neresetovať.** Používa ho staging nasadenie na Verceli, ktoré by po resete prestalo fungovať, kým sa neaktualizuje premenná vo Verceli.
+
+Ručne (záloha), ak Vercel CLI nie je k dispozícii:
+
 | Premenná | Kde ju vziať |
 |---|---|
-| `DATABASE_URL`, `DIRECT_URL` | Supabase → projekt `moonid-b2b-staging` → tlačidlo **Connect** → záložka **ORMs** → **Prisma**. Skopírovať oba riadky a `[YOUR-PASSWORD]` nahradiť heslom DB. Ak ho nepoznáte: Project Settings → Database → *Reset database password*, ale skôr overte, či ho nepoužíva staging e2e. |
+| `DATABASE_URL`, `DIRECT_URL` | Vercel → projekt `moonid-b2b-portal` → Settings → Environment Variables → prostredie *Preview* (vetva `staging`) → *Reveal*. Alternatívne Supabase → `moonid-b2b-staging` → **Connect** → **ORMs** → **Prisma**, kde `[YOUR-PASSWORD]` nahradiť existujúcim heslom. |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://booeaeyyyitlmuxixjfy.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → **API Keys** → *Legacy API keys* → `anon` (verejný) |
 | `SUPABASE_SERVICE_ROLE_KEY` | tamže → `service_role` → *Reveal* (tajný, nikdy necommitovať) |
 
-Odporúčanie: uložiť ako `C:\workspace\websites\moonid_b2b_portal\.env.staging` (gitignored) a každá session si ho skopíruje do svojho worktree ako `.env.local`.
+Aj ručne vytvorený súbor uložiť ako `C:\workspace\websites\moonid_b2b_portal\.env.staging` (gitignored).
