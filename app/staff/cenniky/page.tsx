@@ -32,7 +32,7 @@ export default async function StaffPricing() {
       <p className="max-w-[640px] text-[15px] leading-relaxed text-muted">Cenové úrovne určujú zľavu pre skupiny zákazníkov. Každému zákazníkovi je priradená jedna úroveň (v detaile firmy).</p>
 
       {!canManagePriceTiers(user.role) && (
-        <div role="status" className="rounded-xl border border-line bg-white px-4 py-3 text-[13.5px] text-muted">
+        <div className="rounded-xl border border-line bg-white px-4 py-3 text-[13.5px] text-muted">
           Máte prístup iba na čítanie. Cenové úrovne môže meniť len administrátor.
         </div>
       )}

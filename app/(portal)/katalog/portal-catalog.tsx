@@ -36,7 +36,7 @@ function AddBtn({ productId, repeat }: { productId: string; repeat?: boolean }) 
   const toast = useToast();
   return (
     <button
-      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); toast(repeat ? "Pridané k doobjednaniu" : "Pridané do košíka"); setTimeout(() => setAdded(false), 1500); } })}
+      onClick={() => start(async () => { const r = repeat ? await addToRepeatDraft(productId, 1) : await addToCart(productId, 1); if (r.ok) { setAdded(true); toast(repeat ? "Pridané k doobjednaniu" : "Pridané do košíka"); setTimeout(() => setAdded(false), 1500); } else { toast("Položku sa nepodarilo pridať. Skúste to znova.", "error"); } })}
       disabled={pending}
       className="mt-2.5 w-full rounded-[9px] border border-brand/30 bg-mintbg/40 px-3 py-2 text-[13px] font-semibold text-brand transition hover:bg-mintbg disabled:opacity-60"
     >
@@ -117,7 +117,8 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
     <button key={label} type="button" onClick={onClick}
       className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[15px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
       <span className="truncate pr-2">{label}</span>
-      <span className={`text-[12px] tabular-nums ${on ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
+      {/* brand/60 na mintbg = 3,43:1 — pod AA; brand/80 = 5,88:1 */}
+      <span className={`text-[12px] tabular-nums ${on ? "text-brand/80" : "text-muted-2"}`}>{count}</span>
     </button>
   );
 
@@ -126,7 +127,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input aria-label="Hľadať v sortimente" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
-          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
+          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-field bg-white py-2.5 pl-10 pr-3 text-[14.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
       <FilterGroup title="Kategórie">
@@ -141,7 +142,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
                 <button type="button" onClick={() => go({ cat: catActive ? "" : c.name, sub: "" })}
                   className={`flex flex-1 items-center justify-between rounded-[10px] px-3 py-[8px] text-left text-[14px] transition ${catActive ? "font-semibold text-brand" : "text-muted hover:text-ink"}`}>
                   <span className="truncate pr-2">{c.name}</span>
-                  <span className={`text-[12px] tabular-nums ${catActive ? "text-brand/60" : "text-muted-2"}`}>{c.count}</span>
+                  <span className={`text-[12px] tabular-nums ${catActive ? "text-brand/80" : "text-muted-2"}`}>{c.count}</span>
                 </button>
                 {hasKids && (
                   <button type="button" onClick={() => toggleCat(c.name)} aria-expanded={open} aria-label={open ? `Zbaliť ${c.name}` : `Rozbaliť ${c.name}`}
@@ -167,10 +168,10 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
       <FilterGroup title="Cena (€)">
         <div className="flex items-center gap-2 px-1">
           <input value={pmin} onChange={(e) => setPmin(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="od" aria-label="Cena od"
-            className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
+            className="w-full rounded-[9px] border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
           <span className="flex-none text-muted-2">–</span>
           <input value={pmax} onChange={(e) => setPmax(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ pmin, pmax }); }} inputMode="decimal" placeholder="do" aria-label="Cena do"
-            className="w-full rounded-[9px] border border-line bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
+            className="w-full rounded-[9px] border border-field bg-white px-2.5 py-1.5 text-[13.5px] text-ink outline-none transition focus:border-brand" />
         </div>
         {(pmin !== active.pmin || pmax !== active.pmax) && (
           <button type="button" onClick={() => go({ pmin, pmax })} className="mt-2 w-full rounded-[9px] bg-brand/10 py-1.5 text-[12.5px] font-semibold text-brand transition hover:bg-brand/15">Použiť cenu</button>
@@ -183,7 +184,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
           {facets.brands.length > 5 && (
             <div className="relative mb-2">
               <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-              <input aria-label="Hľadať značku" value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-line bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
+              <input aria-label="Hľadať značku" value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-field bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
             </div>
           )}
           <div className="flex max-h-[210px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
@@ -218,7 +219,7 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
             <div className="flex items-center gap-2 text-[14px] text-muted">
               <span className="hidden sm:inline">Zoradiť</span>
               <div className="relative">
-                <select aria-label="Zoradiť produkty" value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
+                <select aria-label="Zoradiť produkty" value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-field bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
                   <option value="rec">Odporúčané</option>
                   <option value="az">Názov A–Z</option>
                   <option value="price-asc">Cena od najnižšej</option>
@@ -246,8 +247,8 @@ export function PortalCatalog({ items, tierCode, total, page, pageSize, facets, 
             {items.map((p) => (
               <div key={p.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
                 <FavoriteButton productId={p.id} initial={p.fav} className="absolute right-2 top-2 z-10 bg-white/80 backdrop-blur-sm" />
-                <Link prefetch={false} href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-[#fafbfa] p-5">
-                  <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fdf6e7] text-[#8a5a00]"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
+                <Link prefetch={false} href={`/katalog/${p.slug}`} className="relative flex aspect-square items-center justify-center bg-surface-2 p-5">
+                  <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${p.stocked ? "bg-success text-success-ink" : "bg-warning text-warning-ink"}`}>{p.stocked ? "Skladom" : "Na objednávku"}</span>
                   <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 208px" iconSize={36} />
                 </Link>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">

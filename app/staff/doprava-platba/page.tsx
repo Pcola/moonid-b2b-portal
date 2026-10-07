@@ -16,7 +16,7 @@ export default async function DopravaPlatbaPage() {
   return (
     <div className="flex max-w-[1080px] flex-col gap-5">
       {!editable && (
-        <div role="status" className="rounded-xl border border-line bg-white px-4 py-3 text-[13.5px] text-muted">
+        <div className="rounded-xl border border-line bg-white px-4 py-3 text-[13.5px] text-muted">
           Máte prístup iba na čítanie. Dopravu, platby a súvisiace poplatky môže meniť len administrátor.
         </div>
       )}

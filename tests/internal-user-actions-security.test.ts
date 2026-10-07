@@ -8,6 +8,8 @@ const authAdmin = readFileSync(resolve(process.cwd(), "lib/internal-auth-admin.t
 const lifecycleLock = readFileSync(resolve(process.cwd(), "lib/user-lifecycle-lock.ts"), "utf8");
 const customerInvite = readFileSync(resolve(process.cwd(), "lib/invite.ts"), "utf8");
 const migration = readFileSync(resolve(process.cwd(), "prisma/migrations/20260824170000_internal_identity_lifecycle/migration.sql"), "utf8");
+const migrationWorkflow = readFileSync(resolve(process.cwd(), ".github/workflows/database-migrate.yml"), "utf8");
+const adminInvariantChecker = readFileSync(resolve(process.cwd(), "scripts/security/check-admin-invariant.ts"), "utf8");
 
 const actionNames = [
   "inviteInternalUser",
@@ -17,16 +19,52 @@ const actionNames = [
   "resetInternalUserMfa",
 ];
 
+const isExported = (node: ts.Node & { modifiers?: ts.NodeArray<ts.ModifierLike> }) =>
+  node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+
+/**
+ * V súbore s "use server" je KAŽDÝ export server action, teda POST endpoint dosiahnuteľný
+ * kýmkoľvek, kto pozná jeho ID. Preto sa nesmieme pozerať len na `export async function`:
+ * `export const x = async () => {}` je VariableStatement, nie FunctionDeclaration, a starší
+ * gate ho prehliadol — nová akcia bez requireAdmin() by prešla nazeleno. Zbierame teda oba
+ * tvary aj ľubovoľný iný export (ten musí zoznam rozbiť, nech si ho niekto všimne).
+ */
+function exportedServerActions(sourceText: string): { name: string | undefined; body: string }[] {
+  const source = ts.createSourceFile("actions.ts", sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  return source.statements.flatMap((node) => {
+    if (ts.isFunctionDeclaration(node) && isExported(node)) {
+      return [{ name: node.name?.text, body: node.body?.getText(source) ?? "" }];
+    }
+    if (ts.isVariableStatement(node) && isExported(node)) {
+      return node.declarationList.declarations.map((decl) => ({
+        name: ts.isIdentifier(decl.name) ? decl.name.text : undefined,
+        body: decl.initializer?.getText(source) ?? "",
+      }));
+    }
+    return [];
+  });
+}
+
 describe("statické security gate pre správu interných účtov", () => {
   it("každá verejná server action vyžaduje ADMIN + MFA gate", () => {
-    const source = ts.createSourceFile("actions.ts", actions, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const exported = source.statements.filter(ts.isFunctionDeclaration).filter((node) =>
-      node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword),
-    );
-    expect(exported.map((node) => node.name?.text)).toEqual(actionNames);
+    const exported = exportedServerActions(actions);
+    expect(exported.map((node) => node.name)).toEqual(actionNames);
     for (const action of exported) {
-      expect(action.body?.getText(source), action.name?.text).toContain("await requireAdmin()");
+      expect(action.body, action.name).toContain("await requireAdmin()");
     }
+  });
+
+  it("gate zachytí aj akciu napísanú ako exportovaná arrow funkcia", () => {
+    // Regresný test samotného gatu: keby detekcia opäť spadla na FunctionDeclaration,
+    // tento prípad by prešiel a ochrana interných účtov by ticho zmizla.
+    const smuggled = [
+      '"use server";',
+      "export async function inviteInternalUser() { const actor = await requireAdmin(); return actor; }",
+      "export const backdoor = async (userId: string) => { return prisma.user.delete({ where: { id: userId } }); };",
+    ].join("\n");
+    const found = exportedServerActions(smuggled);
+    expect(found.map((node) => node.name)).toEqual(["inviteInternalUser", "backdoor"]);
+    expect(found.find((node) => node.name === "backdoor")?.body).not.toContain("await requireAdmin()");
   });
 
   it("kritické DB zmeny používajú required audit a race-safe advisory lock", () => {
@@ -61,5 +99,34 @@ describe("statické security gate pre správu interných účtov", () => {
   it("prístupový bearer token sa vkladá iba do URL fragmentu", () => {
     expect(authAdmin).toContain("/potvrdit-pristup#token_hash=");
     expect(authAdmin).not.toContain("/potvrdit-pristup?token_hash=");
+  });
+
+  it("DB workflow overí ADMIN invariant pred aj po migrácii bez zablokovania čistého staging bootstrapu", () => {
+    const preflight = migrationWorkflow.indexOf("- name: Preflight active internal admin invariant");
+    const deploy = migrationWorkflow.indexOf("- name: Apply Prisma migrations with migrator credential");
+    const postCheck = migrationWorkflow.indexOf("- name: Verify active internal admin invariant");
+
+    expect(preflight).toBeGreaterThan(-1);
+    expect(deploy).toBeGreaterThan(preflight);
+    expect(postCheck).toBeGreaterThan(deploy);
+
+    const preflightBlock = migrationWorkflow.slice(preflight, deploy);
+    expect(preflightBlock).toContain("inputs.operation == 'migrate' || inputs.operation == 'bootstrap'");
+    expect(preflightBlock).toContain("to_regclass('public.\"User\"')");
+    expect(preflightBlock).toContain("EXISTS (SELECT 1 FROM public.\"User\")");
+
+    const syncCredential = migrationWorkflow.indexOf("- name: Synchronize staging runtime credential");
+    expect(syncCredential).toBeGreaterThan(postCheck);
+
+    const postCheckBlock = migrationWorkflow.slice(postCheck, syncCredential);
+    expect(postCheckBlock).toContain("if: inputs.operation == 'migrate' || inputs.operation == 'bootstrap'");
+    expect(postCheckBlock).toContain('if [[ "$OPERATION" == "bootstrap" ]]');
+    expect(postCheckBlock).toContain("npm run security:admin-invariant -- --allow-empty");
+    expect(postCheckBlock).toMatch(/\n\s+npm run security:admin-invariant\r?\n/);
+
+    expect(adminInvariantChecker).toContain('args[0] === "--allow-empty"');
+    expect(adminInvariantChecker).toMatch(
+      /if \(allowEmpty && totalUsers === 0\)[\s\S]+return;[\s\S]+if \(activeAdmins < 1\)/,
+    );
   });
 });

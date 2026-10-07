@@ -11,9 +11,10 @@ export const STEP_TITLES = ["Prijatá", "Potvrdená", "Pripravuje sa", "Na ceste
 // Farby zladené s prototypom (Moonid Admin). PRIJATA = oranžová = „čaká na akciu".
 export const STATUS_META: Record<OrderStatus, { label: string; fg: string; bg: string }> = {
   CAKA_SCHVALENIE: { label: "Čaká na schválenie", fg: "#8A5A00", bg: "#FDF6E7" },
-  PRIJATA: { label: "Prijatá", fg: "#9A6B0E", bg: "#FBF1DC" },
+  // #9A6B0E na #FBF1DC = 4,18:1 (pod AA); #8A5A00 = 5,28:1
+  PRIJATA: { label: "Prijatá", fg: "#8A5A00", bg: "#FBF1DC" },
   POTVRDENA: { label: "Potvrdená", fg: "#1E5249", bg: "#EAF1EE" },
-  PRIPRAVUJE: { label: "Pripravuje sa", fg: "#9A6B0E", bg: "#FBF1DC" },
+  PRIPRAVUJE: { label: "Pripravuje sa", fg: "#8A5A00", bg: "#FBF1DC" },
   NA_CESTE: { label: "Na ceste", fg: "#1A5B8A", bg: "#E2EEF7" },
   DORUCENA: { label: "Doručená", fg: "#1E5249", bg: "#EAF1EE" },
   STORNO: { label: "Stornovaná", fg: "#A23B2A", bg: "#F7E4E0" },

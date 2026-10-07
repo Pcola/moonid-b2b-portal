@@ -2,17 +2,25 @@
 
 import { useState, useTransition } from "react";
 import { updateDeliveryMethod, updatePaymentMethod } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { buttonClass } from "@/components/ui/button";
 
 type Delivery = { code: string; label: string; description: string | null; enabled: boolean; requiresAddress: boolean; flatFee: number; freeThreshold: number | null };
 type Payment = { code: string; label: string; description: string | null; enabled: boolean; surcharge: number };
 
-const inp = "rounded-[9px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass({ className: "rounded-[9px]" });
 const lbl = "flex flex-col gap-1 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 const chk = "flex items-center gap-2 text-[13.5px] font-medium text-ink";
 
 function Saved({ msg }: { msg: { ok: boolean; text: string } | null }) {
-  if (!msg) return null;
-  return <span className={`text-[13px] font-semibold ${msg.ok ? "text-brand" : "text-[#9a3025]"}`}>{msg.text}</span>;
+  return (
+    <>
+      <LiveMessage message={msg?.ok ? msg.text : null} />
+      <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+      {msg && <span className={`text-[13px] font-semibold ${msg.ok ? "text-brand" : "text-danger-ink"}`}>{msg.text}</span>}
+    </>
+  );
 }
 
 function DeliveryCard({ m, editable }: { m: Delivery; editable: boolean }) {
@@ -42,7 +50,7 @@ function DeliveryCard({ m, editable }: { m: Delivery; editable: boolean }) {
       <div className="mb-3 flex items-center justify-between">
         <span className="rounded-md bg-cream px-2 py-0.5 font-mono text-[12px] font-semibold text-muted-3">{m.code}</span>
         {editable
-          ? <label className={chk}><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-[#163f38]" />Zapnuté</label>
+          ? <label className={chk}><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-brand" />Zapnuté</label>
           : <span className="text-[13px] font-semibold text-muted-3">{enabled ? "Zapnuté" : "Vypnuté"}</span>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -51,9 +59,9 @@ function DeliveryCard({ m, editable }: { m: Delivery; editable: boolean }) {
         <label className={lbl}>Paušál (€ bez DPH){editable ? <input value={flatFee} onChange={(e) => setFlatFee(e.target.value)} inputMode="decimal" className={inp} placeholder="napr. 4.90" /> : <span className="normal-case tracking-normal text-[14px] font-normal text-ink tabular-nums">{m.flatFee.toFixed(2)} €</span>}</label>
         <label className={lbl}>Zdarma nad (€ bez DPH){editable ? <input value={freeThreshold} onChange={(e) => setFreeThreshold(e.target.value)} inputMode="decimal" className={inp} placeholder="prázdne = nikdy zdarma" /> : <span className="normal-case tracking-normal text-[14px] font-normal text-ink tabular-nums">{m.freeThreshold == null ? "Nikdy" : `${m.freeThreshold.toFixed(2)} €`}</span>}</label>
       </div>
-      {editable ? <label className={`${chk} mt-3`}><input type="checkbox" checked={requiresAddress} onChange={(e) => setRequiresAddress(e.target.checked)} className="h-4 w-4 accent-[#163f38]" />Vyžaduje dodaciu adresu <span className="font-normal text-muted-2">(osobný odber = vypnuté)</span></label> : <span className="mt-3 text-[13.5px] text-muted-3">{m.requiresAddress ? "Vyžaduje dodaciu adresu" : "Dodacia adresa sa nevyžaduje"}</span>}
+      {editable ? <label className={`${chk} mt-3`}><input type="checkbox" checked={requiresAddress} onChange={(e) => setRequiresAddress(e.target.checked)} className="h-4 w-4 accent-brand" />Vyžaduje dodaciu adresu <span className="font-normal text-muted-2">(osobný odber = vypnuté)</span></label> : <span className="mt-3 text-[13.5px] text-muted-3">{m.requiresAddress ? "Vyžaduje dodaciu adresu" : "Dodacia adresa sa nevyžaduje"}</span>}
       {editable && <div className="mt-4 flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Ukladám…" : "Uložiť"}</button>
+        <button onClick={save} disabled={pending} className={buttonClass()}>{pending ? "Ukladám…" : "Uložiť"}</button>
         <Saved msg={msg} />
       </div>}
     </div>
@@ -84,7 +92,7 @@ function PaymentCard({ m, editable }: { m: Payment; editable: boolean }) {
       <div className="mb-3 flex items-center justify-between">
         <span className="rounded-md bg-cream px-2 py-0.5 font-mono text-[12px] font-semibold text-muted-3">{m.code}</span>
         {editable
-          ? <label className={chk}><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-[#163f38]" />Zapnuté</label>
+          ? <label className={chk}><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-brand" />Zapnuté</label>
           : <span className="text-[13px] font-semibold text-muted-3">{enabled ? "Zapnuté" : "Vypnuté"}</span>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -93,7 +101,7 @@ function PaymentCard({ m, editable }: { m: Payment; editable: boolean }) {
         <label className={lbl}>Príplatok (€ bez DPH){editable ? <input value={surcharge} onChange={(e) => setSurcharge(e.target.value)} inputMode="decimal" className={inp} placeholder="napr. 1.00 (dobierka)" /> : <span className="normal-case tracking-normal text-[14px] font-normal text-ink tabular-nums">{m.surcharge.toFixed(2)} €</span>}</label>
       </div>
       {editable && <div className="mt-4 flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">{pending ? "Ukladám…" : "Uložiť"}</button>
+        <button onClick={save} disabled={pending} className={buttonClass()}>{pending ? "Ukladám…" : "Uložiť"}</button>
         <Saved msg={msg} />
       </div>}
     </div>

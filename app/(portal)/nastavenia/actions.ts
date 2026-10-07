@@ -7,9 +7,13 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { sendEmail, STAFF_NOTIFY } from "@/lib/email";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { inviteUser } from "@/lib/invite";
-import { isInternalRole, normalizeInternalEmail } from "@/lib/internal-user-policy";
+import { normalizeInternalEmail } from "@/lib/internal-user-policy";
 import { isLastCustomerAdminConstraint } from "@/lib/user-lifecycle-errors";
+import { passwordCompromiseStatus } from "@/lib/password-security";
+import { reportError } from "@/lib/observability";
+import { createClient } from "@/lib/supabase/server";
 
 // ---------- Správa adries (fakturačná + dodacie) — len správca firmy (CUSTOMER_ADMIN) ----------
 
@@ -113,20 +117,62 @@ export async function setDefaultDeliveryLocation(id: string): Promise<{ ok: bool
   return { ok: true };
 }
 
-/** GDPR čl. 15/20 — individuálny export aktuálneho používateľa, nikdy údajov kolegov. */
+/** GDPR čl. 15/20 — individuálny export aktuálneho používateľa, NIKDY údajov kolegov.
+ *  Rozsah = úplná kópia osobných údajov, ktoré o žiadateľovi držíme: konto, firemný
+ *  kontext, jeho objednávky, jeho košík a koncept opakovanej objednávky, jeho zmeny
+ *  stavov, jeho auditná stopa a verejné dopyty/žiadosti podané z jeho e-mailu.
+ *  AuditLog.meta je zámerne VYNECHANÉ — môže niesť údaje tretích osôb (napr. e-mail
+ *  pozývaného kolegu), a čl. 15 ods. 4 zakazuje, aby kópia poškodila práva iných.
+ *  Tenant hranica: objednávky ostávajú filtrované aj na companyId, zvyšok je viazaný
+ *  výlučne na user.id / vlastný e-mail. Limit 5 exportov/hod (dotaz je DB-náročný). */
 export async function exportMyData(): Promise<{ ok: boolean; data?: string; error?: string }> {
   const user = await requireUser();
-  if (!user.companyId) return { ok: false, error: "Konto nie je priradené k firme." };
+  const gate = await rateLimit(rateLimitKey("gdpr-export", user.id), { limit: 5, windowSec: 3600 });
+  if (!gate.ok) return { ok: false, error: "Priveľa exportov za sebou. Skúste to znova o hodinu." };
   const cid = user.companyId;
 
-  const company = await prisma.company.findUnique({ where: { id: cid }, select: { name: true, ico: true } });
-  const myOrders = await prisma.order.findMany({ where: { companyId: cid, createdById: user.id }, orderBy: { createdAt: "desc" }, select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, items: { select: { nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } } });
+  const [me, company, myOrders, myCart, myRepeatDraft, myStatusEvents, myAudit, myInquiries, myAccessRequests] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { email: true, name: true, role: true, active: true, mfaEnabled: true, canOrderDirectly: true, approverId: true, lastLoginAt: true, createdAt: true, updatedAt: true },
+    }),
+    cid ? prisma.company.findUnique({ where: { id: cid }, select: { name: true, ico: true, dic: true, icDph: true, address: true, zip: true, city: true, splatDays: true } }) : Promise.resolve(null),
+    prisma.order.findMany({
+      where: cid ? { companyId: cid, createdById: user.id } : { createdById: user.id },
+      orderBy: { createdAt: "desc" },
+      select: { number: true, status: true, createdAt: true, subtotal: true, vat: true, total: true, note: true, poNumber: true, deliveryMethodLabel: true, shippingFee: true, paymentMethodLabel: true, paymentSurcharge: true, deliveryAddressSnapshot: true, termsVersion: true, termsSha256: true, termsAcknowledgedAt: true, items: { select: { skuSnapshot: true, nameSnapshot: true, qty: true, unitPriceSnapshot: true, lineTotal: true } } },
+    }),
+    prisma.cart.findUnique({ where: { createdById: user.id }, select: { createdAt: true, updatedAt: true, items: { select: { qty: true, product: { select: { sku: true, name: true } } } } } }),
+    prisma.repeatDraftItem.findMany({ where: { userId: user.id }, select: { qty: true, product: { select: { sku: true, name: true } } } }),
+    prisma.orderStatusEvent.findMany({ where: { changedById: user.id }, orderBy: { occurredAt: "desc" }, select: { status: true, occurredAt: true, note: true, order: { select: { number: true } } } }),
+    prisma.auditLog.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, select: { action: true, entity: true, entityId: true, ip: true, userAgent: true, createdAt: true } }),
+    prisma.inquiry.findMany({ where: { email: { equals: user.email, mode: "insensitive" } }, orderBy: { createdAt: "desc" }, select: { name: true, company: true, email: true, phone: true, location: true, type: true, segment: true, message: true, createdAt: true, handledAt: true } }),
+    prisma.accessRequest.findMany({ where: { email: { equals: user.email, mode: "insensitive" } }, orderBy: { createdAt: "desc" }, select: { ico: true, companyName: true, contactName: true, email: true, phone: true, note: true, status: true, createdAt: true, resolvedAt: true } }),
+  ]);
+
   const payload = {
     exportedAt: new Date().toISOString(),
-    poznamka: "Export vašich osobných údajov v B2B portáli Moonid (GDPR čl. 15/20).",
-    konto: { email: user.email, meno: user.name, rola: user.role },
-    firma: { nazov: company?.name ?? null, ico: company?.ico ?? null },
+    poznamka: "Úplná kópia osobných údajov, ktoré o vás vedieme v B2B portáli Moonid (GDPR čl. 15 a 20). Údaje vašich kolegov export neobsahuje. Auditné záznamy neuvádzajú technické pole „meta“, pretože môže obsahovať údaje iných osôb (čl. 15 ods. 4 GDPR). Vystavené faktúry a účtovné doklady vedieme v účtovnom systéme mimo portálu — na požiadanie ich poskytneme samostatne.",
+    konto: {
+      email: me?.email ?? user.email,
+      meno: me?.name ?? null,
+      rola: me?.role ?? user.role,
+      aktivneKonto: me?.active ?? null,
+      dvojfaktoroveOverenie: me?.mfaEnabled ?? null,
+      objednavaPriamo: me?.canOrderDirectly ?? null,
+      idSchvalovatela: me?.approverId ?? null,
+      poslednePrihlasenie: me?.lastLoginAt ?? null,
+      kontoVytvorene: me?.createdAt ?? null,
+      kontoNaposledyZmenene: me?.updatedAt ?? null,
+    },
+    firma: company,
     mojeObjednavky: myOrders,
+    mojKosik: myCart,
+    mojKonceptOpakovanejObjednavky: myRepeatDraft,
+    mnouZmeneneStavyObjednavok: myStatusEvents,
+    mojaAuditnaStopa: myAudit,
+    mojeDopyty: myInquiries,
+    mojeZiadostiOPristup: myAccessRequests,
   };
   await writeAudit({ userId: user.id, companyId: cid, action: "GDPR_ACCESS", entity: "User", entityId: user.id });
   return { ok: true, data: JSON.stringify(payload, null, 2) };
@@ -180,17 +226,20 @@ export async function inviteMember(input: { email: string; name?: string }): Pro
   const ev = z.string().trim().email("Neplatný e-mail").max(160).safeParse(String(input.email ?? "").trim());
   if (!ev.success) return { ok: false, error: "Neplatný e-mail." };
   const normalizedEmail = normalizeInternalEmail(ev.data);
-  const existing = await prisma.user.findFirst({ where: { email: { equals: normalizedEmail, mode: "insensitive" } }, select: { companyId: true, role: true } });
-  if (existing && isInternalRole(existing.role)) return { ok: false, error: "Tento e-mail nemožno pozvať do zákazníckej firmy." };
-  if (existing?.companyId) {
-    if (existing.companyId !== user.companyId) return { ok: false, error: "Tento e-mail už patrí inej firme." };
+  const existing = await prisma.user.findFirst({
+    where: { companyId: user.companyId!, email: { equals: normalizedEmail, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (existing) {
     // už je členom TEJTO firmy — opätovné „pozvanie" by cez inviteUser potichu prepísalo rolu
     // (CUSTOMER_ADMIN → CUSTOMER_USER) a reaktivovalo konto; správu robte v sekcii Používatelia
     return { ok: false, error: "Tento používateľ už je členom vašej firmy — spravujte ho v sekcii Používatelia." };
   }
   const company = await prisma.company.findUnique({ where: { id: user.companyId! }, select: { name: true } });
   const res = await inviteUser(normalizedEmail, String(input.name ?? "").trim() || null, "CUSTOMER_USER", user.companyId!, company?.name ?? "Moonid", { id: user.id, kind: "COMPANY_ADMIN" });
-  if (!res.ok) return { ok: false, error: res.error };
+  // Customer admin nesmie z rozdielnych hlášok zistiť, či e-mail patrí inej firme
+  // alebo internému Moonid účtu. Vlastných členov sme bezpečne rozlíšili vyššie.
+  if (!res.ok) return { ok: false, error: "Pozvánku sa nepodarilo spracovať. Skontrolujte zoznam členov firmy alebo skúste neskôr." };
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "MEMBER_INVITE", entity: "User", meta: { email: ev.data } });
   revalidatePath("/nastavenia");
   return { ok: true, warning: res.warning, inviteLink: null };
@@ -277,7 +326,7 @@ export async function setMemberActive(userId: string, active: boolean): Promise<
 
 const profileSchema = z.object({ name: z.string().trim().min(1, "Zadajte meno").max(120) });
 
-/** Upraví vlastné meno prihláseného používateľa (heslo mení klient cez Supabase). */
+/** Upraví vlastné meno prihláseného používateľa. */
 export async function updateProfile(input: z.input<typeof profileSchema>): Promise<{ ok: boolean; error?: string }> {
   const user = await requireUser();
   const p = profileSchema.safeParse(input);
@@ -285,5 +334,55 @@ export async function updateProfile(input: z.input<typeof profileSchema>): Promi
   await prisma.user.update({ where: { id: user.id }, data: { name: p.data.name } });
   await writeAudit({ userId: user.id, companyId: user.companyId, action: "PROFILE_UPDATE", entity: "User", entityId: user.id });
   revalidatePath("/nastavenia");
+  return { ok: true };
+}
+
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1).max(1024),
+  newPassword: z.string().min(12).max(256),
+});
+
+/** Zmena hesla s povinnou re-autentifikáciou a serverovou kontrolou kompromitácie. */
+export async function changeOwnPassword(input: z.input<typeof passwordChangeSchema>): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  const parsed = passwordChangeSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Nové heslo musí mať 12 až 256 znakov." };
+  if (parsed.data.currentPassword === parsed.data.newPassword) {
+    return { ok: false, error: "Nové heslo sa musí líšiť od súčasného." };
+  }
+
+  const gate = await rateLimit(rateLimitKey("password-change", user.id), { limit: 10, windowSec: 900 });
+  if (!gate.ok) return { ok: false, error: "Priveľa pokusov. Skúste to neskôr." };
+
+  const compromise = await passwordCompromiseStatus(parsed.data.newPassword);
+  if (compromise === "pwned") {
+    return { ok: false, error: "Toto heslo sa našlo v známych únikoch dát. Zvoľte iné." };
+  }
+  if (compromise === "unavailable") {
+    return { ok: false, error: "Bezpečnosť hesla sa teraz nedá overiť. Skúste to o chvíľu znova." };
+  }
+
+  const supabase = await createClient();
+  const { data: reauthenticated, error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+  if (reauthError || reauthenticated.user?.id !== user.authId) {
+    return { ok: false, error: "Súčasné heslo je nesprávne." };
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    current_password: parsed.data.currentPassword,
+    password: parsed.data.newPassword,
+  });
+  if (updateError) return { ok: false, error: "Heslo sa nepodarilo zmeniť. Skúste to znova." };
+
+  await writeAudit({ userId: user.id, companyId: user.companyId, action: "PASSWORD_CHANGED", entity: "User", entityId: user.id });
+
+  const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
+  if (signOutError) {
+    reportError("passwordChange.globalSignOut", signOutError, { action: "password_change" });
+    await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+  }
   return { ok: true };
 }

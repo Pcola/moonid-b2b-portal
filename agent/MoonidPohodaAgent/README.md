@@ -20,10 +20,11 @@ ALTER ROLE pohoda_agent PASSWORD 'silne-nahodne-heslo';
 ```
 (Rolu a RPC vytvorí migrácia `20260820150000_security_objects`. Heslo poznáš len ty.)
 
-## 3. Vyplň `appsettings.json`
+## 3. Vytvor a vyplň `appsettings.local.json`
 - `Supabase:ConnectionString` — Username `pohoda_agent` + heslo z kroku 2; host zo Supabase → **Connect → Session pooler**.
 - `MServer:BaseUrl/Ico/User/Password` — z kroku 1.
-- **Reálne heslá necommituj** (daj ich do `appsettings.local.json` alebo prepíš lokálne; `.gitignore` to chráni).
+- Začni rovnakou JSON štruktúrou ako v `appsettings.json`; lokálny súbor bezpečne prepíše zástupné hodnoty. Pri `dotnet run` ho ulož do priečinka projektu, pri Windows službe vedľa publikovaného `.exe`.
+- **Reálne heslá necommituj**; `appsettings.local.json` chráni `.gitignore`.
 
 ## 4. Test (konzola)
 ```

@@ -7,7 +7,7 @@ import { nextStatus, canCancel, type OrderStatus } from "@/lib/orders/transition
 import { emailOrderStatus } from "@/lib/email";
 import { auditRequestContext, writeAuditRequired } from "@/lib/audit";
 import { SHIPPING_VAT_RATE } from "@/lib/store-config";
-import { dec, round2, lineTotal, lineVat, sumMoney, vatOf } from "@/lib/money";
+import { round2, lineTotal, sumMoney, vatFromLines, vatOf } from "@/lib/money";
 import { z } from "zod";
 
 const ID = z.string().min(1).max(100);
@@ -116,23 +116,22 @@ export async function updateOrder(orderId: string, input: z.input<typeof editSch
     } else deliveryLocationId = null;
   }
 
-  const lineVats: number[] = [];
+  const taxable: { net: number; vatRatePct: number }[] = [];
   const updates = keep.map((it) => {
     const q = effQty(it);
     // kanonická jednotková cena = 2 des. (tak ju vidí zákazník a tak ju ukladá createOrder);
     // 4-des. snapshot sa najprv zaokrúhli — náhľad v editore (money-client) tak sedí s uloženým
     const net = round2(it.unitPriceSnapshot);
-    const vr = Number(it.product?.vatRate ?? 23);
-    const grossUnit = round2(dec(net).times(dec(100).plus(vr).dividedBy(100))); // rovnaká metóda ako createOrder (zaokr. gross/kus)
-    lineVats.push(lineVat(net, grossUnit, q));
-    return { id: it.id, qty: q, lineTotal: lineTotal(net, q) };
+    const line = lineTotal(net, q);
+    taxable.push({ net: line, vatRatePct: Number(it.product?.vatRate ?? 23) });
+    return { id: it.id, qty: q, lineTotal: line };
   });
   const subtotal = sumMoney(updates.map((u) => u.lineTotal));
   // doprava + príplatok platby ostávajú (dohodnuté pri objednaní) — len doplníme ich DPH do súm,
   // aby staff úprava množstiev nezahodila poplatky z objednávky.
   const shippingFee = Number(order.shippingFee);
   const paymentSurcharge = Number(order.paymentSurcharge);
-  const vat = sumMoney([...lineVats, vatOf(sumMoney([shippingFee, paymentSurcharge]), SHIPPING_VAT_RATE)]);
+  const vat = sumMoney([vatFromLines(taxable), vatOf(sumMoney([shippingFee, paymentSurcharge]), SHIPPING_VAT_RATE)]);
   const total = sumMoney([subtotal, shippingFee, paymentSurcharge, vat]);
 
   const auditCtx = await auditRequestContext();

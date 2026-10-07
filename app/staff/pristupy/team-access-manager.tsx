@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { LiveMessage } from "@/components/ui/live-region";
 import {
   inviteInternalUser,
   resendInternalUserAccess,
@@ -28,7 +29,7 @@ type TeamUser = {
   createdAt: string;
 };
 
-const inputClass = "min-h-11 rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand disabled:bg-cream disabled:opacity-60";
+const inputClass = "min-h-11 rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand disabled:bg-field/25 disabled:border-field/60 disabled:opacity-60";
 const secondaryButton = "inline-flex min-h-11 items-center justify-center rounded-lg border border-line bg-white px-3 py-2 text-[12px] font-semibold text-muted transition hover:border-brand/30 hover:text-ink disabled:cursor-not-allowed disabled:opacity-45";
 
 function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
@@ -43,16 +44,16 @@ function ManualAccessLink({ url, warning }: { url: string; warning?: string }) {
     }
   }
   return (
-    <div className="rounded-xl border border-[#e7d7af] bg-[#fffaf0] p-3">
-      <div className="text-[12.5px] font-semibold text-[#6d5520]" role="status">E-mail nebol doručený — citlivý jednorazový odkaz</div>
+    <div className="rounded-xl border border-warning-line bg-[#fffaf0] p-3">
+      <div className="text-[12.5px] font-semibold text-warning-ink-2">E-mail nebol doručený — citlivý jednorazový odkaz</div>
       <p className="mt-1 text-[12px] leading-relaxed text-[#786331]">{warning ?? "Odkaz odošlite používateľovi bezpečným kanálom a nikde ho trvalo neukladajte."}</p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        <input readOnly value={url} aria-label="Jednorazový prístupový odkaz" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#dfce9e] bg-white px-2.5 py-1.5 font-mono text-[11px] text-ink outline-none" />
-        <button type="button" onClick={copy} aria-label="Kopírovať jednorazový prístupový odkaz" className="min-h-11 rounded-lg bg-[#6d5520] px-3 py-2 text-[12px] font-semibold text-white">{copyState === "copied" ? "Skopírované" : "Kopírovať"}</button>
+        <input readOnly value={url} aria-label="Jednorazový prístupový odkaz" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#a08946] bg-white px-2.5 py-1.5 font-mono text-[12px] text-ink outline-none" />
+        <button type="button" onClick={copy} aria-label="Kopírovať jednorazový prístupový odkaz" className="min-h-11 rounded-lg bg-warning-ink-2 px-3 py-2 text-[12px] font-semibold text-white">{copyState === "copied" ? "Skopírované" : "Kopírovať"}</button>
       </div>
       <div className="mt-1 min-h-[18px] text-[11.5px]" aria-live="polite">
-        {copyState === "copied" && <span className="font-medium text-[#14633f]">Odkaz bol skopírovaný.</span>}
-        {copyState === "failed" && <span className="font-medium text-[#9a3025]" role="alert">Odkaz sa nepodarilo skopírovať. Označte ho a skopírujte ručne.</span>}
+        {copyState === "copied" && <span className="font-medium text-success-ink">Odkaz bol skopírovaný.</span>}
+        {copyState === "failed" && <span className="font-medium text-danger-ink">Odkaz sa nepodarilo skopírovať. Označte ho a skopírujte ručne.</span>}
       </div>
     </div>
   );
@@ -144,7 +145,7 @@ export function InviteInternalUserForm() {
       <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_1fr_190px]">
         <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
           E-mail *
-          <input ref={emailInputRef} type="email" required maxLength={160} autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="meno@moonid.sk" disabled={pending} />
+          <input ref={emailInputRef} type="email" required maxLength={160} autoComplete="off" value={email} onChange={(event) => setEmail(event.target.value)} aria-invalid={!!result && !result.ok} aria-describedby={result && !result.ok ? "invite-internal-error" : undefined} className={inputClass} placeholder="meno@moonid.sk" disabled={pending} />
         </label>
         <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
           Meno
@@ -158,15 +159,19 @@ export function InviteInternalUserForm() {
           </select>
         </label>
       </div>
-      {role === "ADMIN" && (
-        <div role="alert" className="mt-3 rounded-lg border border-[#e7d7af] bg-[#fffaf0] px-3 py-2 text-[12.5px] text-[#6d5520]">
-          Administrátor uvidí všetko čo staff a navyše môže meniť globálne nastavenia, roly a bezpečnostné prístupy.
-        </div>
-      )}
+      <div aria-live="polite">
+        {role === "ADMIN" && (
+          <div className="mt-3 rounded-lg border border-warning-line bg-[#fffaf0] px-3 py-2 text-[12.5px] text-warning-ink-2">
+            Administrátor uvidí všetko čo staff a navyše môže meniť globálne nastavenia, roly a bezpečnostné prístupy.
+          </div>
+        )}
+      </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
+        <LiveMessage message={pending ? "Pozývam…" : result?.ok ? (result.emailSent ? "Pozvánka bola odoslaná e-mailom." : "Konto je vytvorené. E-mail neodišiel — nižšie je jednorazový odkaz na bezpečné odovzdanie.") : null} />
+        <LiveMessage message={result && !result.ok ? result.error : null} tone="error" />
         <button type="submit" disabled={pending || !email.trim()} className="min-h-11 rounded-[10px] bg-brand px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-50">{pending ? "Pozývam…" : "Odoslať pozvánku"}</button>
-        {result?.ok && result.emailSent && <span className="text-[13px] font-medium text-[#14633f]" role="status">Pozvánka bola odoslaná e-mailom.</span>}
-        {result && !result.ok && <span className="text-[13px] font-medium text-[#9a3025]" role="alert">{result.error}</span>}
+        {result?.ok && result.emailSent && <span className="text-[13px] font-medium text-success-ink">Pozvánka bola odoslaná e-mailom.</span>}
+        {result && !result.ok && <span id="invite-internal-error" className="text-[13px] font-medium text-danger-ink">{result.error}</span>}
       </div>
       {result?.inviteLink && <div className="mt-3"><ManualAccessLink url={result.inviteLink} warning={result.warning} /></div>}
     </form>
@@ -198,9 +203,9 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
   const statusClass = authSyncPending
     ? "bg-[#fff5dc] text-[#805b0b]"
     : !user.active
-      ? "bg-[#fdeceb] text-[#9a3025]"
+      ? "bg-danger text-danger-ink"
       : user.lastLoginAt
-        ? "bg-[#ecfdf3] text-[#14633f]"
+        ? "bg-success text-success-ink"
         : "bg-[#fff5dc] text-[#805b0b]";
   const authStatusId = `auth-status-${user.id}`;
   const authDetail = authSyncPending
@@ -293,18 +298,18 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
       <td className="px-4 py-3.5">
         <div className="max-w-[260px] truncate text-[13.5px] font-semibold text-ink">{user.name || user.email}{self && <span className="ml-1 font-normal text-brand-2">(vy)</span>}</div>
         <div className="max-w-[280px] truncate text-[12px] text-muted-2">{user.email}</div>
-        {inconsistent && <div className="mt-1 text-[11.5px] font-medium text-[#9a3025]">Nekonzistentné konto: priradené k firme</div>}
+        {inconsistent && <div className="mt-1 text-[11.5px] font-medium text-danger-ink">Nekonzistentné konto: priradené k firme</div>}
       </td>
       <td className="px-4 py-3.5">
         <select value={user.role} onChange={(event) => changeRole(event.target.value as InternalRole)} disabled={mutationDisabled || self}
           aria-label={`Rola účtu ${user.email}`} title={self ? "Vlastnú admin rolu nemožno odobrať" : undefined}
-          className="min-h-11 rounded-lg border border-line bg-white px-2 py-1.5 text-[12.5px] font-medium text-ink outline-none transition focus:border-brand disabled:cursor-not-allowed disabled:bg-cream disabled:text-muted-2">
+          className="min-h-11 rounded-lg border border-field bg-white px-2 py-1.5 text-[12.5px] font-medium text-ink outline-none transition focus:border-brand disabled:cursor-not-allowed disabled:bg-cream disabled:text-muted-2">
           <option value="STAFF">Staff</option>
           <option value="ADMIN">Administrátor</option>
         </select>
       </td>
       <td className="px-4 py-3.5">
-        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${user.mfaEnabled ? "bg-[#ecfdf3] text-[#14633f]" : "bg-[#fff5dc] text-[#805b0b]"}`}>
+        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${user.mfaEnabled ? "bg-success text-success-ink" : "bg-[#fff5dc] text-[#805b0b]"}`}>
           {user.mfaEnabled ? "MFA aktívne" : "MFA čaká"}
         </span>
       </td>
@@ -316,7 +321,7 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
       <td className="min-w-[310px] px-4 py-3.5">
         <div className="flex flex-wrap gap-1.5">
           {authSyncPending ? (
-            <button type="button" onClick={retryAuthSync} disabled={baseDisabled || user.authDesiredActive === null} aria-describedby={authStatusId} aria-label={`Dokončiť synchronizáciu Supabase Auth pre účet ${user.email}`} className={`${secondaryButton} border-[#dfce9e] text-[#6d5520]`}>{pending ? "Synchronizujem…" : "Dokončiť synchronizáciu"}</button>
+            <button type="button" onClick={retryAuthSync} disabled={baseDisabled || user.authDesiredActive === null} aria-describedby={authStatusId} aria-label={`Dokončiť synchronizáciu Supabase Auth pre účet ${user.email}`} className={`${secondaryButton} border-[#dfce9e] text-warning-ink-2`}>{pending ? "Synchronizujem…" : "Dokončiť synchronizáciu"}</button>
           ) : (
             <button type="button" onClick={changeActive} disabled={baseDisabled || self} aria-label={`${user.active ? "Deaktivovať" : "Aktivovať"} konto ${user.email}`} title={self ? "Vlastné konto nemožno deaktivovať" : undefined} className={secondaryButton}>{pending ? "Pracujem…" : user.active ? "Deaktivovať" : "Aktivovať"}</button>
           )}
@@ -324,9 +329,10 @@ function TeamUserRow({ user, currentUserId }: { user: TeamUser; currentUserId: s
           {!self && <button type="button" onClick={resetMfa} disabled={mutationDisabled} aria-label={`Resetovať MFA účtu ${user.email}`} className={secondaryButton}>Resetovať MFA</button>}
           {self && <a href="/staff/bezpecnost" aria-label="Spravovať moje MFA" className={secondaryButton}>Moje MFA</a>}
         </div>
-        <div className="mt-2 min-h-[18px]" aria-live="polite">
-          {result?.ok && successMessage && <span className="text-[11.5px] font-medium text-[#14633f]">{successMessage}</span>}
-          {result && !result.ok && <span className="text-[11.5px] font-medium text-[#9a3025]" role="alert">{result.error}</span>}
+        <div className="mt-2 min-h-[18px]" aria-live="polite" aria-atomic="true">
+          {pending && <span className="text-[11.5px] text-muted-2">Pracujem…</span>}
+          {result?.ok && successMessage && <span className="text-[11.5px] font-medium text-success-ink">{successMessage}</span>}
+          {result && !result.ok && <span className="text-[11.5px] font-medium text-danger-ink">{result.error}</span>}
         </div>
         {result?.inviteLink && <ManualAccessLink url={result.inviteLink} warning={result.warning} />}
       </td>
@@ -344,12 +350,12 @@ export function TeamAccessManager({ users, currentUserId }: { users: TeamUser[];
         <caption className="sr-only">Interné účty Moonid, ich roly, MFA, stav a dostupné administrátorské akcie</caption>
         <thead>
           <tr className="border-b border-line bg-cream/60 text-[11px] uppercase tracking-wide text-muted-2">
-            <th className="px-4 py-2.5 font-semibold">Konto</th>
-            <th className="px-4 py-2.5 font-semibold">Rola</th>
-            <th className="px-4 py-2.5 font-semibold">MFA</th>
-            <th className="px-4 py-2.5 font-semibold">Posledné prihlásenie</th>
-            <th className="px-4 py-2.5 font-semibold">Stav</th>
-            <th className="px-4 py-2.5 font-semibold">Akcie</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Konto</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Rola</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">MFA</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Posledné prihlásenie</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Stav</th>
+            <th scope="col" className="px-4 py-2.5 font-semibold">Akcie</th>
           </tr>
         </thead>
         <tbody>{users.map((user) => <TeamUserRow key={user.id} user={user} currentUserId={currentUserId} />)}</tbody>

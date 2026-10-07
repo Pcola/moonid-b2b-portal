@@ -8,10 +8,10 @@ export const metadata = { title: "Faktúry — Moonid portál", robots: { index:
 
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 const STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: "Čaká na úhradu", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
-  PAID: { label: "Uhradená", cls: "bg-[#ecfdf3] text-[#14633f]" },
-  OVERDUE: { label: "Po splatnosti", cls: "bg-[#fdeceb] text-[#9a3025]" },
-  CANCELLED: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-muted-2" },
+  PENDING: { label: "Čaká na úhradu", cls: "bg-warning text-warning-ink" },
+  PAID: { label: "Uhradená", cls: "bg-success text-success-ink" },
+  OVERDUE: { label: "Po splatnosti", cls: "bg-danger text-danger-ink" },
+  CANCELLED: { label: "Stornovaná", cls: "bg-cream-2 text-muted-2" },
 };
 
 function SummaryCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
@@ -50,7 +50,7 @@ export default async function FakturyPage() {
   return (
     <div className="flex max-w-[1080px] flex-col gap-5">
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
-        <SummaryCard label="Po splatnosti" value={eur(overdue)} accent={overdue > 0 ? "text-[#9a3025]" : "text-ink"} />
+        <SummaryCard label="Po splatnosti" value={eur(overdue)} accent={overdue > 0 ? "text-danger-ink" : "text-ink"} />
         <SummaryCard label="Čaká na úhradu" value={eur(pending)} />
         <SummaryCard label={`Uhradené (${year})`} value={eur(paidYear)} />
       </div>
@@ -64,20 +64,21 @@ export default async function FakturyPage() {
           <p className="mt-1 text-[13.5px] text-muted">Faktúry sa zobrazia po vystavení a synchronizácii z účtovného systému.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-line bg-white">
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
-            <span>Faktúra</span><span>Objednávka</span><span>Splatnosť</span><span>Stav</span><span className="text-right">Suma</span>
+        <div role="table" aria-label="Vaše faktúry" className="overflow-hidden rounded-2xl border border-line bg-white">
+          {/* sémantika tabuľky cez ARIA — rozloženie ostáva CSS grid (SC 1.3.1) */}
+          <div role="row" className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 border-b border-line bg-cream/60 px-[22px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+            <span role="columnheader">Faktúra</span><span role="columnheader">Objednávka</span><span role="columnheader">Splatnosť</span><span role="columnheader">Stav</span><span role="columnheader" className="text-right">Suma</span>
           </div>
           {invoices.map((f) => {
             const s = STATUS[effStatus(f)] ?? { label: f.status, cls: "bg-cream text-muted" };
             return (
-              <div key={f.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 last:border-0">
-                <span className="font-mono text-[13.5px] font-semibold text-ink">{f.pohodaNumber}</span>
-                <span className="text-[13.5px] text-muted-2">{f.order?.number ?? "—"}</span>
-                <span className="text-[13.5px] text-muted-2">{new Date(f.dueAt).toLocaleDateString("sk")}</span>
-                <span className={`justify-self-start rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
+              <div role="row" key={f.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[22px] py-4 last:border-0">
+                <span role="cell" className="font-mono text-[13.5px] font-semibold text-ink">{f.pohodaNumber}</span>
+                <span role="cell" className="text-[13.5px] text-muted-2">{f.order?.number ?? "—"}</span>
+                <span role="cell" className="text-[13.5px] text-muted-2">{new Date(f.dueAt).toLocaleDateString("sk")}</span>
+                <span role="cell" className={`justify-self-start rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
                 {/* PDF sťahovanie sa doplní po importe faktúr z Pohody */}
-                <span className="text-right text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(f.total))}</span>
+                <span role="cell" className="text-right text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(f.total))}</span>
               </div>
             );
           })}

@@ -85,7 +85,8 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
     <button key={label} type="button" onClick={onClick}
       className={`flex w-full items-center justify-between rounded-[10px] px-3 py-[9px] text-left text-[15px] transition ${on ? "bg-mintbg font-semibold text-brand" : "text-muted hover:bg-cream hover:text-ink"}`}>
       <span className="truncate pr-2">{label}</span>
-      <span className={`text-[12px] tabular-nums ${on ? "text-brand/60" : "text-muted-2"}`}>{count}</span>
+      {/* brand/60 na mintbg = 3,43:1 — pod AA; brand/80 = 5,88:1 */}
+      <span className={`text-[12px] tabular-nums ${on ? "text-brand/80" : "text-muted-2"}`}>{count}</span>
     </button>
   );
 
@@ -94,7 +95,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
       <div className="relative">
         <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input aria-label="Hľadať v sortimente" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") go({ q }); }}
-          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-line bg-white py-2.5 pl-10 pr-3 text-[15.5px] text-ink outline-none transition focus:border-brand" />
+          placeholder="Hľadať v sortimente…" className="w-full rounded-[11px] border border-field bg-white py-2.5 pl-10 pr-3 text-[15.5px] text-ink outline-none transition focus:border-brand" />
       </div>
 
       <div>
@@ -120,7 +121,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
           {brands.length > 5 && (
             <div className="relative mb-2">
               <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-              <input aria-label="Hľadať značku" value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-line bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
+              <input aria-label="Hľadať značku" value={brandQ} onChange={(e) => setBrandQ(e.target.value)} placeholder="Hľadať značku…" className="w-full rounded-[9px] border border-field bg-white py-2 pl-9 pr-3 text-[13px] text-ink outline-none transition focus:border-brand" />
             </div>
           )}
           <div className="flex max-h-[210px] flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
@@ -150,7 +151,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
             <div className="flex items-center gap-2 text-[14px] text-muted">
               <span className="hidden sm:inline">Zoradiť</span>
               <div className="relative">
-                <select aria-label="Zoradiť produkty" value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
+                <select aria-label="Zoradiť produkty" value={active.sort} onChange={(e) => go({ sort: e.target.value })} className="cursor-pointer appearance-none rounded-[10px] border border-field bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40 focus:border-brand">
                   <option value="rec">Odporúčané</option>
                   <option value="az">Názov A–Z</option>
                   <option value="za">Názov Z–A</option>
@@ -180,7 +181,7 @@ export function CatalogBrowser({ products, categories, subcategories, brands, to
                 href={`/produkt/${p.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-200 hover:-translate-y-1 hover:border-brand/30 hover:shadow-[0_14px_34px_-16px_rgba(16,42,38,0.22)]"
               >
-                <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#fafbfa] p-5">
+                <div className="flex aspect-square items-center justify-center overflow-hidden bg-surface-2 p-5">
                   <ProductImg src={p.i} alt={p.n} sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 220px" iconSize={38} imgClassName="transition duration-300 group-hover:scale-[1.04]" />
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 p-4 pt-3.5">

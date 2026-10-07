@@ -1,7 +1,8 @@
 # Zistí, či sa humed feed (g:sku / g:gtin / g:id) dá namapovať na Pohoda SKz (IDS / EAN / Kod)
 $ErrorActionPreference = 'Stop'
-$feedPath = 'C:\Users\lukas\Downloads\feed.xml'
-$mdb      = 'C:\Users\lukas\Downloads\mdb\50934660_2026.mdb'
+# repozitar je verejny - ziadne lokalne cesty ani ICO v nazve suboru
+$feedPath = if ($env:FEED_PATH) { $env:FEED_PATH } else { throw 'Nastav FEED_PATH.' }
+$mdb      = if ($env:MDB_PATH) { $env:MDB_PATH } else { throw 'Nastav MDB_PATH (cesta k .mdb Pohody).' }
 
 function Norm([string]$s){ if([string]::IsNullOrWhiteSpace($s)){return ''}; return $s.Trim().TrimStart('0') }
 

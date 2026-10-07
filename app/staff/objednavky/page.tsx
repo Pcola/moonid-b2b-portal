@@ -36,7 +36,7 @@ export default async function StaffOrdersPage({ searchParams }: { searchParams: 
   return (
     <>
       {pendingApproval > 0 && (
-        <div className="mb-4 rounded-xl border border-[#e8d9b0] bg-[#fdf6e7] px-4 py-3 text-[13.5px] text-[#8a5a00]">
+        <div className="mb-4 rounded-xl border border-[#e8d9b0] bg-warning px-4 py-3 text-[13.5px] text-warning-ink">
           Čaká na schválenie zákazníkom: <strong>{pendingApproval}</strong> — v zozname sa zobrazia až po schválení. Ak niektorá visí dlho, skontrolujte so zákazníkom jeho schvaľovateľa.
         </div>
       )}

@@ -8,13 +8,13 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Objednávky — Moonid portál", robots: { index: false, follow: false } };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
-  CAKA_SCHVALENIE: { label: "Čaká na schválenie", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
-  PRIJATA: { label: "Prijatá", cls: "bg-[#fdf6e7] text-[#8a5a00]" },
-  POTVRDENA: { label: "Potvrdená", cls: "bg-[#eef2ff] text-[#3730a3]" },
-  PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-[#eef2ff] text-[#3730a3]" },
-  NA_CESTE: { label: "Na ceste", cls: "bg-[#eef2ff] text-[#3730a3]" },
-  DORUCENA: { label: "Doručená", cls: "bg-[#ecfdf3] text-[#14633f]" },
-  STORNO: { label: "Stornovaná", cls: "bg-[#f3f0ee] text-muted-2" },
+  CAKA_SCHVALENIE: { label: "Čaká na schválenie", cls: "bg-warning text-warning-ink" },
+  PRIJATA: { label: "Prijatá", cls: "bg-warning text-warning-ink" },
+  POTVRDENA: { label: "Potvrdená", cls: "bg-info text-info-ink" },
+  PRIPRAVUJE: { label: "Pripravuje sa", cls: "bg-info text-info-ink" },
+  NA_CESTE: { label: "Na ceste", cls: "bg-info text-info-ink" },
+  DORUCENA: { label: "Doručená", cls: "bg-success text-success-ink" },
+  STORNO: { label: "Stornovaná", cls: "bg-cream-2 text-muted-2" },
 };
 function eur(n: number) { return n.toFixed(2).replace(".", ",") + " €"; }
 
@@ -64,7 +64,7 @@ export default async function ObjednavkyPage() {
                 <Link href={`/objednavky/${o.id}`} className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-4 transition hover:bg-cream">
                   <span className="font-mono text-[14px] font-semibold text-ink">{o.number}</span>
                   <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${s.cls}`}>{s.label}</span>
-                  {o.hasBackorder && <span className="rounded-full bg-[#fdf6e7] px-2.5 py-0.5 text-[11px] font-medium text-[#8a5a00]">čiastočne na objednávku</span>}
+                  {o.hasBackorder && <span className="rounded-full bg-warning px-2.5 py-0.5 text-[11px] font-medium text-warning-ink">čiastočne na objednávku</span>}
                   <span className="text-[13px] text-muted-2">{new Date(o.createdAt).toLocaleDateString("sk")} · {o._count.items} pol.</span>
                   <span className="ml-auto text-[14.5px] font-semibold tabular-nums text-ink">{eur(Number(o.total))}</span>
                 </Link>

@@ -61,7 +61,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   return (
     <div className="flex max-w-[1160px] flex-col gap-5">
       <div>
-        <h1 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Audit log</h1>
+        <h2 className="text-[22px] font-normal tracking-[-0.01em] text-ink">Audit log</h2>
         <p className="mt-1 text-[14px] text-muted">Append-only záznam bezpečnostných a prevádzkových udalostí — prihlásenia, zmeny práv, objednávky, GDPR prístupy. Zápis je na úrovni DB nemazateľný.</p>
       </div>
 
@@ -74,14 +74,16 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-line bg-white">
           <table className="w-full min-w-[860px] text-left text-[13px]">
+            {/* popis tabuľky pre čítačky */}
+            <caption className="sr-only">Záznamy auditného logu — čas, akcia, entita, používateľ, IP adresa a detaily</caption>
             <thead>
               <tr className="border-b border-line bg-cream/60 text-[11px] uppercase tracking-wide text-muted-2">
-                <th className="px-4 py-2.5 font-semibold">Čas</th>
-                <th className="px-4 py-2.5 font-semibold">Akcia</th>
-                <th className="px-4 py-2.5 font-semibold">Entita</th>
-                <th className="px-4 py-2.5 font-semibold">Kto</th>
-                <th className="px-4 py-2.5 font-semibold">IP</th>
-                <th className="px-4 py-2.5 font-semibold">Detaily</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Čas</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Akcia</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Entita</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Kto</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">IP</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Detaily</th>
               </tr>
             </thead>
             <tbody>

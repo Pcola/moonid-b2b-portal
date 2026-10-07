@@ -34,7 +34,7 @@ export default async function MfaSetupPage() {
       }
     >
       <div className="flex flex-col gap-2.5">
-        <h2 className="font-display text-[30px] font-semibold tracking-[-0.02em] text-ink">Zabezpečte svoj účet</h2>
+        <h1 className="font-display text-[30px] font-semibold tracking-[-0.02em] text-ink">Zabezpečte svoj účet</h1>
         <p className="text-[15px] leading-relaxed text-muted">
           Staff a admin kontá musia mať zapnuté dvojfaktorové overenie — chráni celú zákaznícku
           databázu, aj keď niekto získa vaše heslo. Bez neho sa do administrácie nedostanete.

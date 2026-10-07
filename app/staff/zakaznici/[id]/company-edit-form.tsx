@@ -2,21 +2,24 @@
 
 import { useState, useTransition } from "react";
 import { updateCompany } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
+import { inputClass } from "@/components/ui/input";
+import { buttonClass } from "@/components/ui/button";
 
 type Tier = { code: string; name: string; discountPct: number };
 type Company = {
   id: string; name: string; ico: string; dic: string | null; icDph: string | null;
-  address: string | null; city: string | null; priceTierCode: string; splatDays: number; active: boolean;
+  address: string | null; city: string | null; zip: string | null; priceTierCode: string; splatDays: number; active: boolean;
 };
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = inputClass();
 const lbl = "flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted-2";
 
-export function CompanyEditForm({ company, tiers }: { company: Company; tiers: Tier[] }) {
+export function CompanyEditForm({ company, tiers, canEditPricing }: { company: Company; tiers: Tier[]; canEditPricing: boolean }) {
   const [pending, start] = useTransition();
   const [f, setF] = useState({
     name: company.name, dic: company.dic ?? "", icDph: company.icDph ?? "",
-    address: company.address ?? "", city: company.city ?? "",
+    address: company.address ?? "", city: company.city ?? "", zip: company.zip ?? "",
     priceTierCode: company.priceTierCode, splatDays: String(company.splatDays), active: company.active,
   });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -37,12 +40,16 @@ export function CompanyEditForm({ company, tiers }: { company: Company; tiers: T
         <label className={lbl}>IČO<input value={company.ico} disabled className={`${inp} bg-cream/60 text-muted`} /></label>
         <label className={lbl}>DIČ<input value={f.dic} onChange={(e) => setF({ ...f, dic: e.target.value })} className={inp} /></label>
         <label className={lbl}>IČ DPH<input value={f.icDph} onChange={(e) => setF({ ...f, icDph: e.target.value })} className={inp} /></label>
+        <label className={lbl}>PSČ<input value={f.zip} onChange={(e) => setF({ ...f, zip: e.target.value })} autoComplete="billing postal-code" className={inp} /></label>
         <label className={lbl}>Mesto<input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={inp} /></label>
-        <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa (ulica a číslo)<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} /></label>
+        <label className={`${lbl} sm:col-span-2`}>Fakturačná adresa (ulica a číslo)<input value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} className={inp} />
+          <span className="text-[12.5px] font-normal normal-case tracking-normal text-muted-3">Bez ulice, PSČ a mesta zákazník neodošle objednávku — košík to kontroluje pri odoslaní.</span>
+        </label>
         <label className={lbl}>Cenová úroveň
-          <select value={f.priceTierCode} onChange={(e) => setF({ ...f, priceTierCode: e.target.value })} className={inp}>
+          <select value={f.priceTierCode} onChange={(e) => setF({ ...f, priceTierCode: e.target.value })} disabled={!canEditPricing} aria-describedby={canEditPricing ? undefined : "tier-locked"} className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}>
             {tiers.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.name} (−{Number(t.discountPct).toFixed(0)} %)</option>)}
           </select>
+          {!canEditPricing && <span id="tier-locked" className="text-[12.5px] font-normal normal-case tracking-normal text-muted-3">Cenovú úroveň mení administrátor.</span>}
         </label>
         <label className={lbl}>Splatnosť faktúr (dni)<input type="number" min={0} max={365} value={f.splatDays} onChange={(e) => setF({ ...f, splatDays: e.target.value })} className={inp} /></label>
       </div>
@@ -51,10 +58,12 @@ export function CompanyEditForm({ company, tiers }: { company: Company; tiers: T
         Aktívna firma <span className="text-muted-2">(neaktívna = zákazník sa nedostane do portálu)</span>
       </label>
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+        <button onClick={save} disabled={pending} className={buttonClass({ className: "self-start" })}>
           {pending ? "Ukladám…" : "Uložiť zmeny"}
         </button>
-        {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        <LiveMessage message={pending ? "Ukladám…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+        {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
     </div>
   );

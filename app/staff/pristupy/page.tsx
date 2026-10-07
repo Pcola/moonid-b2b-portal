@@ -125,11 +125,11 @@ export default async function TeamAccessPage({ searchParams }: { searchParams: P
         <form method="get" className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px_180px_auto] md:items-end">
           <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
             Hľadať
-            <input name="q" defaultValue={q} maxLength={120} placeholder="Meno alebo e-mail" className="min-h-11 rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
+            <input name="q" defaultValue={q} maxLength={120} placeholder="Meno alebo e-mail" className="min-h-11 rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand" />
           </label>
           <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
             Rola
-            <select name="role" defaultValue={role} className="min-h-11 rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand">
+            <select name="role" defaultValue={role} className="min-h-11 rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand">
               <option value="">Všetky roly</option>
               <option value="ADMIN">Administrátor</option>
               <option value="STAFF">Staff</option>
@@ -137,7 +137,7 @@ export default async function TeamAccessPage({ searchParams }: { searchParams: P
           </label>
           <label className="flex flex-col gap-1.5 text-[12.5px] font-medium text-muted-3">
             Stav
-            <select name="status" defaultValue={status} className="min-h-11 rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand">
+            <select name="status" defaultValue={status} className="min-h-11 rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand">
               <option value="">Všetky stavy</option>
               <option value="active">Aktívne</option>
               <option value="inactive">Neaktívne</option>
@@ -177,7 +177,7 @@ export default async function TeamAccessPage({ searchParams }: { searchParams: P
         </div>
       )}
 
-      <div className="rounded-xl border border-[#e7d7af] bg-[#fffaf0] px-4 py-3 text-[12.5px] leading-relaxed text-[#6d5520]">
+      <div className="rounded-xl border border-warning-line bg-[#fffaf0] px-4 py-3 text-[12.5px] leading-relaxed text-warning-ink-2">
         <strong>Bezpečnostná poznámka:</strong> účet sa nikdy nemaže. Deaktivácia ho okamžite zablokuje v portáli a zároveň zablokuje nové prihlásenia v Supabase Auth. Už vydaný token sa na každom serverovom requeste znovu kontroluje proti aktívnemu stavu a priama Data API vrstva je default-deny.
       </div>
     </div>

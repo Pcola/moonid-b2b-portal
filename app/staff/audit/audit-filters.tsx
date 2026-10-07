@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const inp = "rounded-[10px] border border-line bg-white px-3 py-2 text-[13.5px] text-ink outline-none transition focus:border-brand";
+const inp = "rounded-[10px] border border-field bg-white px-3 py-2 text-[13.5px] text-ink outline-none transition focus:border-brand";
 
 export function AuditFilters({ actions, active }: { actions: string[]; active: { action: string; q: string } }) {
   const router = useRouter();

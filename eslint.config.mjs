@@ -12,7 +12,7 @@ const eslintConfig = defineConfig([
     },
   },
   // Jednorazové skripty, prototypy, .NET agent, testy a generované súbory nelintujeme.
-  globalIgnores([".next/**", "out/**", "build/**", "prototypes/**", "scripts/**", "agent/**", "tests/**", "public/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", ".claude/**", "out/**", "build/**", "prototypes/**", "scripts/**", "agent/**", "tests/**", "public/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

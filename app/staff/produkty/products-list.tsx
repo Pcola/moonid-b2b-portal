@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setProductPublished } from "./actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Item = {
   id: string; sku: string; name: string; unit: string; basePrice: number | null;
@@ -54,17 +55,17 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <select value={active.cat} onChange={(e) => go({ cat: e.target.value })}
-              className="cursor-pointer appearance-none rounded-[10px] border border-line bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition hover:border-brand/40">
+            <select value={active.cat} onChange={(e) => go({ cat: e.target.value })} aria-label="Filtrovať podľa kategórie"
+              className="cursor-pointer appearance-none rounded-[10px] border border-field bg-white py-2 pl-3.5 pr-9 text-[14px] font-medium text-ink outline-none transition focus:border-brand hover:border-brand/40">
               <option value="">Všetky kategórie</option>
               {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m6 9 6 6 6-6" /></svg>
           </div>
-          <div className="flex items-center gap-2 rounded-[10px] border border-line bg-white px-3 py-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#86827A" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+          <div className="flex items-center gap-2 rounded-[10px] border border-field bg-white px-3 py-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7f8d88" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <form onSubmit={(e) => { e.preventDefault(); go({ q }); }}>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Názov alebo SKU…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Hľadať produkt podľa názvu alebo SKU" placeholder="Názov alebo SKU…" className="w-[160px] bg-transparent text-[14px] text-ink outline-none" />
             </form>
           </div>
           <Link href="/staff/katalog/novy" className="inline-flex items-center gap-1.5 rounded-[10px] bg-brand px-3.5 py-2 text-[13.5px] font-semibold text-white transition hover:bg-brand-2">
@@ -75,15 +76,16 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
 
       <p className="text-[13.5px] text-muted-2"><span className="font-semibold text-ink">{total}</span> produktov{total > 0 ? ` · ${from}–${to}` : ""}</p>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-white">
-        <div className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line bg-cream/60 px-[18px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
-          <span></span><span>Produkt</span><span>Kategória</span><span className="text-right">Cena</span><span>Stav</span><span></span>
+      {/* sémantika tabuľky cez ARIA — rozloženie ostáva CSS grid (SC 1.3.1) */}
+      <div role="table" aria-label="Produkty v katalógu" className="overflow-hidden rounded-2xl border border-line bg-white">
+        <div role="row" className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line bg-cream/60 px-[18px] py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted-2">
+          <span role="columnheader"><span className="sr-only">Obrázok</span></span><span role="columnheader">Produkt</span><span role="columnheader">Kategória</span><span role="columnheader" className="text-right">Cena</span><span role="columnheader">Stav</span><span role="columnheader"><span className="sr-only">Akcia</span></span>
         </div>
         {items.length === 0 ? (
           <div className="px-[18px] py-14 text-center text-[14px] text-muted">Nič sa nenašlo.</div>
         ) : items.map((p) => (
-          <div key={p.id} className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[18px] py-3 last:border-0">
-            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line bg-[#fafbfa]">
+          <div role="row" key={p.id} className="grid grid-cols-[44px_1.6fr_1fr_auto_auto_auto] items-center gap-4 border-b border-line px-[18px] py-3 last:border-0">
+            <span role="cell" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-line bg-surface-2">
               {p.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={p.image} alt="" className="max-h-full max-w-full object-contain" />
@@ -91,14 +93,14 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2 opacity-40"><rect x="3" y="3" width="18" height="18" rx="2.5" /><circle cx="8.5" cy="8.5" r="1.6" /><path d="m21 15-5-5L5 21" /></svg>
               )}
             </span>
-            <div className="min-w-0">
+            <div role="cell" className="min-w-0">
               <div className="truncate text-[14px] font-medium text-ink">{p.name}</div>
-              <div className="font-mono text-[12px] text-muted-2">{p.sku}{p.isSubsidized && <span className="ml-2 rounded bg-[#fdf6e7] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#8a5a00]">na vyžiadanie</span>}</div>
+              <div className="font-mono text-[12px] text-muted-2">{p.sku}{p.isSubsidized && <span className="ml-2 rounded bg-warning px-1.5 py-0.5 text-[10.5px] font-semibold text-warning-ink">na vyžiadanie</span>}</div>
             </div>
-            <span className="truncate text-[13.5px] text-muted">{p.category ?? "—"}</span>
-            <span className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(p.basePrice)}<span className="ml-1 text-[11.5px] font-normal text-muted-2">/{p.unit}</span></span>
-            <PublishToggle id={p.id} published={p.isPublished} />
-            <Link href={`/staff/produkty/${p.id}`} className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-ink transition hover:border-brand/40">Upraviť</Link>
+            <span role="cell" className="truncate text-[13.5px] text-muted">{p.category ?? "—"}</span>
+            <span role="cell" className="text-right text-[14px] font-semibold tabular-nums text-ink">{eur(p.basePrice)}<span className="ml-1 text-[11.5px] font-normal text-muted-2">/{p.unit}</span></span>
+            <span role="cell"><PublishToggle id={p.id} published={p.isPublished} /></span>
+            <span role="cell"><Link href={`/staff/produkty/${p.id}`} className="rounded-lg border border-line px-3 py-1.5 text-[13px] font-semibold text-ink transition hover:border-brand/40">Upraviť</Link></span>
           </div>
         ))}
       </div>
@@ -117,14 +119,20 @@ export function ProductsList({ items, total, page, pageSize, cats, counts, activ
 function PublishToggle({ id, published }: { id: string; published: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [announce, setAnnounce] = useState<string | null>(null);
   function toggle() {
-    start(async () => { await setProductPublished(id, !published); router.refresh(); });
+    start(async () => {
+      await setProductPublished(id, !published);
+      setAnnounce(published ? "Produkt bol skrytý z katalógu." : "Produkt bol publikovaný v katalógu.");
+      router.refresh();
+    });
   }
   return (
     <button type="button" onClick={toggle} disabled={pending} title={published ? "Skryť z katalógu" : "Publikovať"}
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-[#ecfdf3] text-[#14633f] hover:bg-[#d6f5e4]" : "bg-[#f3f0ee] text-muted-2 hover:bg-[#e9e5e1]"}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-[#14633f]" : "bg-muted-2"}`} />
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition disabled:opacity-50 ${published ? "bg-success text-success-ink hover:bg-[#d6f5e4]" : "bg-cream-2 text-muted-2 hover:bg-[#e9e5e1]"}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${published ? "bg-success-ink" : "bg-muted-2"}`} />
       {pending ? "…" : published ? "Publikované" : "Skryté"}
+      <LiveMessage message={announce} />
     </button>
   );
 }

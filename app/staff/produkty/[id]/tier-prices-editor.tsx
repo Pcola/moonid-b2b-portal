@@ -3,10 +3,11 @@
 import { useState, useTransition } from "react";
 import { setProductPrices } from "../actions";
 import { discountedNet2, grossUnit2 } from "@/lib/money-client";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type Tier = { code: string; name: string; discountPct: number };
 
-const inp = "w-[130px] rounded-[10px] border border-line bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
+const inp = "w-[130px] rounded-[10px] border border-field bg-white px-3 py-2 text-[14px] text-ink outline-none transition focus:border-brand";
 
 function fmt(n: number): string {
   return n.toFixed(2).replace(".", ",") + " €";
@@ -21,6 +22,7 @@ export function TierPricesEditor({
   isSubsidized,
   tiers,
   initial,
+  canEditPricing,
 }: {
   productId: string;
   basePriceNet: number | null;
@@ -28,12 +30,14 @@ export function TierPricesEditor({
   isSubsidized: boolean;
   tiers: Tier[];
   initial: Record<string, number>;
+  canEditPricing: boolean;
 }) {
   const [vals, setVals] = useState<Record<string, string>>(() =>
     Object.fromEntries(tiers.map((t) => [t.code, initial[t.code] != null ? String(initial[t.code]) : ""])),
   );
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [badCode, setBadCode] = useState<string | null>(null);
 
   // zhodné so serverom (resolveUnitPrice/round2) — centová aritmetika, polovica nahor
   const defaultNet = (disc: number): number | null =>
@@ -48,10 +52,12 @@ export function TierPricesEditor({
 
   function save() {
     setMsg(null);
+    setBadCode(null); // nové uloženie → zahoď predchádzajúcu chybu poľa
     const entries: { code: string; price: number | null }[] = [];
     for (const t of tiers) {
       const p = parse(vals[t.code] ?? "");
       if (typeof p === "number" && Number.isNaN(p)) {
+        setBadCode(t.code);
         setMsg({ ok: false, text: `Neplatná cena pri úrovni ${t.code}. Zadajte kladné číslo alebo nechajte prázdne.` });
         return;
       }
@@ -81,12 +87,14 @@ export function TierPricesEditor({
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse text-[13.5px]">
+          {/* popis tabuľky pre čítačky */}
+          <caption className="sr-only">Zmluvné ceny podľa cenovej úrovne — štandardná cena zo zľavy, zmluvná netto cena a výsledná brutto cena s DPH</caption>
           <thead>
             <tr className="border-b border-line text-left text-[11px] font-semibold uppercase tracking-wide text-muted-2">
-              <th className="py-2 pr-3 font-semibold">Úroveň</th>
-              <th className="py-2 pr-3 font-semibold">Štandardná (zo zľavy)</th>
-              <th className="py-2 pr-3 font-semibold">Zmluvná netto</th>
-              <th className="py-2 font-semibold">Brutto s DPH</th>
+              <th scope="col" className="py-2 pr-3 font-semibold">Úroveň</th>
+              <th scope="col" className="py-2 pr-3 font-semibold">Štandardná (zo zľavy)</th>
+              <th scope="col" className="py-2 pr-3 font-semibold">Zmluvná netto</th>
+              <th scope="col" className="py-2 font-semibold">Brutto s DPH</th>
             </tr>
           </thead>
           <tbody>
@@ -97,11 +105,11 @@ export function TierPricesEditor({
               const gross = effective != null ? grossUnit2(effective, vatRate) : null;
               return (
                 <tr key={t.code} className="border-b border-line/60">
-                  <td className="py-2.5 pr-3">
+                  <th scope="row" className="py-2.5 pr-3 text-left font-normal">
                     <span className="font-medium text-ink">{t.name}</span>
                     <span className="ml-2 rounded bg-cream px-1.5 py-0.5 font-mono text-[10.5px] font-semibold text-muted-2">{t.code}</span>
                     <span className="ml-2 text-[12px] text-muted-2">−{t.discountPct.toFixed(0)} %</span>
-                  </td>
+                  </th>
                   <td className="py-2.5 pr-3 text-muted-2">{def != null ? fmt(def) : "—"}</td>
                   <td className="py-2.5 pr-3">
                     <input
@@ -110,7 +118,10 @@ export function TierPricesEditor({
                       inputMode="decimal"
                       placeholder={def != null ? def.toFixed(2).replace(".", ",") : "—"}
                       aria-label={`Zmluvná netto cena pre úroveň ${t.name}`}
-                      className={inp}
+                      disabled={!canEditPricing}
+                      aria-invalid={badCode === t.code || undefined}
+                      aria-describedby={!canEditPricing ? "tier-prices-locked" : badCode === t.code ? "tier-prices-error" : undefined}
+                      className={`${inp} disabled:cursor-not-allowed disabled:bg-cream/60 disabled:text-muted`}
                     />
                   </td>
                   <td className="py-2.5 font-medium text-ink">{gross != null ? fmt(gross) : "—"}</td>
@@ -122,10 +133,13 @@ export function TierPricesEditor({
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={pending} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-60">
+        <button onClick={save} disabled={pending || !canEditPricing} className="self-start rounded-[10px] bg-brand px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-2 disabled:cursor-not-allowed disabled:opacity-60">
           {pending ? "Ukladám…" : "Uložiť ceny"}
         </button>
-        {msg && <span className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-[#9a3025]"}`}>{msg.text}</span>}
+        {!canEditPricing && <span id="tier-prices-locked" className="text-[13px] text-muted-3">Zmluvné ceny nastavuje administrátor.</span>}
+        <LiveMessage message={pending ? "Ukladám ceny…" : msg?.ok ? msg.text : null} />
+        <LiveMessage message={msg && !msg.ok ? msg.text : null} tone="error" />
+        {msg && <span id="tier-prices-error" className={`text-[13px] ${msg.ok ? "text-brand-2" : "text-danger-ink"}`}>{msg.text}</span>}
       </div>
     </div>
   );

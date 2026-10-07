@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LiveMessage, useFocusWhen } from "@/components/ui/live-region";
 
 const SEGMENTS = [
   "Hotel, penzión, wellness",
@@ -15,7 +16,7 @@ const SEGMENTS = [
 const TYPY = ["Cenová ponuka", "Prenájom dávkovačov", "Prístup do portálu", "Iné"];
 
 const inputCls =
-  "border-0 border-b border-[#d2d8d4] bg-transparent px-0.5 py-2.5 text-[16.5px] text-ink outline-none transition-colors focus:border-brand";
+  "border-0 border-b border-field bg-transparent px-0.5 py-2.5 text-[16.5px] text-ink outline-none transition-colors focus:border-brand";
 const labelCls =
   "flex flex-col gap-2.5 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-2";
 
@@ -23,6 +24,7 @@ export function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const sentRef = useFocusWhen<HTMLDivElement>(submitted);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,7 +48,7 @@ export function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center gap-[18px] px-2 text-center" style={{ padding: "clamp(28px,5vw,64px) 8px" }}>
+      <div role="status" ref={sentRef} tabIndex={-1} className="flex flex-col items-center gap-[18px] px-2 text-center" style={{ padding: "clamp(28px,5vw,64px) 8px" }}>
         <span className="inline-flex h-[62px] w-[62px] items-center justify-center rounded-full bg-mintbg text-brand">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
         </span>
@@ -68,7 +70,7 @@ export function ContactForm() {
       <form onSubmit={onSubmit} className="flex flex-col gap-[26px]">
         <div className="grid gap-[26px] sm:grid-cols-2">
           <label className={labelCls}>Meno a priezvisko *
-            <input name="meno" type="text" required placeholder="Vaše meno" className={inputCls} />
+            <input name="meno" type="text" required autoComplete="name" placeholder="Vaše meno" className={inputCls} />
           </label>
           <label className={labelCls}>Firma / prevádzka *
             <input name="firma" type="text" required placeholder="Názov firmy alebo prevádzky" className={inputCls} />
@@ -103,7 +105,9 @@ export function ContactForm() {
         </div>
         <input type="text" name="web" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
         <p className="text-[13.5px] leading-relaxed text-muted-3">Odoslaním dopytu beriete na vedomie spracúvanie údajov potrebné na jeho vybavenie. Podrobnosti sú v <a href="/ochrana-osobnych-udajov" target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2">zásadách ochrany osobných údajov</a>. Nejde o marketingový súhlas.</p>
-        {error && <p role="alert" className="text-[14px] text-[#a23b2a]">Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908.</p>}
+        <LiveMessage message={submitting ? "Odosielam dopyt…" : null} />
+        <LiveMessage message={error ? "Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908." : null} tone="error" />
+        {error && <p className="text-[14px] text-[#a23b2a]">Odoslanie zlyhalo. Skúste znova alebo nám zavolajte na 0919 216 908.</p>}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-4">
           <button type="submit" disabled={submitting} className="inline-flex items-center gap-2.5 rounded-[9px] bg-brand px-7 py-[15px] text-[16px] font-semibold text-white transition hover:bg-brand-2 disabled:opacity-70">
             {submitting ? "Odosielam…" : "Odoslať dopyt"}

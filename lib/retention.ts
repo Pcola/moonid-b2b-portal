@@ -10,6 +10,14 @@ const AUDIT_MONTHS = 24;
 const INQUIRY_HANDLED_MONTHS = 12;
 const INQUIRY_STALE_MONTHS = 24;
 const RATELIMIT_DAYS = 7;
+// Žiadosti o prístup (meno, e-mail, telefón, IČO, voľná poznámka) — doteraz sa nemazali.
+// Zamietnutá = rovnaký režim ako vybavený dopyt (12 mes. od vybavenia). Schválená = 24 mes.
+// od vybavenia: živé údaje už žijú v Company/User a auditná stopa ACCESS_APPROVE má tiež
+// 24 mes. Nevybavená = 24 mes. od prijatia (mŕtvy lead). MUSÍ sedieť so zverejnenými
+// zásadami v app/ochrana-osobnych-udajov/page.tsx — meniť vždy obe miesta naraz.
+const ACCESS_REQ_REJECTED_MONTHS = 12;
+const ACCESS_REQ_APPROVED_MONTHS = 24;
+const ACCESS_REQ_STALE_MONTHS = 24;
 
 function monthsAgo(m: number): Date {
   const d = new Date();
@@ -34,16 +42,27 @@ export async function maybeRunRetention(): Promise<void> {
     const inqHandled = await prisma.inquiry.deleteMany({ where: { handledAt: { lt: monthsAgo(INQUIRY_HANDLED_MONTHS) } } });
     const inqStale = await prisma.inquiry.deleteMany({ where: { handledAt: null, createdAt: { lt: monthsAgo(INQUIRY_STALE_MONTHS) } } });
     const rl = await prisma.rateLimit.deleteMany({ where: { windowStart: { lt: new Date(Date.now() - RATELIMIT_DAYS * 86400_000) }, key: { not: "retention:daily" } } });
+    const accRejected = await prisma.accessRequest.deleteMany({ where: { status: "REJECTED", resolvedAt: { lt: monthsAgo(ACCESS_REQ_REJECTED_MONTHS) } } });
+    const accApproved = await prisma.accessRequest.deleteMany({ where: { status: "APPROVED", resolvedAt: { lt: monthsAgo(ACCESS_REQ_APPROVED_MONTHS) } } });
+    const accStale = await prisma.accessRequest.deleteMany({ where: { status: "PENDING", createdAt: { lt: monthsAgo(ACCESS_REQ_STALE_MONTHS) } } });
 
     // preukázateľnosť purgeu (GDPR accountability) — zapíše sa len keď sa niečo zmazalo.
     // Priamy insert, NIE writeAudit: ten číta headers(), čo v after() z render fázy hádže
     // (Next E367) a audit by sa ticho nezapísal; systémový purge aj tak nemá ip/UA.
-    if (audit + inqHandled.count + inqStale.count + rl.count > 0) {
+    if (audit + inqHandled.count + inqStale.count + rl.count + accRejected.count + accApproved.count + accStale.count > 0) {
       await prisma.auditLog.create({
         data: {
           action: "RETENTION_PURGE",
           entity: "System",
-          meta: { audit, inquiriesHandled: inqHandled.count, inquiriesStale: inqStale.count, rateLimit: rl.count },
+          meta: {
+            audit,
+            inquiriesHandled: inqHandled.count,
+            inquiriesStale: inqStale.count,
+            rateLimit: rl.count,
+            accessRequestsRejected: accRejected.count,
+            accessRequestsApproved: accApproved.count,
+            accessRequestsStale: accStale.count,
+          },
         },
       });
     }

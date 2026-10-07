@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
+import { canManagePriceTiers } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { isStockFresh } from "@/lib/stock";
 import { ProductEditForm } from "./product-edit-form";
 import { TierPricesEditor } from "./tier-prices-editor";
 
@@ -9,15 +11,20 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Staff · Úprava produktu", robots: { index: false, follow: false } };
 
 export default async function ProductEditPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { id } = await params;
+  // Cenotvorba je ADMIN-only (viď app/staff/produkty/actions.ts). Tu iba UI — server si to
+  // vynucuje sám, takže skryté/zamknuté polia nie sú bezpečnostná hranica, len prevencia
+  // toho, aby staff vypĺňal pole, ktoré mu uloženie aj tak odmietne.
+  const canEditPricing = canManagePriceTiers(staff.role);
 
   const [product, cats, tiers] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       select: {
         id: true, sku: true, name: true, nameDisplay: true, origin: true, unit: true, brand: true,
-        basePrice: true, vatRate: true, descriptionLong: true, isPublished: true, isSubsidized: true,
+        basePrice: true, vatRate: true, descriptionLong: true, isPublished: true, isSubsidized: true, isStocked: true,
+        stockCache: true, stockSyncedAt: true,
         categoryId: true, subcategoryId: true, slug: true,
         media: { where: { isPrimary: true }, take: 1, select: { storagePath: true } },
         prices: { select: { priceTierCode: true, unitPriceNet: true } },
@@ -38,14 +45,17 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
     nameDisplay: product.nameDisplay ?? "", categoryId: product.categoryId ?? "", subcategoryId: product.subcategoryId ?? "", unit: product.unit,
     brand: product.brand ?? "", basePrice: product.basePrice != null ? Number(product.basePrice) : null,
     vatRate: Number(product.vatRate), descriptionLong: product.descriptionLong ?? "",
-    isPublished: product.isPublished, isSubsidized: product.isSubsidized,
+    isPublished: product.isPublished, isSubsidized: product.isSubsidized, isStocked: product.isStocked,
+    stockCache: product.stockCache != null ? Number(product.stockCache) : null,
+    stockFresh: isStockFresh(product.stockSyncedAt),
+    stockSyncedAt: product.stockSyncedAt ? product.stockSyncedAt.toISOString() : null,
     image: product.media[0]?.storagePath ?? "", slug: product.slug ?? null,
   };
 
   return (
     <div className="flex max-w-[880px] flex-col gap-5">
       <Link href="/staff/produkty" className="text-[13.5px] font-medium text-muted transition hover:text-ink">← Produkty</Link>
-      <ProductEditForm product={data} cats={cats} />
+      <ProductEditForm product={data} cats={cats} canEditPricing={canEditPricing} />
       <TierPricesEditor
         productId={product.id}
         basePriceNet={data.basePrice}
@@ -53,6 +63,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
         isSubsidized={data.isSubsidized}
         tiers={tierItems}
         initial={priceInitial}
+        canEditPricing={canEditPricing}
       />
     </div>
   );

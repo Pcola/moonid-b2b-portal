@@ -43,6 +43,7 @@ export default function OchranaOsobnychUdajov() {
         <li>účtovné a daňové záznamy spravidla 10 rokov podľa príslušných predpisov,</li>
         <li>objednávky, zmluvná komunikácia a účty počas vzťahu a následne podľa zákonných lehôt a času potrebného na uplatnenie alebo obranu právnych nárokov,</li>
         <li>vybavené kontaktné dopyty 12 mesiacov od vybavenia; nevybavené najviac 24 mesiacov od prijatia,</li>
+        <li>žiadosti o prístup do portálu: zamietnuté 12 mesiacov od vybavenia, schválené 24 mesiacov od vybavenia, nevybavené najviac 24 mesiacov od prijatia,</li>
         <li>aplikačné bezpečnostné/auditné záznamy 24 mesiacov, rate-limit záznamy najviac 7 dní.</li>
       </UL>
       <P>Ak právny predpis, prebiehajúci spor alebo bezpečnostný incident vyžaduje dlhšie uchovanie konkrétneho záznamu, uchováme ho len v nevyhnutnom rozsahu do skončenia daného účelu.</P>
@@ -59,10 +60,26 @@ export default function OchranaOsobnychUdajov() {
 
       <H2>Prenos do tretích krajín</H2>
       <P>
-        Pri niektorých dodávateľoch alebo ich subdodávateľoch môže dochádzať k spracúvaniu mimo EHP. Taký prenos
-        uskutočňujeme iba na základe platného mechanizmu podľa GDPR, najmä rozhodnutia o primeranosti alebo aktuálnych
-        štandardných zmluvných doložiek, a podľa potreby doplnkových opatrení. Konkrétny aktuálny zoznam príjemcov,
-        krajín a použitých záruk vám poskytneme na požiadanie.
+        Sprostredkovatelia <strong>Supabase</strong>, <strong>Vercel</strong>, <strong>Resend</strong> a{" "}
+        <strong>Sentry</strong> sú poskytovatelia so sídlom alebo materskou spoločnosťou v{" "}
+        <strong>Spojených štátoch amerických</strong>. Pri prevádzke týchto služieb, pri ich technickej podpore alebo
+        u ich subdodávateľov preto môže dochádzať k spracúvaniu údajov alebo k prístupu k nim{" "}
+        <strong>mimo Európskeho hospodárskeho priestoru, najmä v USA</strong>.
+      </P>
+      <P>
+        Každý takýto prenos je krytý zárukami podľa kapitoly V GDPR: buď{" "}
+        <strong>rozhodnutím Európskej komisie o primeranosti</strong> — pre USA rámcom EU–US Data Privacy Framework, ak
+        je konkrétny príjemca v ňom certifikovaný — alebo{" "}
+        <strong>štandardnými zmluvnými doložkami podľa čl. 46 ods. 2 písm. c) GDPR</strong> uzavretými v zmluve
+        o spracúvaní osobných údajov. Dopĺňame ich technickými a organizačnými opatreniami: šifrovaným prenosom,
+        minimalizáciou odosielaných údajov a pseudonymizáciou identifikátorov v monitoringu chýb.
+      </P>
+      <P>
+        Ktorý z týchto mechanizmov sa uplatňuje pri konkrétnom príjemcovi, spolu s aktuálnym zoznamom
+        sprostredkovateľov a krajín spracúvania, vám oznámime na požiadanie a poskytneme aj{" "}
+        <strong>kópiu použitých záruk alebo odkaz na ne</strong> (čl. 13 ods. 1 písm. f a čl. 46 ods. 1 GDPR). Napíšte
+        nám na{" "}
+        <a href="mailto:moonid@moonid.sk" className="font-semibold text-brand hover:text-brand-2">moonid@moonid.sk</a>.
       </P>
 
       <H2>Automatizované rozhodovanie a profilovanie</H2>

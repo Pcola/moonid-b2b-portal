@@ -9,8 +9,9 @@ export const metadata: Metadata = { title: "Prihlásenie — Moonid B2B portál"
 
 const stats = (
   <div className="flex gap-7">
-    <div className="flex flex-col gap-0.5"><span className="text-[28px] text-white">1 600+</span><span className="text-[12.5px] text-[#8fb3ab]">položiek v sortimente</span></div>
-    <div className="flex flex-col gap-0.5"><span className="text-[28px] text-white">Vlastný rozvoz</span><span className="text-[12.5px] text-[#8fb3ab]">Nové Zámky a okolie</span></div>
+    {/* #8fb3ab na #21564C = 3,68:1 (pod AA); #b7ccc6 = 4,99:1 */}
+    <div className="flex flex-col gap-0.5"><span className="text-[28px] text-white">1 600+</span><span className="text-[12.5px] text-[#b7ccc6]">položiek v sortimente</span></div>
+    <div className="flex flex-col gap-0.5"><span className="text-[28px] text-white">Vlastný rozvoz</span><span className="text-[12.5px] text-[#b7ccc6]">Nové Zámky a okolie</span></div>
   </div>
 );
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
       }
     >
       <div className="flex flex-col gap-2.5">
-        <h2 className="text-[32px] tracking-[-0.01em] text-ink">Prihlásenie</h2>
+        <h1 className="text-[32px] tracking-[-0.01em] text-ink">Prihlásenie</h1>
         <p className="text-[15px] leading-relaxed text-muted">Zadajte firemné prihlasovacie údaje pre prístup do portálu.</p>
       </div>
       <Suspense>

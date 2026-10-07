@@ -3,6 +3,7 @@
 import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
@@ -14,8 +15,8 @@ import { rateLimit, rateLimitKey, clientIp } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 
-const RESET_MIN_RESPONSE_MS = 1_800;
-const RESET_JITTER_MS = 400;
+const RESET_MIN_RESPONSE_MS = 300;
+const RESET_JITTER_MS = 200;
 
 async function equalizeResetResponse(startedAt: number): Promise<void> {
   const targetDuration = RESET_MIN_RESPONSE_MS + randomInt(RESET_JITTER_MS + 1);
@@ -70,16 +71,7 @@ export async function authenticate(input: unknown): Promise<{ ok: boolean; error
   return { ok: true };
 }
 
-/** Scanner-safe reset s rovnakou verejnou odpoveďou pre existujúci aj neexistujúci účet. */
-export async function requestPasswordReset(email: unknown): Promise<void> {
-  const parsed = z.string().trim().email().max(160).safeParse(email);
-  if (!parsed.success) return;
-  const ip = clientIp(await headers());
-  const byIp = await rateLimit(rateLimitKey("reset-ip", ip), { limit: 10, windowSec: 3600 });
-  const byEmail = await rateLimit(rateLimitKey("reset-email", parsed.data), { limit: 3, windowSec: 3600 });
-  if (!byIp.ok || !byEmail.ok) return;
-  const normalizedEmail = normalizeInternalEmail(parsed.data);
-  const startedAt = Date.now();
+async function processPasswordReset(normalizedEmail: string): Promise<void> {
   try {
     const user = await prisma.user.findFirst({
       where: { email: { equals: normalizedEmail, mode: "insensitive" } },
@@ -121,11 +113,41 @@ export async function requestPasswordReset(email: unknown): Promise<void> {
       entityId: user.id,
     });
   } catch (error) {
-    // Rovnaká odpoveď chráni pred enumeráciou; interná chyba je viditeľná iba v observability.
+    // Verejná odpoveď už bola odoslaná; interná chyba je viditeľná iba v observability.
     reportError("auth.passwordReset", error, { action: "reset_failed" });
+  }
+}
+
+/** Scanner-safe reset s rovnakou verejnou odpoveďou aj časovou cestou pre každý účet. */
+export async function requestPasswordReset(email: unknown): Promise<void> {
+  const parsed = z.string().trim().email().max(160).safeParse(email);
+  if (!parsed.success) return;
+
+  const startedAt = Date.now();
+  try {
+    const ip = clientIp(await headers());
+    const normalizedEmail = normalizeInternalEmail(parsed.data);
+    const byIp = await rateLimit(rateLimitKey("reset-ip", ip), { limit: 10, windowSec: 3600 });
+    // Zablokovaná IP nesmie inkrementovať globálny emailový bucket. Inak by jediná
+    // blokovaná IP vedela odoprieť obnovu hesla ľubovoľnému počtu cudzích účtov.
+    if (!byIp.ok) return;
+
+    const byEmail = await rateLimit(rateLimitKey("reset-email", normalizedEmail), { limit: 3, windowSec: 3600 });
+    if (!byEmail.ok) return;
+
+    try {
+      // Lookup, vydanie tokenu, e-mail aj audit prebehnú až po verejnej odpovedi. Pred
+      // odpoveďou preto neexistuje vetva závislá od existencie alebo aktivity účtu.
+      // Next/Vercel cez waitUntil drží invokáciu na dokončenie tejto práce.
+      after(() => processPasswordReset(normalizedEmail));
+    } catch (error) {
+      // Napr. chýbajúci request context/adaptér. Navonok stále rovnaká odpoveď,
+      // ale bezpečnostný reset nesmie zlyhať potichu.
+      reportError("auth.passwordReset.schedule", error, { action: "reset_schedule_failed" });
+    }
   } finally {
-    // DB-only negatívna vetva a provider/email vetva majú spoločnú minimálnu dobu s jitterom.
-    // Rate limit vyššie bráni zneužitiu oneskorenia na lacný serverless DoS.
+    // Každý syntakticky platný request vrátane oboch rate-limit vetiev má rovnaké
+    // minimum s kryptografickým jitterom. Account-dependent práca je až v after().
     await equalizeResetResponse(startedAt);
   }
 }

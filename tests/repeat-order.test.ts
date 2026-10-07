@@ -154,4 +154,29 @@ describe("placeRepeatOrder — opakovanie s doobjednaním", () => {
     expect(r1.ok && r2.ok).toBe(true);
     expect(r1.id).not.toBe(r2.id); // zopakovať tú istú objednávku 2× je povolené (iný kľúč)
   });
+
+  it("IDEMPOTENCIA: kolízia kľúča neprezradí ID ani číslo objednávky iného používateľa", async () => {
+    const key = randomUUID();
+    const foreign = await prisma.order.create({
+      data: {
+        number: `WEB-IDEMP-${key.slice(0, 8)}`,
+        companyId,
+        createdById: userBId,
+        idempotencyKey: key,
+        status: "PRIJATA",
+        pohodaSync: "LOKALNA",
+        priceTierCode: TIER,
+        subtotal: 1,
+        vat: 0,
+        total: 1,
+      },
+    });
+
+    const result = await placeRepeatOrder(sourceOrderId, key, true);
+
+    expect(result.ok).toBe(false);
+    expect(result.id).toBeUndefined();
+    expect(result.number).toBeUndefined();
+    expect(result).not.toEqual(expect.objectContaining({ id: foreign.id, number: foreign.number }));
+  });
 });

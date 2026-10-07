@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setCompanyUserActive, setCompanyUserRole, resendCompanyUserInvite } from "../actions";
+import { LiveMessage } from "@/components/ui/live-region";
 
 type U = { id: string; name: string | null; email: string; role: string; active: boolean };
 
 const ROLE: Record<string, string> = { CUSTOMER_ADMIN: "Správca firmy", CUSTOMER_USER: "Používateľ", STAFF: "Staff", ADMIN: "Admin" };
-const sel = "rounded-lg border border-line bg-white px-2 py-1 text-[12.5px] text-ink outline-none transition focus:border-brand";
+const sel = "rounded-lg border border-field bg-white px-2 py-1 text-[12.5px] text-ink outline-none transition focus:border-brand";
 const btn = "rounded-lg border border-line px-2.5 py-1.5 text-[12px] font-semibold text-muted transition hover:text-ink disabled:opacity-50";
 
 function UserRow({ u }: { u: U }) {
@@ -34,7 +35,7 @@ function UserRow({ u }: { u: U }) {
           <div className="truncate text-[14px] font-medium text-ink">{u.name ?? u.email}</div>
           <div className="truncate text-[12.5px] text-muted-2">{u.email}</div>
         </div>
-        {!u.active && <span className="whitespace-nowrap rounded-full bg-[#fdeceb] px-2 py-0.5 text-[11px] font-medium text-[#9a3025]">neaktívne</span>}
+        {!u.active && <span className="whitespace-nowrap rounded-full bg-danger px-2 py-0.5 text-[11px] font-medium text-danger-ink">neaktívne</span>}
       </div>
 
       {isInternal ? (
@@ -62,7 +63,9 @@ function UserRow({ u }: { u: U }) {
         </div>
       )}
 
-      {err && <span className="text-[12px] text-[#9a3025]">{err}</span>}
+      <LiveMessage message={pending ? "Pracujem…" : null} />
+      <LiveMessage message={err} tone="error" />
+      {err && <span className="text-[12px] text-danger-ink">{err}</span>}
       {link && (
         <div className="rounded-lg border border-line bg-cream/50 p-2">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-2">Prístupový odkaz (pošlite používateľovi)</p>

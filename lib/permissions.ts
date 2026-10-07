@@ -20,3 +20,7 @@ export function canViewAuditLog(role: Role): boolean {
 export function canManageInternalUsers(role: Role): boolean {
   return role === "ADMIN";
 }
+
+export function canManageSyncJobs(role: Role): boolean {
+  return role === "ADMIN";
+}
