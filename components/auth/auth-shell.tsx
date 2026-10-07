@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 // Split-screen rám pre auth stránky: vľavo brand panel, vpravo plávajúca karta s formulárom.
 export function AuthShell({
@@ -16,7 +17,9 @@ export function AuthShell({
       <div className="relative flex items-center justify-center bg-cream p-[clamp(20px,4vw,48px)]">
         <div className="microgrid pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className={`relative flex w-full flex-col gap-6 ${rightMax}`}>
-          <Link href="/" className="font-display self-start text-[26px] font-semibold tracking-[-0.03em] text-brand lg:hidden">moonid<span className="text-mint-ink">.</span></Link>
+          <Link href="/" className="self-start py-1 lg:hidden">
+            <Logo className="h-[19px]" />
+          </Link>
           <div className="flex flex-col gap-7 rounded-[22px] border border-line bg-white p-[clamp(24px,3.4vw,44px)] shadow-[0_30px_70px_-45px_rgba(13,33,27,0.4)]">
             {children}
           </div>

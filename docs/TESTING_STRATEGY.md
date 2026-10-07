@@ -85,20 +85,23 @@
 - **Supabase** → Query Performance report + `pg_stat_statements`; `EXPLAIN (ANALYZE, BUFFERS)` len pri >10 ms.
 
 ### Vrstva 3 — Autentifikované E2E (Playwright) *(jadro hodnoty)*
-- **Artefakty:** `playwright.config.ts`, `tests/e2e/auth.setup.ts` (login + storageState), `perf-baseline.spec.ts` (dealer), `staff-baseline.spec.ts`, `order-flow.spec.ts` (opt-in).
-- **Účty:** `.env.test` (gitignored) — skopíruj z `.env.test.example`, doplň heslá. V CI → GitHub Secrets.
+- **Artefakty:** `playwright.config.ts`, `tests/e2e/auth.setup.ts` (login + storageState + voliteľné staff TOTP), `staging-smoke.spec.ts` (read-only release gate), `perf-baseline.spec.ts` (dealer), `staff-baseline.spec.ts`, `order-flow.spec.ts` (opt-in).
+- **Účty:** `.env.test` (gitignored) — skopíruj z `.env.test.example`, doplň heslá. Read-only smoke používa izolovaný účet s rolou `CUSTOMER_ADMIN`, pretože overuje aj firemné faktúry a používateľov; nepoužíva interné `STAFF`/`ADMIN` konto ani MFA secret.
+- **Oddelenie tajomstiev:** CI credentials sú iba v GitHub Environment `staging-e2e`, ktorý smie byť povolený len pre vetvu `staging`. Toto prostredie nesmie obsahovať `DATABASE_URL`, migračné ani iné prevádzkové credentials.
+- **Automatický staging gate:** `.github/workflows/staging-e2e.yml` čaká cez GitHub Deployments API na presný Vercel deployment aktuálneho SHA, použije Vercel Automation Bypass a spustí iba read-only projekt `customer-smoke`. Nepracuje so stabilným aliasom, takže nemôže omylom otestovať starší build.
 - **Spustenie:**
   ```bash
   npm run e2e:install   # raz: stiahne chromium
-  npm run e2e           # setup → dealer + staff baseline (nedeštruktívne)
+  npm run e2e           # setup → dealer + staff baseline (staff vyžaduje TOTP secret)
+  npx playwright test --project=customer-smoke  # read-only release gate
   npm run e2e:report    # HTML report
   ```
 - **Deštruktívny test odoslania objednávky** (vytvorí REÁLNU objednávku + e-mail staffu; Pohoda sync sa inline NEspustí — status `LOKALNA`):
   ```bash
   # PowerShell
-  $env:E2E_PLACE_ORDER="1"; npx playwright test --project=dealer order-flow
+  $env:E2E_PLACE_ORDER="1"; $env:E2E_ALLOW_MUTATIONS_HOST="presny-staging-host"; npx playwright test --project=dealer order-flow
   # Bash
-  E2E_PLACE_ORDER=1 npx playwright test --project=dealer order-flow
+  E2E_PLACE_ORDER=1 E2E_ALLOW_MUTATIONS_HOST=presny-staging-host npx playwright test --project=dealer order-flow
   ```
 
 ### Vrstva 4 — Load test (skromný, realistický) *(až keď to mierka vyžaduje)*

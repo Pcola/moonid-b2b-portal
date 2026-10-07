@@ -90,7 +90,7 @@ export function Dialog({
         tabIndex={-1}
         className={cn("relative flex w-full max-w-[440px] flex-col gap-4 rounded-2xl border border-line bg-white p-6 shadow-[0_24px_60px_-18px_rgba(13,23,21,0.35)]", className)}
       >
-        <h2 id={titleId} className="font-display text-[19px] font-semibold tracking-[-0.02em] text-ink">{title}</h2>
+        <h2 id={titleId} className="text-[19px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
         {description && <div id={descId} className="text-[13.5px] leading-relaxed text-muted-3">{description}</div>}
         {children}
         {footer && <div className="flex flex-wrap items-center justify-end gap-2">{footer}</div>}

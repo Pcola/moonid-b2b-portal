@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Bricolage_Grotesque } from "next/font/google";
+import { Hanken_Grotesk, Newsreader } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { safeJsonLd } from "@/lib/json-ld";
@@ -14,11 +14,13 @@ const sans = Hanken_Grotesk({
   display: "swap",
 });
 
-// Display font redizajnu — nadpisy, obrie číslovky, wordmark (design-system/MASTER.md)
-const displayFont = Bricolage_Grotesque({
+// Display font redizajnu 2026 — editoriálny serif pre verejný web a veľké nadpisy stránok
+// (design-system/MASTER.md). Jediný rez 500 (≈ 38 KB latin + latin-ext); logo je SVG
+// (components/ui/logo.tsx), takže na tomto fonte nezávisí.
+const displayFont = Newsreader({
   subsets: ["latin", "latin-ext"],
-  weight: ["500", "600", "700"],
-  variable: "--font-bricolage",
+  weight: ["500"],
+  variable: "--font-newsreader",
   display: "swap",
 });
 

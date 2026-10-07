@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { focusFirst, trapTabKey } from "@/lib/focus-trap";
+import { Logo } from "@/components/ui/logo";
 
 const NAV = [
   { label: "Sortiment", href: "/produkty" },
@@ -64,7 +65,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
 
       <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
         <header
-          className="mx-auto flex h-[62px] max-w-[1180px] items-center justify-between gap-4 rounded-2xl border pl-5 pr-2.5 transition-all duration-300 sm:pl-6"
+          className={`${light ? "" : "on-dark "}mx-auto flex h-[62px] max-w-[1180px] items-center justify-between gap-4 rounded-2xl border pl-5 pr-2.5 transition-all duration-300 sm:pl-6`}
           style={{
             background: light ? "rgba(255,255,255,0.86)" : "rgba(13,28,24,0.55)",
             borderColor: light ? "#e5eae8" : "rgba(255,255,255,0.14)",
@@ -73,8 +74,9 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
             boxShadow: light ? "0 12px 40px -18px rgba(13,33,27,0.25)" : "0 12px 40px -18px rgba(0,0,0,0.5)",
           }}
         >
-          <Link href="/" className="font-display text-[26px] font-semibold leading-none tracking-[-0.03em] transition-colors" style={{ color: light ? "#163f38" : "#ffffff" }}>
-            moonid<span style={{ color: light ? "#0f6b57" : "#8fe0cd" }}>.</span>
+          {/* py-1: odkaz s logom má 27 px na výšku (SC 2.5.8 Target Size, min. 24 px) */}
+          <Link href="/" className="flex items-center py-1">
+            <Logo tone={light ? "brand" : "inverse"} className="h-[19px]" />
           </Link>
 
           <nav className="hidden items-center gap-[30px] lg:flex" aria-label="Hlavná navigácia">
@@ -112,10 +114,10 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
 
       {/* fullscreen mobilné menu — editoriálne */}
       {open && (
-        <div ref={menuDialogRef} tabIndex={-1} id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[60] flex flex-col bg-brand-deep lg:hidden">
+        <div ref={menuDialogRef} tabIndex={-1} id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" className="on-dark fixed inset-0 z-[60] flex flex-col bg-brand-deep lg:hidden">
           <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
           <div className="relative flex items-center justify-between px-6 pt-6">
-            <span className="font-display text-[26px] font-semibold tracking-[-0.03em] text-white">moonid<span className="text-mint">.</span></span>
+            <Logo tone="inverse" className="h-[19px]" />
             <button onClick={() => setOpen(false)} aria-label="Zavrieť menu" className="inline-flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-xl border border-white/25 text-white">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
@@ -129,7 +131,7 @@ export function SiteHeader({ solid = false }: { solid?: boolean }) {
                 className="group flex items-baseline gap-4 border-b border-white/10 py-4"
               >
                 <span className="font-display text-[13px] tabular-nums text-mint/80">{String(i + 1).padStart(2, "0")}</span>
-                <span className="font-display text-[32px] font-semibold tracking-[-0.02em] text-white transition-colors group-hover:text-mint">{n.label}</span>
+                <span className="font-display text-[32px] font-medium tracking-[-0.012em] text-white transition-colors group-hover:text-mint">{n.label}</span>
               </Link>
             ))}
           </nav>

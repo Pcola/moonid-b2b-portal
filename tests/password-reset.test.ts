@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => {
     findFirst: vi.fn(),
     createRecovery: vi.fn(),
     sendEmail: vi.fn(),
+    isEmailConfigured: vi.fn(),
+    issueGrant: vi.fn(),
+    failGrant: vi.fn(),
+    sendHosted: vi.fn(),
     writeAudit: vi.fn(),
     reportError: vi.fn(),
     rateLimit: vi.fn(),
@@ -21,8 +25,13 @@ vi.mock("next/server", () => ({ after: mocks.scheduleAfter }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findFirst: mocks.findFirst } } }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ writeAudit: mocks.writeAudit }));
-vi.mock("@/lib/email", () => ({ sendEmail: mocks.sendEmail }));
+vi.mock("@/lib/email", () => ({ sendEmail: mocks.sendEmail, isEmailConfigured: mocks.isEmailConfigured }));
 vi.mock("@/lib/internal-auth-admin", () => ({ createInternalRecoveryLink: mocks.createRecovery }));
+vi.mock("@/lib/password-setup-grants", () => ({
+  issuePasswordSetupGrant: mocks.issueGrant,
+  failUndeliveredPasswordSetupGrant: mocks.failGrant,
+}));
+vi.mock("@/lib/supabase/password-recovery", () => ({ sendHostedPasswordRecovery: mocks.sendHosted }));
 vi.mock("@/lib/observability", () => ({ reportError: mocks.reportError }));
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: mocks.rateLimit,
@@ -60,6 +69,10 @@ describe("scanner-safe obnova hesla", () => {
     vi.clearAllMocks();
     mocks.afterTasks.length = 0;
     mocks.rateLimit.mockResolvedValue({ ok: true, count: 1 });
+    mocks.isEmailConfigured.mockReturnValue(true);
+    mocks.issueGrant.mockResolvedValue({ id: "grant-1", nonce: "n".repeat(43), expiresAt: new Date() });
+    mocks.failGrant.mockResolvedValue(undefined);
+    mocks.sendHosted.mockResolvedValue({ ok: true });
   });
 
   afterEach(() => {
@@ -166,6 +179,56 @@ describe("scanner-safe obnova hesla", () => {
       expect.any(Error),
       { action: "reset_withheld" },
     );
+  });
+
+  it("na preview bez Resend použije účelový DB grant a vstavaný Supabase mailer", async () => {
+    mocks.isEmailConfigured.mockReturnValueOnce(false);
+    mocks.findFirst.mockResolvedValueOnce({
+      id: "user-1",
+      authId: "a633b737-baed-484a-b118-75db4238ce90",
+      email: "user@test.invalid",
+      active: true,
+      companyId: "company-1",
+      company: { active: true },
+    });
+
+    await completePublicResponse("user@test.invalid");
+    await runAfterTasks();
+
+    expect(mocks.issueGrant).toHaveBeenCalledWith({
+      userId: "user-1",
+      authId: "a633b737-baed-484a-b118-75db4238ce90",
+      purpose: "RECOVERY",
+    });
+    expect(mocks.sendHosted).toHaveBeenCalledWith(
+      "user@test.invalid",
+      `https://staging.moonid.test/nastav-heslo?grant=${"n".repeat(43)}`,
+    );
+    expect(mocks.createRecovery).not.toHaveBeenCalled();
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).toHaveBeenCalledWith(expect.objectContaining({
+      action: "PASSWORD_RESET_REQUESTED",
+      meta: { delivery: "supabase_hosted" },
+    }));
+  });
+
+  it("pri odmietnutí hosted e-mailu spáli nevydaný grant", async () => {
+    mocks.isEmailConfigured.mockReturnValueOnce(false);
+    mocks.sendHosted.mockResolvedValueOnce({ ok: false });
+    mocks.findFirst.mockResolvedValueOnce({
+      id: "user-1",
+      authId: "a633b737-baed-484a-b118-75db4238ce90",
+      email: "user@test.invalid",
+      active: true,
+      companyId: null,
+      company: null,
+    });
+
+    await completePublicResponse("user@test.invalid");
+    await runAfterTasks();
+
+    expect(mocks.failGrant).toHaveBeenCalledWith("grant-1");
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
   it("pri neúspešnom e-maile nevytvorí zavádzajúci audit úspešného resetu", async () => {
