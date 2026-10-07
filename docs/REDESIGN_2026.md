@@ -37,7 +37,12 @@
 - **Zdroj:** Vercel preview vetvy `staging`, alias `moonid-b2b-portal-git-staging-…vercel.app`, commit `4493b5a`.
   - Overené, že číta staging DB `moonid-b2b-staging`: 18 produktov, žiadny odkaz na produkčný projekt.
   - Lokálny preview by potreboval DB heslo, ktoré connector nevydá. Staging nasadenie ukazuje ten istý vizuál bez neho.
-- **Rozdiel voči `main`:** staging obsahuje aj práce z vetvy `codex/staging-ops-hardening` (auth/heslá, testy) a a11y úpravy, napr. tlačidlo „Zastaviť pohyb" pri marquee. Zistenia v kap. 4 sa vzťahujú na `main` (`df0dfca`).
+- **Rozdiel voči `main`:** vetva `staging` je 29 commitov pred `main` (práce z `codex/staging-ops-hardening`). Zistenia v kap. 4 sa vzťahujú na `main` (`df0dfca`); **časť z nich je na `staging` už vyriešená:**
+  - `1f65d86` UI kit, sémantické tokeny (`success`/`warning`/`danger`/`info`, `on-dark*`, `surface-2/3`), koniec ad-hoc farieb;
+  - `d52ca39` viditeľný focus na tmavých plochách, `--color-field: #7f8d88`, koniec iOS zoomu (A1, A2, A8);
+  - `d383803` pauza pohybu (SC 2.2.2), tri pásy focus ringu (A3);
+  - `173381b` sémantika tabuliek, kontrasty, `h1` na každom breakpointe (A4, A9);
+  - `ddf079d`, `2644f15` popisy polí, autocomplete, oznamovanie výsledkov server akcií čítačkám.
 - **Verejné stránky** `/`, `/produkty`, `/produkt/[slug]`, `/kontakt`, `/registracia`, `/login` nafotil Playwright automaticky s `prefers-reduced-motion`, aby scroll animácie neskryli obsah.
 - **Portál** `/dashboard`, `/katalog`, `/katalog/[slug]`, `/kosik`, `/rychla-objednavka` je nafotený.
   - Skript otvoril okno Chromium a Lukáš sa v ňom prihlásil sám zákazníckym testovacím účtom (firma „[TEST] Hotel Aurora", úroveň B2). Heslo skript nevidel a session sa neuložila.
@@ -191,6 +196,8 @@ Podrobný zoznam je v kap. 9. Najdôležitejšie body:
 ## 5. Návrh tokenov (implementácia vo Fáze 1)
 
 Názvy existujúcich tokenov ostávajú, menia sa len hodnoty tam, kde je to uvedené. Nové tokeny pribúdajú.
+
+> **Zosúladenie s vetvou `staging`:** po jej merge do `main` už existujú `--color-field: #7f8d88` (≈ návrh `#808985`, ponechať hodnotu zo `staging`) a stavové tokeny `success`/`warning`/`danger`/`info` (+ `-ink`, `-line`). V F1 sa preto **nepridávajú** nové názvy `ok-*`/`warn-*`/`danger-*`, ale použijú sa tieto. Zmení sa len `info` z indigo na brand rodinu (`#1E5249` na `#EEF2F0`). Skutočne nové sú `ivory`, `ivory-deep`, `line-warm` a displejový font.
 
 ### 5.1 Farby
 
@@ -526,7 +533,7 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 | PR | Fáza | Obsah | Závisí od | Zastavenie |
 |---|---|---|---|---|
 | 0 | F0 | `docs(design)`: tento dokument, prototyp, master prompt | — | **STOP: smer, font, ivory** |
-| 1 | F1a | `feat(design)`: tokeny v `@theme`, Newsreader cez `next/font`, SVG logo, `.on-dark` focus, odstránenie Bricolage a `container.tsx`, **MASTER.md v2** | PR 0 | — |
+| 1 | F1a | `feat(design)`: tokeny v `@theme` (nadviazať na UI kit zo `staging`), Newsreader cez `next/font`, SVG logo, odstránenie Bricolage a `container.tsx`, **MASTER.md v2** | PR 0 + **merge `staging` → `main`** (UI kit, tokeny, a11y) | — |
 | 2 | F1b | `feat(design)`: primitíva v `components/ui/` (Button, IconButton, Field/Input, Select, Badge, StockBadge, Price + `formatEur`, QtyStepper, Card, Dialog/Drawer, Tabs, DataTable, EmptyState, Logo). Bez migrácie stránok, staré triedy (`.t-h2`, `.eyebrow`, `.wipe`, `.microgrid`, `.reveal`) ostávajú. | PR 1 | — |
 | 3 | F2a | `feat(design)`: header + hero (mesh, stagger, magnetické CTA) | PR 2 | **STOP: vizuálne schválenie** |
 | 4 | F2b | zvyšok domovskej stránky, footer, cookie lišta, obsahové úpravy O1–O8 po rozhodnutí | PR 3 | — |
@@ -562,7 +569,7 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 | ≈ 400 hex hodnôt a 30+ veľkostí písma | regresie pri migrácii | migrácia po stránkach v F2–F5, vizuálne porovnanie zo stagingu |
 | Nové komponenty a únik cien | porušenie invariantu 2 | len view-model typy (`PricedLine`), kontrola RSC payloadu `/katalog*` v každom PR |
 | E2E proti produkcii (`.env.test`) | zásah do produkčných dát | staging env pred PR 1, `db-guard` nevypínať |
-| Paralelná vetva `codex/staging-ops-hardening` mení auth a testy | merge konflikty v F3 | F3 až po jej merge |
+| Paralelná vetva `codex/staging-ops-hardening` / `staging` už má UI kit, sémantické tokeny a a11y opravy (29 commitov pred `main`) | duplicitná práca a masívne konflikty v F1–F5 | **F1 až po merge `staging` → `main`**; návrh tokenov zosúladiť (kap. 5.1) |
 | Staging na free pláne sa uspí po 7 dňoch nečinnosti | zlyhá fotenie alebo e2e | pred každou fázou skontrolovať stav, prípadne ho zobudiť |
 | Obsahové TODO bez vlastníka | blokuje F2b | rozhodnutia O1–O9 od majiteľa pred PR 4 |
 
