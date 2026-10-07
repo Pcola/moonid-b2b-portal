@@ -20,6 +20,11 @@ const baseHeaders = [
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
+const passwordSetupHeaders = [
+  { key: "Referrer-Policy", value: "no-referrer" },
+  { key: "Cache-Control", value: "no-store, max-age=0" },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
@@ -32,7 +37,11 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: "/:path*", headers: baseHeaders }];
+    return [
+      { source: "/:path*", headers: baseHeaders },
+      // `grant` is a short-lived capability until the bootstrap scrubs the URL.
+      { source: "/nastav-heslo", headers: passwordSetupHeaders },
+    ];
   },
 };
 

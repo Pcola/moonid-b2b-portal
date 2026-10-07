@@ -11,7 +11,18 @@ try {
   /* .env.test nemusí existovať v CI — premenné prídu z GitHub Secrets */
 }
 
-const BASE = process.env.E2E_BASE_URL || "https://moonid-b2b-portal.vercel.app";
+// Bez explicitného cieľa testujeme iba lokálny server. Produkcia nesmie byť bezpečnostne
+// neviditeľným defaultom, pretože niektoré E2E scenáre zapisujú do košíka/objednávok.
+const BASE = process.env.E2E_BASE_URL || "http://127.0.0.1:3000";
+
+if (process.env.GITHUB_ACTIONS === "true") {
+  const target = new URL(BASE);
+  const isMoonidPreview =
+    /^moonid-b2b-portal-[a-z0-9]+-lukasslobodnik7-7499s-projects\.vercel\.app$/i.test(target.hostname);
+  if (target.protocol !== "https:" || !isMoonidPreview) {
+    throw new Error(`CI E2E odmieta neočakávaný cieľ: ${target.origin}`);
+  }
+}
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -34,6 +45,12 @@ export default defineConfig({
       name: "dealer",
       dependencies: ["setup"],
       testMatch: /(perf-baseline|order-flow)\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], storageState: "tests/e2e/.auth/dealer.json" },
+    },
+    {
+      name: "customer-smoke",
+      dependencies: ["setup"],
+      testMatch: /staging-smoke\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], storageState: "tests/e2e/.auth/dealer.json" },
     },
     {

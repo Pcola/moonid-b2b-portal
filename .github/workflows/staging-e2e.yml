@@ -1,0 +1,136 @@
+name: Staging E2E
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  deployments: read
+
+concurrency:
+  group: staging-e2e
+  cancel-in-progress: true
+
+jobs:
+  customer-smoke:
+    name: customer-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Samostatné prostredie úmyselne nesmie obsahovať DATABASE_URL ani migračné
+    # credentials. Workflow z vetvy staging dostane iba tri E2E secrets.
+    environment: staging-e2e
+    steps:
+      - name: Reject non-staging manual runs
+        if: github.ref != 'refs/heads/staging'
+        run: |
+          echo "::error::Staging E2E sa smie spustiť iba z vetvy staging."
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Validate protected E2E configuration
+        env:
+          E2E_CUSTOMER_ADMIN_EMAIL: ${{ secrets.E2E_CUSTOMER_ADMIN_EMAIL }}
+          E2E_CUSTOMER_ADMIN_PASSWORD: ${{ secrets.E2E_CUSTOMER_ADMIN_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          missing=0
+          for name in E2E_CUSTOMER_ADMIN_EMAIL E2E_CUSTOMER_ADMIN_PASSWORD VERCEL_AUTOMATION_BYPASS_SECRET; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::$name chýba v GitHub environment staging-e2e."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Wait for the exact Vercel deployment
+        id: deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          deployment_url=""
+          for attempt in $(seq 1 60); do
+            deployments=$(gh api --method GET "repos/${GITHUB_REPOSITORY}/deployments" \
+              -f sha="${GITHUB_SHA}" -f per_page=20)
+            deployment_id=$(jq -r '[.[] | select(.environment == "Preview" and .creator.login == "vercel[bot]")][0].id // empty' <<<"$deployments")
+
+            if [[ -n "$deployment_id" ]]; then
+              statuses=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${deployment_id}/statuses?per_page=10")
+              state=$(jq -r '.[0].state // empty' <<<"$statuses")
+              if [[ "$state" == "success" ]]; then
+                deployment_url=$(jq -r '.[0].environment_url // .[0].target_url // empty' <<<"$statuses")
+                break
+              fi
+              if [[ "$state" == "error" || "$state" == "failure" ]]; then
+                echo "::error::Vercel deployment skončil stavom $state."
+                exit 1
+              fi
+            fi
+
+            echo "Čakám na Vercel deployment pre ${GITHUB_SHA:0:12} (pokus $attempt/60)…"
+            sleep 10
+          done
+
+          if [[ -z "$deployment_url" ]]; then
+            echo "::error::Vercel deployment nebol pripravený do 10 minút."
+            exit 1
+          fi
+
+          node -e '
+            const url = new URL(process.argv[1]);
+            const immutableStagingHost = /^moonid-b2b-portal-[a-z0-9]+-lukasslobodnik7-7499s-projects\.vercel\.app$/i;
+            if (url.protocol !== "https:" || !immutableStagingHost.test(url.hostname)) {
+              throw new Error(`Neočekávaný deployment URL: ${url.origin}`);
+            }
+          ' "$deployment_url"
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Verify staging liveness endpoint
+        env:
+          E2E_BASE_URL: ${{ steps.deployment.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          out=$(curl -sS -m 30 \
+            -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" \
+            -H "x-vercel-set-bypass-cookie: true" \
+            -w '\n%{http_code}' "$E2E_BASE_URL/api/health")
+          code=$(tail -n1 <<<"$out")
+          body=$(sed '$d' <<<"$out")
+          if [[ "$code" != "200" && "$code" != "503" ]]; then
+            echo "::error::Health endpoint vrátil HTTP $code."
+            exit 1
+          fi
+          if ! jq -e '.db == "up"' >/dev/null <<<"$body"; then
+            echo "::error::Health endpoint nepotvrdil dostupnú staging DB."
+            exit 1
+          fi
+          if [[ "$code" == "503" ]]; then
+            echo "::warning::Aplikácia a DB sú dostupné, ale niektorá voliteľná integrácia zatiaľ nie je ready."
+          fi
+
+      - name: Install dependencies
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
+          DIRECT_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run authenticated read-only customer smoke
+        env:
+          CI: "true"
+          E2E_BASE_URL: ${{ steps.deployment.outputs.url }}
+          E2E_CUSTOMER_ADMIN_EMAIL: ${{ secrets.E2E_CUSTOMER_ADMIN_EMAIL }}
+          E2E_CUSTOMER_ADMIN_PASSWORD: ${{ secrets.E2E_CUSTOMER_ADMIN_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npx playwright test --project=customer-smoke

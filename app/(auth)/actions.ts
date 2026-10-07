@@ -7,12 +7,14 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
-import { sendEmail } from "@/lib/email";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { createInternalRecoveryLink } from "@/lib/internal-auth-admin";
 import { normalizeInternalEmail } from "@/lib/internal-user-policy";
 import { reportError } from "@/lib/observability";
+import { failUndeliveredPasswordSetupGrant, issuePasswordSetupGrant } from "@/lib/password-setup-grants";
 import { rateLimit, rateLimitKey, clientIp } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
+import { sendHostedPasswordRecovery } from "@/lib/supabase/password-recovery";
 import { SITE_URL } from "@/lib/site-url";
 
 const RESET_MIN_RESPONSE_MS = 300;
@@ -79,6 +81,42 @@ async function processPasswordReset(normalizedEmail: string): Promise<void> {
     });
     // Navonok nič neprezradíme; neaktívne/neprovisionované konto nedostane recovery token.
     if (!user?.active || user.company?.active === false) return;
+
+    if (!isEmailConfigured()) {
+      const hostedFallbackAllowed = process.env.VERCEL_ENV === "preview" || process.env.NODE_ENV !== "production";
+      if (!hostedFallbackAllowed) {
+        reportError("auth.passwordReset.email", new Error("Production recovery email is not configured"), { action: "reset_email_failed" });
+        return;
+      }
+
+      const grant = await issuePasswordSetupGrant({
+        userId: user.id,
+        authId: user.authId,
+        purpose: "RECOVERY",
+      });
+      const redirectTo = `${SITE_URL}/nastav-heslo?grant=${encodeURIComponent(grant.nonce)}`;
+      let hosted: { ok: boolean };
+      try {
+        hosted = await sendHostedPasswordRecovery(user.email, redirectTo);
+      } catch (error) {
+        await failUndeliveredPasswordSetupGrant(grant.id);
+        throw error;
+      }
+      if (!hosted.ok) {
+        await failUndeliveredPasswordSetupGrant(grant.id);
+        reportError("auth.passwordReset.hostedEmail", new Error("Hosted recovery email was not accepted"), { action: "reset_email_failed" });
+        return;
+      }
+      await writeAudit({
+        userId: user.id,
+        companyId: user.companyId,
+        action: "PASSWORD_RESET_REQUESTED",
+        entity: "User",
+        entityId: user.id,
+        meta: { delivery: "supabase_hosted" },
+      });
+      return;
+    }
 
     const access = await createInternalRecoveryLink(normalizedEmail);
     if (access.authId !== user.authId) {
