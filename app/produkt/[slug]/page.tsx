@@ -128,7 +128,7 @@ export default async function ProduktDetail({ params }: { params: Promise<{ slug
               {p.brand && <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-brand">{p.brand}</span>}
               <span className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-muted-2">{cat}</span>
             </div>
-            <h1 className="font-display mt-2.5 font-medium text-ink" style={{ fontSize: "clamp(27px,3.5vw,42px)", lineHeight: 1.12, letterSpacing: "-0.015em", textWrap: "balance" }}>{name}</h1>
+            <h1 className="font-display mt-2.5 font-medium text-ink" style={{ fontSize: "clamp(27px,3.5vw,42px)", lineHeight: 1.15, letterSpacing: "-0.015em", textWrap: "balance" }}>{name}</h1>
 
             {/* cena + CTA */}
             <div className="mt-7 overflow-hidden rounded-[18px] border border-mint/45" style={{ background: "linear-gradient(135deg,#f3f8f6 0%,#eaf1ee 100%)" }}>

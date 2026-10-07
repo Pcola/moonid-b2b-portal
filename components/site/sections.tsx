@@ -104,7 +104,7 @@ const btnGhost = "inline-flex cursor-pointer items-center justify-center gap-2.5
 /* ═════════ HERO — full-width obraz + textový marquee ═════════ */
 export function HeroSection() {
   return (
-    <section className="relative flex flex-col overflow-hidden bg-brand-deep" style={{ minHeight: "clamp(640px,92vh,900px)" }}>
+    <section className="on-dark relative flex flex-col overflow-hidden bg-brand-deep" style={{ minHeight: "clamp(640px,92vh,900px)" }}>
       <Image src="/images/hero-still-life.jpg" alt="Biele uteráky, dávkovač mydla a čistiace potreby na tmavozelenom pozadí" fill priority sizes="100vw" className="hero-img object-cover" style={{ objectPosition: "76% center" }} />
       <div className="absolute inset-0" style={{ background: "linear-gradient(98deg, rgba(13,28,24,0.92) 0%, rgba(15,36,30,0.78) 30%, rgba(17,48,42,0.34) 58%, rgba(17,48,42,0.04) 100%)" }} aria-hidden="true" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(13,28,24,0.42) 0%, rgba(13,28,24,0) 26%, rgba(13,28,24,0.5) 100%)" }} aria-hidden="true" />
@@ -210,7 +210,7 @@ export function SortimentSection() {
 
         <div className="reveal grid gap-[clamp(14px,1.8vw,20px)] lg:grid-cols-2">
           {/* sortiment — zelená karta */}
-          <div className="relative flex min-h-[380px] flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(28px,3.5vw,44px)]">
+          <div className="on-dark relative flex min-h-[380px] flex-col justify-between gap-10 overflow-hidden rounded-[22px] bg-brand p-[clamp(28px,3.5vw,44px)]">
             <div className="microgrid-dark pointer-events-none absolute inset-0" aria-hidden="true" />
             <div className="relative flex flex-col gap-3">
               <span className="stat-num text-white" style={{ fontSize: "clamp(56px,7vw,110px)" }}>1 600+</span>
@@ -274,7 +274,7 @@ export function PortalSection() {
   return (
     <section id="portal" className="bg-cream" style={pad}>
       <div className={wrap}>
-        <div className="reveal relative overflow-hidden rounded-[28px] text-mintbg" style={{ background: "radial-gradient(130% 130% at 88% -20%, #21564C 0%, #143A33 56%)" }}>
+        <div className="on-dark reveal relative overflow-hidden rounded-[28px] text-mintbg" style={{ background: "radial-gradient(130% 130% at 88% -20%, #21564C 0%, #143A33 56%)" }}>
           <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
           <div className="relative z-[2] grid items-center gap-[clamp(36px,5vw,64px)] p-[clamp(30px,4.5vw,64px)] lg:grid-cols-[1fr_1.05fr]">
             <div className="flex flex-col gap-6">
@@ -412,7 +412,7 @@ export function HotelSection() {
 /* ═════════ PREČO MOONID ═════════ */
 export function PrecoSection() {
   return (
-    <section id="preco" className="relative overflow-hidden text-mintbg" style={{ ...pad, background: "radial-gradient(130% 120% at 85% -10%, #21564C 0%, #163F38 52%)" }}>
+    <section id="preco" className="on-dark relative overflow-hidden text-mintbg" style={{ ...pad, background: "radial-gradient(130% 120% at 85% -10%, #21564C 0%, #163F38 52%)" }}>
       <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
       <div className={`relative ${wrap}`}>
         <div className="reveal mb-[clamp(44px,5vw,68px)] max-w-[680px]">
@@ -566,7 +566,7 @@ export function KontaktSection() {
     },
   ];
   return (
-    <section id="form" className="relative overflow-hidden bg-brand-deep text-[#e7efec]" style={pad}>
+    <section id="form" className="on-dark relative overflow-hidden bg-brand-deep text-[#e7efec]" style={pad}>
       <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(120% 80% at 12% -10%, rgba(46,98,88,0.45) 0%, rgba(16,42,38,0) 60%)" }} />
       <div className="microgrid-dark absolute inset-0" aria-hidden="true" />
       <div className={`relative ${wrap}`}>
@@ -602,7 +602,7 @@ export function KontaktSection() {
               Moonid s.r.o. · Jozef Slobodník — konateľ · IČO 50 934 660 · IČ DPH SK2120530995
             </p>
           </div>
-          <div className="rounded-[24px] p-[clamp(28px,3.4vw,48px)] lg:sticky lg:top-[100px]" style={{ background: "#fbfcfb", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.55)" }}><ContactForm /></div>
+          <div className="on-light rounded-[24px] p-[clamp(28px,3.4vw,48px)] lg:sticky lg:top-[100px]" style={{ background: "#fbfcfb", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.55)" }}><ContactForm /></div>
         </div>
       </div>
     </section>

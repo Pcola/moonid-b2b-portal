@@ -29,7 +29,7 @@ export default function LoginPage() {
       }
     >
       <div className="flex flex-col gap-2.5">
-        <h1 className="text-[32px] tracking-[-0.01em] text-ink">Prihlásenie</h1>
+        <h1 className="t-page text-ink">Prihlásenie</h1>
         <p className="text-[15px] leading-relaxed text-muted">Zadajte firemné prihlasovacie údaje pre prístup do portálu.</p>
       </div>
       <Suspense>

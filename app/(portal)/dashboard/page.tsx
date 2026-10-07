@@ -163,7 +163,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <div className="flex flex-col gap-4 rounded-2xl bg-[radial-gradient(120%_120%_at_90%_-10%,#21564C_0%,#163F38_60%)] p-6 text-[#eaf1ee]">
+        <div className="on-dark flex flex-col gap-4 rounded-2xl bg-[radial-gradient(120%_120%_at_90%_-10%,#21564C_0%,#163F38_60%)] p-6 text-[#eaf1ee]">
           <div className="flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-mint-2/15 text-mint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></span>
             {/* mint-2 na #21564C = 4,27:1 (pod AA); mint = 5,48:1 */}

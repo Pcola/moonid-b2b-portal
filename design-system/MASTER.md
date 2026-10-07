@@ -20,7 +20,7 @@ Názvy tokenov sa nemenia (mení sa len hodnota, nové pribúdajú). V kóde **�
 | `brand-2` | `#1E5249` | hover CTA, sekundárny brand |
 | `brand-deep` / `brand-foot` | `#0F2A26` / `#0C211D` | tmavé pásy, footer, staff sidebar |
 | `mint` | `#8FE0CD` | **jediný akcent** (wipe, tmavé plochy), focus na tmavej ploche |
-| `mint-ink` / `mintbg` | `#0F6B57` / `#EAF3F0` | eyebrow, stav „Skladom" / „Doručená" (funkčná farba) |
+| `mint-ink` / `mintbg` | `#0F6B57` / `#EAF3F0` | eyebrow, stav „Skladom" (funkčná farba) |
 | `muted` / `muted-2` / `muted-3` | `#5C584F` / `#6B675F` / `#54514A` | sekundárny text (teplé šedé, ladia s ivory) |
 | `on-dark` / `on-dark-2` / `on-dark-3` | `#D7E4E0` / `#B7CCC6` / `#8FB3AB` | text na tmavých plochách (`on-dark-3` len veľký/dekoratívny) |
 
@@ -49,7 +49,11 @@ Vždy dvojica podklad + text, vždy s **textom** (nie len farbou). Komponent: `B
 | danger | `danger` `#FDECEA` | `danger-ink` `#9A3025` | 6,50 | chyby, Po splatnosti |
 | info (v2) | `info` `#EEF2F0` | `info-ink` `#1E5249` | 7,88 | Potvrdená, Pripravuje sa, Na ceste |
 | brand | `mintbg` | `brand` | 10,31 | aktívne/označené |
-| neutral | `cream` | `muted` | 6,59 | neaktívne, Stornovaná (`cream-2`) |
+| neutral | `cream` | `muted` | 6,59 | neaktívne |
+| storno | `cream-2` | `muted-2` | 4,96 | Stornovaná |
+
+`info` a `brand` sú zámerne v jednej zelenej rodine — rozlišuje ich **text**, nie farba; v jednom zozname
+stavov ich nemiešať.
 
 Doplnky: `warning-ink-2` (dlhší text v žltom paneli), `warning-line`, `danger-ink-2` (hover plného
 červeného tlačidla), `danger-line` (dekoratívny rámik oznamu). **Info je v2 v brand rodine** — indigo
@@ -74,8 +78,10 @@ byť `.on-dark`** (inak obrys focusu nesie len biely prstenec).
 
 - **Ivory iba na verejnom webe** (R2). Auth obrazovky = biela karta na `cream` + editoriálny brand panel.
   Portál a staff = `cream` / `paper` (hustota, neutralita cien).
-- **Tmavé plochy** (hero, footer, mobilné menu, tmavý header, staff sidebar, auth panel) majú triedu
-  **`.on-dark`**: obrys focusu sa prepne na `focus-dark`. Svetlá karta vnútri tmavej sekcie → `.on-light`.
+- **Tmavé plochy** majú triedu **`.on-dark`**: obrys focusu sa prepne na `focus-dark`. Dnes: tmavé sekcie a
+  karty domovskej stránky (hero, sortiment, portál, prečo Moonid, kontakt), footer, tmavý header, mobilné
+  menu, staff sidebar, auth panel, karta „Ako to funguje" na dashboarde. Svetlá karta vnútri tmavej sekcie
+  (formulár v kontakte) → `.on-light`. Každá nová tmavá plocha s ovládačmi ju musí mať.
 - **Akcent:** do limitu **1–2 výskytov na viewport** sa počíta jasný `mint` (`#8FE0CD`). Funkčné stavy
   `mint-ink` na `mintbg` sa nepočítajú. **Žiadna druhá akcentová farba** — ani zlatá/champagne, ani
   žltá hviezda obľúbených, ani indigo stavov.
@@ -88,7 +94,7 @@ byť `.on-dark`** (inak obrys focusu nesie len biely prstenec).
 
 | Rola | Font | Kde | Pravidlá |
 |---|---|---|---|
-| Display | **Newsreader 500** (`--font-display`, `next/font`, latin + latin-ext, jediný rez) | verejný web, veľké nadpisy stránok (portál, auth) | váha **len 500**, `font-synthesis-weight: none`; nikdy `font-semibold`/`bold` |
+| Display | **Newsreader 500** (`--font-display`, `next/font`, latin + latin-ext, jediný rez) | verejný web, veľké nadpisy stránok (portál; auth = `.t-page` na všetkých 7 obrazovkách) | váha **len 500**, `font-synthesis-weight: none`; nikdy `font-semibold`/`bold` |
 | UI | **Hanken Grotesk** 400–700 (`--font-sans`) | všetko ostatné | ceny, SKU, tabuľky, štatistiky v UI → `tabular-nums` |
 | Logo | SVG (`components/ui/logo.tsx`) | všade | nikdy živý text (kap. 4) |
 
@@ -106,8 +112,12 @@ nadpisy sekcií v portáli pod 24 px, formuláre. Tam je Hanken `font-semibold`.
 | `.t-page` (v2) | `--fs-page: clamp(24px, 2.4vw, 32px)` | 1,12 | −0,012 em |
 | `.stat-num` | `--fs-stat: clamp(40px, 5vw, 76px)` | 1,0 | −0,02 em, `tabular-nums` |
 
-- Riadkovanie displeja **≥ 1,02**: karony nad verzálkami (Ď, Ľ, Č, Ž) sa nesmú dotknúť predošlého riadku.
-  Pri inline `font-display` do 32 px tracking −0,01 až −0,012 em, nad 32 px −0,015 až −0,02 em.
+- **Riadkovanie a diakritika** (zmerané v Newsreader 500): verzálky s diakritikou (Č Ď Ť Ž Š Ň Á É Í Ó Ú
+  Ý Ô Ĺ Ŕ) siahajú 0,871 em nad účiaru, malé ĺ 0,894 em, dotiahnutia g j y ý −0,26 em. Pod dotiahnutím
+  predošlého riadku sa ich dotkne pri riadkovaní **< 1,13**. Malé písmená s diakritikou (≤ 0,716 em) sú
+  bezpečné od 1,0; Ľ má karon bokom. Hodnoty 1,02–1,12 z tabuľky sú preto len pre **statický** text
+  overený na 375 / 768 / 1440 px; **text z dát** (názov produktu, meno firmy) má riadkovanie ≥ 1,15.
+- Pri inline `font-display` do 32 px tracking −0,01 až −0,012 em, nad 32 px −0,015 až −0,02 em.
 - `text-wrap: balance` na nadpisoch.
 - **UI škála:** Tailwind `text-xs` 12 · `sm` 14 · `base` 16 · `lg` 18 · `xl` 20 · `2xl` 24 + tokeny
   `text-13`, `text-15`. **Nič pod 12 px.** Polia 16 px na dotykových/úzkych displejoch (iOS zoom —
@@ -119,7 +129,8 @@ nadpisy sekcií v portáli pod 24 px, formuláre. Tam je Hanken `font-semibold`.
 ## 4. Logo
 
 - Komponent **`<Logo />`** (`components/ui/logo.tsx`): obrysy pôvodného wordmarku „moonid." (Bricolage
-  Grotesque 600, tracking −0,03 em), 1,6 KB inline SVG, bez závislosti na fonte.
+  Grotesque 600, tracking −0,03 em), 1,6 KB inline SVG, bez závislosti na fonte. Používa sa na 10 miestach
+  (header 2×, footer 2×, auth panel, auth shell, portál, staff, `/cakajuce`, mockup portálu).
 - **Tóny:** `tone="brand"` (svetlá plocha: písmená `brand`, bodka `mint-ink`), `tone="inverse"` (tmavá:
   biela + `mint`). Bodka nesie akcent, písmená sa inak neprefarbujú.
 - **Veľkosť cez výšku** (`h-[…]`), šírku dopočíta pomer 4,82 : 1. Prevod zo starého textu: výška ≈ 0,747 ×

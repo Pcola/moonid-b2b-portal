@@ -162,8 +162,12 @@ body {
    dorobil umelým stučnením (faux bold, rozmazané karony ď/ť/ľ), preto všetky display triedy
    majú váhu 500 a font-synthesis-weight: none — aj zabudnutý `font-semibold` vedľa
    `font-display` sa vykreslí čistým 500, nie syntetickým tučným.
-   Riadkovanie 1,02–1,15: karony nad verzálkami (Ď, Ľ, Č, Ž) sa pri 0,98 Bricolage
-   dotýkali dolných dotiahnutí predošlého riadku. Tracking −0,01 až −0,022 em
+   Riadkovanie (zmerané v súbore Newsreader 500): verzálky s diakritikou (Č Ď Ť Ž Š Ň Á É Í
+   Ó Ú Ý Ô Ĺ Ŕ) siahajú 0,871 em nad účiaru, malé ĺ 0,894 em, dotiahnutia g j y ý −0,26 em.
+   Ak je taký znak pod dotiahnutím predošlého riadku, dotkne sa ho pri riadkovaní < 1,13.
+   Malé písmená s diakritikou (≤ 0,716 em) sú bezpečné od 1,0; Ľ má karon bokom (0,676 em).
+   Preto: 1,02–1,15 len pre STATICKÝ text overený na 375/768/1440 px; text z dát
+   (názov produktu, meno) ≥ 1,15. Tracking −0,01 až −0,022 em
    (serif je pri textovej optickej veľkosti širší než grotesk, −0,04 em by ho zlepil). */
 .t-display {
   font-family: var(--font-display);
@@ -410,7 +414,8 @@ body {
   outline-offset: 3px;
   box-shadow: 0 0 0 1px var(--color-ink), 0 0 0 3px #fff;
 }
-/* Tmavé plochy (hero/footer/sidebar/mobilné menu) nesú triedu .on-dark: vonkajší pás sa
+/* Tmavé plochy (tmavé sekcie a karty webu, footer, tmavý header, mobilné menu, staff sidebar,
+   karta „Ako to funguje" na dashboarde) nesú triedu .on-dark: vonkajší pás sa
    prepne na mint, takže na tmavom podklade má kontrast aj samotný obrys (9,94:1 na
    brand-deep), nielen biely prstenec. Vnútorné pásy ostávajú — biele CTA na tmavej ploche
    drží tmavý vlások. Prvky v .on-light (svetlá karta vnútri tmavej sekcie) sa vrátia späť. */

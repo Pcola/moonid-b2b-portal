@@ -2,7 +2,8 @@ import { cn } from "@/lib/utils";
 
 /** Logotyp „moonid." ako SVG z obrysov — nezávislý od načítaných fontov.
  *
- *  Prečo: wordmark bol na 9 miestach živý text v Bricolage Grotesque. Redizajn 2026 mení
+ *  Prečo: wordmark bol na 8 miestach (+ monogram „m." v mockupe portálu) živý text v Bricolage
+ *  Grotesque; /cakajuce mal vlastný text v Hanken. Redizajn 2026 mení
  *  display font na Newsreader (docs/REDESIGN_2026.md, R1 a K4), takže textové logo by sa
  *  zmenilo spolu s ním — to by bol rebrand, nie výmena fontu. Obrysy sú preto vyrezané
  *  z presne toho súboru, ktorý servíroval next/font (Bricolage Grotesque, Google Fonts v9,
