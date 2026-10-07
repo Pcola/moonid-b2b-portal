@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 import { usePathname, useRouter } from "next/navigation";
 import { focusFirst, trapTabKey } from "@/lib/focus-trap";
 
@@ -64,7 +65,7 @@ function Icon({ children }: { children: React.ReactNode }) {
 /**
  * Svetlý SaaS shell portálu: biely sidebar so zoskupenou navigáciou, firemná karta,
  * blur topbar s vyhľadávaním a košíkom. Jednotný jazyk s verejným webom (mint/green,
- * Bricolage display, hairlines).
+ * SVG logo, hairlines); titulok v topbare je UI (Hanken), serif patrí nadpisom stránok.
  */
 export function PortalShell({ companyName, userName, email, tierCode, cartCount, pendingApproval, isAdmin, children }: Props) {
   const pathname = usePathname();
@@ -106,7 +107,9 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
     <div className="flex h-full flex-col border-r border-line bg-white">
       {/* logo */}
       <div className="flex items-center gap-2.5 px-5 pb-4 pt-5">
-        <Link href="/dashboard" onClick={() => setOpen(false)} prefetch={false} className="font-display text-[23px] font-semibold tracking-[-0.03em] text-brand">moonid<span className="text-mint-ink">.</span></Link>
+        <Link href="/dashboard" onClick={() => setOpen(false)} prefetch={false} className="flex items-center py-1">
+          <Logo className="h-[17px]" />
+        </Link>
         <span className="rounded-md border border-mint-ink/25 bg-mintbg px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.14em] text-mint-ink">B2B</span>
       </div>
 
@@ -173,7 +176,7 @@ export function PortalShell({ companyName, userName, email, tierCode, cartCount,
           <button ref={menuBtnRef} onClick={() => setOpen(true)} className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-[10px] border border-line bg-white text-ink lg:hidden" aria-label="Otvoriť menu" aria-expanded={open} aria-controls="portal-drawer">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
-          <h1 className="font-display text-[21px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
+          <h1 className="text-[21px] font-semibold tracking-[-0.015em] text-ink">{title}</h1>
           <div className="ml-auto flex items-center gap-2.5">
             <form onSubmit={(e) => { e.preventDefault(); router.push(q.trim() ? `/katalog?q=${encodeURIComponent(q.trim())}` : "/katalog"); }} className="hidden items-center gap-2 rounded-xl border border-field bg-cream px-3.5 py-2.5 transition-colors focus-within:border-brand focus-within:bg-white focus-within:shadow-[inset_0_0_0_1.5px_var(--color-brand)] sm:flex">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b675f" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>

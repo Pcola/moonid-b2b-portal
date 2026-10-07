@@ -35,7 +35,7 @@ export default function RegistraciaPage() {
       }
     >
       <div className="flex flex-col gap-2.5">
-        <h2 className="text-[32px] tracking-[-0.01em] text-ink">Požiadať o prístup</h2>
+        <h1 className="t-page text-ink">Požiadať o prístup</h1>
         <p className="text-[15px] leading-relaxed text-muted">Vyplňte údaje o firme — ozveme sa a sprístupníme vás do portálu.</p>
       </div>
       <RegistraciaForm />

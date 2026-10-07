@@ -28,7 +28,7 @@ function StatCard({ icon, badge, badgeCls, value, label }: { icon: React.ReactNo
         {badge && <span className={`rounded-md px-2 py-1 text-[12px] font-semibold ${badgeCls ?? "bg-mintbg text-mint-ink"}`}>{badge}</span>}
       </div>
       <div className="flex flex-col gap-1">
-        <span className="font-display text-[34px] font-semibold leading-none tracking-[-0.02em] text-ink" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        <span className="text-[34px] font-semibold leading-none tracking-[-0.02em] text-ink" style={{ fontVariantNumeric: "tabular-nums" }}>{value}</span>
         <span className="text-[13.5px] text-muted">{label}</span>
       </div>
     </div>
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <span className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-brand-2">{today}</span>
-          <h2 className="font-display text-[clamp(26px,3.4vw,38px)] font-semibold tracking-[-0.025em] text-ink">Dobrý deň, {user.name?.trim().split(/\s+/)[0] || user.company?.name || "vitajte"}</h2>
+          <h2 className="font-display text-[clamp(26px,3.4vw,38px)] font-medium tracking-[-0.015em] text-ink">Dobrý deň, {user.name?.trim().split(/\s+/)[0] || user.company?.name || "vitajte"}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           {recent.length > 0 && (
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-4">
           <div className="flex items-end justify-between">
             <div className="flex flex-col gap-1">
-              <h2 className="font-display text-[22px] font-semibold tracking-[-0.02em] text-ink">Rýchle doobjednanie</h2>
+              <h2 className="text-[22px] font-semibold tracking-[-0.01em] text-ink">Rýchle doobjednanie</h2>
               <p className="text-[15px] text-muted">Vaše naposledy objednávané položky.</p>
             </div>
             <Link href="/katalog" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-brand transition hover:text-brand-2">Celý katalóg<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Link>
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
       <div className="grid gap-[clamp(16px,2vw,24px)] lg:grid-cols-[1.7fr_1fr]">
         <div className="overflow-hidden rounded-2xl border border-line bg-white">
           <div className="flex items-center justify-between border-b border-line px-[22px] py-5">
-            <h2 className="font-display text-[20px] font-semibold tracking-[-0.02em] text-ink">Posledné objednávky</h2>
+            <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-ink">Posledné objednávky</h2>
             <Link href="/objednavky" className="text-[14px] font-semibold text-brand transition hover:text-brand-2">Všetky</Link>
           </div>
           {recent.length === 0 ? (
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <div className="flex flex-col gap-4 rounded-2xl bg-[radial-gradient(120%_120%_at_90%_-10%,#21564C_0%,#163F38_60%)] p-6 text-[#eaf1ee]">
+        <div className="on-dark flex flex-col gap-4 rounded-2xl bg-[radial-gradient(120%_120%_at_90%_-10%,#21564C_0%,#163F38_60%)] p-6 text-[#eaf1ee]">
           <div className="flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-mint-2/15 text-mint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg></span>
             {/* mint-2 na #21564C = 4,27:1 (pod AA); mint = 5,48:1 */}

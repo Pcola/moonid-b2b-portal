@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
-   Moonid dizajnový systém — tokeny (source of truth: design-system/MASTER.md)
-   Štýl „Clean Slate": švajčiarsky grid, klinická čistota, mint akcent.
+   Moonid dizajnový systém v2 — tokeny (source of truth: design-system/MASTER.md)
+   Štýl „Editorial Precision" (evolúcia „Clean Slate", redizajn 2026):
+   zelená identita, mint jediný akcent, ivory len na verejnom webe,
+   Newsreader v nadpisoch, Hanken Grotesk v UI a číslach.
    ═══════════════════════════════════════════════════════════════ */
 @theme {
   --color-brand: #163f38;
@@ -29,12 +31,29 @@
   --color-field: #7f8d88;
   --color-mintbg: #eaf3f0;
 
+  /* ---- teplý povrch verejného webu (redizajn 2026, docs/REDESIGN_2026.md kap. 5) ----
+     LEN verejný web. Auth obrazovky a portál ostávajú paper/cream (MASTER.md, Plochy).
+     Kontrasty na ivory: ink 16,63 · brand 10,61 · muted 6,45 · muted-2 5,13 · mint-ink 5,87
+     · field 3,15 (SC 1.4.11 OK). Na ivory-deep má field len 2,86:1, preto na zapustenú
+     plochu nepatria formulárové polia — je to podklad placeholderov a vložených blokov. */
+  --color-ivory: #f7f4ee;
+  --color-ivory-deep: #eee9df;
+  /* hairline na ivory — 1,23:1, teda DEKOR (ako --color-line), nikdy okraj ovládača */
+  --color-line-warm: #e3ddd1;
+
+  /* ---- focus ring (aliasy) ----
+     focus = obrys na svetlých plochách (brand na ivory 10,61 / na bielej 11,65);
+     focus-dark = obrys na tmavých plochách v kontajneri .on-dark
+     (mint na brand-deep 9,94 / brand-foot 10,96 / brand 7,61). */
+  --color-focus: var(--color-brand);
+  --color-focus-dark: var(--color-mint);
+
   /* ---- sémantické stavové farby ----------------------------------------------------
      Doteraz to boli ad-hoc hexy priamo v triedach: 406 výskytov, 99 rôznych hodnôt v app/
      a components/. Tie, ktoré nesú VÝZNAM (úspech / upozornenie / chyba / informácia), sú
      odteraz tokeny. Kontrasty počítané cez WCAG relatívnu luminanciu:
        success-ink na success = 6,90:1   warning-ink na warning = 5,51:1
-       danger-ink  na danger  = 6,50:1   info-ink    na info    = 8,88:1
+       danger-ink  na danger  = 6,50:1   info-ink    na info    = 7,88:1
      Všetky prechádzajú AA (1.4.3) aj pre 11px pilulky.
      Vedľajší efekt: zjednotenie #fdeceb → #fdecea (rozdiel 1/255 v modrej, 5 miest) a
      #9a6b0e/#fbf1dc → warning-ink/warning. Tá druhá dvojica mala 4,17:1, čo AA PADALO
@@ -52,8 +71,10 @@
   --color-danger-ink-2: #832619;
   /* ohraničenie červeného oznamu — 1,52:1, teda DEKORATÍVNE (nie je to ovládač) */
   --color-danger-line: #f0c9c2;
-  --color-info: #eef2ff;
-  --color-info-ink: #3730a3;
+  /* info = brand rodina, nie indigo: #3730a3/#eef2ff bol druhý akcent (MASTER anti-pattern
+     „navy"). Nesie stavy Potvrdená / Pripravuje sa / Na ceste — vždy s textom. */
+  --color-info: #eef2f0;
+  --color-info-ink: #1e5249;
 
   /* ---- doplnkové plochy (podklad riadkov, hlavičiek tabuliek, neutrálnych pilúl) ---- */
   --color-surface-2: #fafbfa;
@@ -69,18 +90,47 @@
   --color-on-dark-2: #b7ccc6;
   --color-on-dark-3: #8fb3ab;
 
+  /* UI, ceny, SKU, tabuľky = Hanken Grotesk. Display = Newsreader 500 (jediný načítaný
+     rez) — len verejný web a veľké nadpisy stránok; logo je SVG (components/ui/logo.tsx).
+     Záložné metriky (Times New Roman) dopĺňa next/font cez adjustFontFallback → CLS ≈ 0. */
   --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-hanken), system-ui, sans-serif;
+  --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
+
+  /* ---- UI škála doplnkov k Tailwind predvoľbám (xs 12 · sm 14 · base 16 · lg 18 …) ---- */
+  --text-13: 0.8125rem;
+  --text-13--line-height: 1.45;
+  --text-15: 0.9375rem;
+  --text-15--line-height: 1.55;
+
+  /* ---- polomery: ovládače 10 px, karty portálu 14 px, panely webu 20 px ---- */
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 20px;
+
+  /* ---- pohyb: jediná krivka pre mikrointerakcie (150–250 ms) aj odhalenia (600–900 ms) ---- */
+  --ease-precise: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-/* fluidná typografická škála */
+/* fluidná typografická škála (display = Newsreader) + rozmery mimo @theme */
 :root {
-  --fs-display: clamp(44px, 6.4vw, 92px);
+  --fs-display: clamp(42px, 6.3vw, 98px);
   --fs-h1: clamp(36px, 5vw, 68px);
-  --fs-h2: clamp(32px, 4.4vw, 56px);
-  --fs-h3: clamp(21px, 2.3vw, 28px);
-  
+  --fs-h2: clamp(30px, 4vw, 56px);
+  --fs-h3: clamp(22px, 2.2vw, 30px);
+  /* nadpis stránky v portáli a v auth obrazovkách */
+  --fs-page: clamp(24px, 2.4vw, 32px);
   --fs-stat: clamp(40px, 5vw, 76px);
+
+  /* výška ovládačov: verejný web 52 px, portál 40–44 px */
+  --control-h-web: 52px;
+  --control-h-portal: 44px;
+  --control-h-dense: 40px;
+
+  /* vrstvy (dnešné hodnoty, len pomenované): header < drawer < cookie lišta < toast */
+  --z-header: 50;
+  --z-drawer: 60;
+  --z-cookie: 100;
+  --z-toast: 120;
 }
 
 html {
@@ -98,49 +148,82 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-h1, h2, h3 { margin: 0; font-weight: 400; }
+/* V @layer base, NIE unlayered: nevrstvené pravidlo prebíja každú Tailwind utilitu (tie sú
+   v @layer utilities), takže `mt-4`, `font-semibold` či `font-medium` na h1–h3 sa doteraz
+   ticho ignorovali — 75 nadpisov s váhou a 17 s okrajom (zistené v PR 1 redizajnu 2026:
+   karon „Č" v h1 detailu produktu narážal do eyebrow, lebo jeho `mt-2.5` bolo 0 px).
+   Predvolenie ostáva rovnaké (bez okraja, váha 400); triedy .t-* sú naďalej nevrstvené. */
+@layer base {
+  h1, h2, h3 { margin: 0; font-weight: 400; }
+}
 
-/* ---- display typografia (Bricolage Grotesque) ---- */
+/* ---- display typografia (Newsreader 500) ----
+   Načítaný je JEDINÝ rez 500 (docs/REDESIGN_2026.md, R1). font-weight 600/700 by prehliadač
+   dorobil umelým stučnením (faux bold, rozmazané karony ď/ť/ľ), preto všetky display triedy
+   majú váhu 500 a font-synthesis-weight: none — aj zabudnutý `font-semibold` vedľa
+   `font-display` sa vykreslí čistým 500, nie syntetickým tučným.
+   Riadkovanie (zmerané v súbore Newsreader 500): verzálky s diakritikou (Č Ď Ť Ž Š Ň Á É Í
+   Ó Ú Ý Ô Ĺ Ŕ) siahajú 0,871 em nad účiaru, malé ĺ 0,894 em, dotiahnutia g j y ý −0,26 em.
+   Ak je taký znak pod dotiahnutím predošlého riadku, dotkne sa ho pri riadkovaní < 1,13.
+   Malé písmená s diakritikou (≤ 0,716 em) sú bezpečné od 1,0; Ľ má karon bokom (0,676 em).
+   Preto: 1,02–1,15 len pre STATICKÝ text overený na 375/768/1440 px; text z dát
+   (názov produktu, meno) ≥ 1,15. Tracking −0,01 až −0,022 em
+   (serif je pri textovej optickej veľkosti širší než grotesk, −0,04 em by ho zlepil). */
 .t-display {
   font-family: var(--font-display);
   font-size: var(--fs-display);
-  font-weight: 600;
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  font-weight: 500;
+  font-synthesis-weight: none;
+  line-height: 1.02;
+  letter-spacing: -0.022em;
   text-wrap: balance;
 }
 .t-h1 {
   font-family: var(--font-display);
   font-size: var(--fs-h1);
-  font-weight: 600;
-  line-height: 1.02;
-  letter-spacing: -0.035em;
+  font-weight: 500;
+  font-synthesis-weight: none;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 .t-h2 {
   font-family: var(--font-display);
   font-size: var(--fs-h2);
-  font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.03em;
+  font-weight: 500;
+  font-synthesis-weight: none;
+  line-height: 1.06;
+  letter-spacing: -0.018em;
   text-wrap: balance;
 }
 .t-h3 {
   font-family: var(--font-display);
   font-size: var(--fs-h3);
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  font-weight: 500;
+  font-synthesis-weight: none;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+/* nadpis stránky (portál, auth) — nová trieda v2, staré stránky ju dostanú pri migrácii */
+.t-page {
+  font-family: var(--font-display);
+  font-size: var(--fs-page);
+  font-weight: 500;
+  font-synthesis-weight: none;
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
 }
 .stat-num {
   font-family: var(--font-display);
   font-size: var(--fs-stat);
-  font-weight: 600;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-weight: 500;
+  font-synthesis-weight: none;
+  line-height: 1;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-.font-display { font-family: var(--font-display); }
+.font-display { font-family: var(--font-display); font-synthesis-weight: none; }
 
 /* ---- eyebrow (číslované sekcie: „01 / Sortiment") ---- */
 .eyebrow {
@@ -327,10 +410,19 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
    s rounded-[10px] by pri fokuse skočilo na 3px a viditeľne sa zdeformovalo. outline aj
    box-shadow polomer prvku rešpektujú samy. */
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-focus);
   outline-offset: 3px;
   box-shadow: 0 0 0 1px var(--color-ink), 0 0 0 3px #fff;
 }
+/* Tmavé plochy (tmavé sekcie a karty webu, footer, tmavý header, mobilné menu, staff sidebar,
+   karta „Ako to funguje" na dashboarde) nesú triedu .on-dark: vonkajší pás sa
+   prepne na mint, takže na tmavom podklade má kontrast aj samotný obrys (9,94:1 na
+   brand-deep), nielen biely prstenec. Vnútorné pásy ostávajú — biele CTA na tmavej ploche
+   drží tmavý vlások. Prvky v .on-light (svetlá karta vnútri tmavej sekcie) sa vrátia späť. */
+.on-dark :focus-visible,
+.on-dark:focus-visible { outline-color: var(--color-focus-dark); }
+.on-dark .on-light :focus-visible,
+.on-dark .on-light:focus-visible { outline-color: var(--color-focus); }
 
 /* iOS Safari zoomne stránku, keď má fokusovaný ovládač písmo pod 16 px — a v projekte je
    pod 16 px prakticky každý input (32 rôznych veľkostí od 9 px vyššie). Namiesto zásahu do

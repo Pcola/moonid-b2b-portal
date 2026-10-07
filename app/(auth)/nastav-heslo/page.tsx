@@ -30,7 +30,7 @@ export default async function SetPasswordPage({ searchParams }: PageProps) {
       }
     >
       <div className="flex flex-col gap-2.5">
-        <h1 className="text-[32px] tracking-[-0.01em] text-ink">Nastavenie hesla</h1>
+        <h1 className="t-page text-ink">Nastavenie hesla</h1>
         <p className="text-[15px] leading-relaxed text-muted">
           {email ? <>Nastavujete heslo pre účet <strong className="font-semibold text-ink">{email}</strong>.</> : "Zadajte nové heslo k vášmu firemnému účtu."}
         </p>
