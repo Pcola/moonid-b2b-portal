@@ -11,4 +11,5 @@ Sentry.init({
   tracesSampleRate: 0.1,
   sendDefaultPii: false,
   beforeSend: (event) => scrubPii(event),
+  beforeSendTransaction: (event) => scrubPii(event),
 });

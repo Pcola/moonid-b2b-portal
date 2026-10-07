@@ -13,6 +13,7 @@ Sentry.init({
   replaysOnErrorSampleRate: 0,
   sendDefaultPii: false,
   beforeSend: (event) => scrubPii(event),
+  beforeSendTransaction: (event) => scrubPii(event),
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

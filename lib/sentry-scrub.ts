@@ -11,6 +11,10 @@ export function scrubPii<T extends { request?: any; user?: any }>(event: T): T {
       delete event.request.headers.Cookie;
     }
     delete event.request.query_string;
+    if (typeof event.request.url === "string") {
+      // Capability/query tokens must not survive in either error or transaction events.
+      event.request.url = event.request.url.split(/[?#]/, 1)[0];
+    }
   }
   if (event.user) {
     event.user = { id: event.user.id }; // ponechaj len id, zahoď email/ip/username

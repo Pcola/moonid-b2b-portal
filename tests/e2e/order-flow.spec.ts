@@ -1,15 +1,23 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * DEŠTRUKTÍVNE: vytvorí REÁLNU objednávku v produkčnej DB a pošle e-mail staffu
+ * DEŠTRUKTÍVNE: vytvorí REÁLNU objednávku v cieľovej DB a pošle e-mail staffu
  * (STAFF_NOTIFY_EMAIL). Pohoda sync sa nespustí inline (status LOKALNA), ale
  * objednávka ostane v histórii. Preto je test default VYPNUTÝ.
  *
  * Spustenie (vedome):
- *   PowerShell:  $env:E2E_PLACE_ORDER="1"; npx playwright test --project=dealer order-flow
- *   Bash:        E2E_PLACE_ORDER=1 npx playwright test --project=dealer order-flow
+ *   PowerShell:  $env:E2E_PLACE_ORDER="1"; $env:E2E_ALLOW_MUTATIONS_HOST="staging.example"; npx playwright test --project=dealer order-flow
+ *   Bash:        E2E_PLACE_ORDER=1 E2E_ALLOW_MUTATIONS_HOST=staging.example npx playwright test --project=dealer order-flow
  */
 const ENABLED = process.env.E2E_PLACE_ORDER === "1";
+
+if (ENABLED) {
+  const target = new URL(process.env.E2E_BASE_URL || "http://127.0.0.1:3000");
+  const allowedHost = process.env.E2E_ALLOW_MUTATIONS_HOST;
+  if (!allowedHost || target.hostname !== allowedHost || /(^|[-.])prod(uction)?([-.]|$)/i.test(target.hostname)) {
+    throw new Error("Deštruktívny E2E test vyžaduje E2E_ALLOW_MUTATIONS_HOST presne zhodný s neprodukčným E2E_BASE_URL.");
+  }
+}
 
 test.describe("dealer: odoslanie objednávky (DESTRUCTIVE)", () => {
   test.skip(!ENABLED, "Nastav E2E_PLACE_ORDER=1 — vytvára reálnu objednávku + e-mail staffu.");
