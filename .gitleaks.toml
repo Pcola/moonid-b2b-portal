@@ -14,4 +14,8 @@ paths = [
 regexes = [
   # Nejde o credential: bol vytvorený ako deterministické abc... testovacie heslo v commite 32e3818.
   '''abcdefghijklmnopqrstuvwxyz0123456789_-''',
+  # Public RFC 6238 test vector and synthetic UUIDs used only by tests.
+  '''^GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ$''',
+  '''^a633b737-baed-484a-b118-75db4238ce90$''',
+  '''^b633b737-baed-484a-b118-75db4238ce90$''',
 ]
