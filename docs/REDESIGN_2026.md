@@ -604,13 +604,18 @@ npx vercel env pull .env.staging --environment=preview --git-branch=staging
 
 Výsledok `C:\workspace\websites\moonid_b2b_portal\.env.staging` je gitignored. Každá session si ho skopíruje do svojho worktree ako `.env.local`.
 
-⚠️ **Heslo staging DB neresetovať.** Používa ho staging nasadenie na Verceli, ktoré by po resete prestalo fungovať, kým sa neaktualizuje premenná vo Verceli.
+⚠️ **Sensitive premenné sa nestiahnu.** Vo Verceli sú `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY` a `RATE_LIMIT_HMAC_SECRET` označené ako *Sensitive*, `vercel env pull` za ne zapíše `[SENSITIVE]` a treba ich doplniť ručne (tabuľka nižšie).
+
+**Heslo `postgres` na stagingu** (overené 7. 10. 2026):
+
+- Staging na Verceli sa pripája samostatnou rolou `moonid_app_staging`, takže reset hesla `postgres` ho **nerozbije**.
+- Heslo `postgres` používa len workflow *Database Migration* cez GitHub secret `MIGRATOR_DATABASE_URL` v prostredí `staging`. Po resete treba aktualizovať tento secret.
 
 Ručne (záloha), ak Vercel CLI nie je k dispozícii:
 
 | Premenná | Kde ju vziať |
 |---|---|
-| `DATABASE_URL`, `DIRECT_URL` | Vercel → projekt `moonid-b2b-portal` → Settings → Environment Variables → prostredie *Preview* (vetva `staging`) → *Reveal*. Alternatívne Supabase → `moonid-b2b-staging` → **Connect** → **ORMs** → **Prisma**, kde `[YOUR-PASSWORD]` nahradiť existujúcim heslom. |
+| `DATABASE_URL` | Supabase → `moonid-b2b-staging` → **Connect** → **ORMs** → **Prisma**: pooler `aws-0-eu-central-1`, port 6543, `[YOUR-PASSWORD]` nahradiť heslom `postgres`. Heslo nikde nie je čitateľné, ak ho nemáte v správcovi hesiel: Project Settings → Database → *Reset database password* a potom aktualizovať GitHub secret `MIGRATOR_DATABASE_URL` (prostredie `staging`). |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://booeaeyyyitlmuxixjfy.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → **API Keys** → *Legacy API keys* → `anon` (verejný) |
 | `SUPABASE_SERVICE_ROLE_KEY` | tamže → `service_role` → *Reveal* (tajný, nikdy necommitovať) |
