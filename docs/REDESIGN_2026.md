@@ -1,6 +1,7 @@
 # Redizajn 2026 — Fáza 0: discovery a smer
 
 > **Stav:** Fáza 0 hotová. **Smer schválený 7. 10. 2026:** display font Newsreader, ivory len na verejnom webe, svetlý hero (kap. 12).
+> **Fáza 1, PR 1 hotový 7. 10. 2026:** tokeny v2, Newsreader 500, SVG logo, oprava kaskády nadpisov, `design-system/MASTER.md` v2 (kap. 13).
 > **Dátum:** 7. 10. 2026 · **Zadanie:** [`docs/prompts/MASTER_PROMPT_REDIZAJN_2026.md`](prompts/MASTER_PROMPT_REDIZAJN_2026.md)
 > **Prototyp:** [`prototypes/redesign-2026.html`](../prototypes/redesign-2026.html). Otvorte priamo v prehliadači; prepínače hore menia display font a povrch.
 > **Bez zmien v kóde aplikácie.** Fáza 0 pridáva iba tento dokument, statický prototyp a kópiu master promptu.
@@ -147,7 +148,7 @@ Najpoučnejšia: `.sr-only` (`position: absolute`) v bunke vodorovne posuvnej ta
    - `border-line` (1,22 : 1) majú vstupy v katalógu, košíku a registrácii.
    - Náprava: token `field` `#808985`. **F1** (primitívum `Field`).
 3. **Referencie na `/o-nas` sa automaticky prepínajú** každých 8 s bez možnosti pauzy (2.2.2). Skryté citácie ostávajú v DOM, takže čítačka prečíta všetky štyri. **F2.**
-4. **Mobilné auth obrazovky nemajú `h1`.** Panel s `h1` je `hidden lg:flex` (audit UX-04), platí pre všetky auth stránky. **F3.**
+4. **Mobilné auth obrazovky nemajú `h1`.** Panel s `h1` je `hidden lg:flex` (audit UX-04), platí pre všetky auth stránky. `/registracia` nemá `h1` ani na desktope (overené v PR 1 na 375 / 768 / 1440 px). **F3.**
 5. **Dva `h1` v portáli a staffe.** Topbar `PortalShell` má `h1` a ďalší má 7 portálových a 8 staff stránok. Náprava: `h1` patrí stránke, titulok v topbare nie. **F4/F5.**
 6. **Ikonové ovládače majú 32–36 px.** Spĺňajú minimum 24 px, ale cieľ je 40–44 px. `QuickAddButton` nemá prístupný názov okrem `title`. **F4.**
 7. **Obľúbené sú žlté** `#E0A83B`: 2,14 : 1 (1.4.11) a zároveň druhá akcentová farba. Náprava: plná hviezda v `brand`. **F4.**
@@ -505,8 +506,9 @@ MRIEŽKA ≥ 560 px                        MOBIL < 560 px (riadok zoznamu)
 | K1 | dialógy a drawery „cez `lib/focus-trap.ts` (Escape, návrat focusu, scroll lock)" | helper vie len `focusFirst` + `trapTabKey`; zvyšok je ručne v 5 komponentoch | primitívum `Dialog`/`Drawer` v F1 nad helperom; helper sa nemení |
 | K2 | sklad len cez `lib/stock.ts` | verejný `/produkt/[slug]` číta `isStocked` priamo (odznak aj JSON-LD) | malý samostatný `fix(stock)` PR mimo redizajnu (logická zmena, ovplyvňuje SEO) |
 | K3 | kategórie sú strom `Category` | portál filtruje `categoryId`/`subcategoryId` (strom), verejný `/produkty` stále textové pole `subcategory` | zjednotiť pred F2 alebo v nej (dotyk dátovej vrstvy, mimo vizuálu); pri redizajne katalógu nepridávať nový rozdiel |
-| K4 | „Serif nahrádza Bricolage" | Bricolage nesie aj wordmark (8 výskytov) | SVG logo v F1, inak by šlo o rebrand loga |
-| K5 | README: „Next.js 15" | `package.json`: Next 16.3.1 | README opraviť v F1 (dokumentácia) |
+| K4 | „Serif nahrádza Bricolage" | Bricolage nesie aj wordmark (8 výskytov) | ✅ PR 1: SVG logo (`components/ui/logo.tsx`), 9 výskytov vrátane `/cakajuce` |
+| K5 | README: „Next.js 15" | `package.json`: Next 16.3.1 | ✅ PR 1: README opravené |
+| K6 | `mt-*` a `font-*` na nadpisoch (napr. `t-h2 mt-4`, `font-semibold`) | nevrstvené `h1, h2, h3 { margin: 0; font-weight: 400 }` v `globals.css` prebíjalo všetky Tailwind utility na h1–h3 (75 nadpisov s váhou, 17 s okrajom) | ✅ PR 1: pravidlo presunuté do `@layer base`; utility platia tak, ako sú zapísané |
 
 ---
 
@@ -533,7 +535,7 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 | PR | Fáza | Obsah | Závisí od | Zastavenie |
 |---|---|---|---|---|
 | 0 | F0 | `docs(design)`: tento dokument, prototyp, master prompt | — | **STOP: smer, font, ivory** |
-| 1 | F1a | `feat(design)`: tokeny v `@theme` (nadviazať na UI kit zo `staging`), Newsreader cez `next/font`, SVG logo, odstránenie Bricolage a `container.tsx`, **MASTER.md v2** | PR 0 (#45 ✅) + merge `staging` → `main` (#47 ✅, 7. 10. 2026) | — |
+| 1 | F1a | ✅ `feat(design)`: tokeny v `@theme` (nadviazať na UI kit zo `staging`), Newsreader cez `next/font`, SVG logo, odstránenie Bricolage a `container.tsx`, **MASTER.md v2** | PR 0 (#45 ✅) + merge `staging` → `main` (#47 ✅, 7. 10. 2026) | — |
 | 2 | F1b | `feat(design)`: primitíva v `components/ui/` (Button, IconButton, Field/Input, Select, Badge, StockBadge, Price + `formatEur`, QtyStepper, Card, Dialog/Drawer, Tabs, DataTable, EmptyState, Logo). Bez migrácie stránok, staré triedy (`.t-h2`, `.eyebrow`, `.wipe`, `.microgrid`, `.reveal`) ostávajú. | PR 1 | — |
 | 3 | F2a | `feat(design)`: header + hero (mesh, stagger, magnetické CTA) | PR 2 | **STOP: vizuálne schválenie** |
 | 4 | F2b | zvyšok domovskej stránky, footer, cookie lišta, obsahové úpravy O1–O8 po rozhodnutí | PR 3 | — |
@@ -587,9 +589,36 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 
 1. ✅ Merge PR Fázy 0 (#45) a zlúčenie `staging` → `main` (#47), oboje 7. 10. 2026.
 2. Fáza 1 v novej session (staging env podľa prílohy A):
-   - PR 1: tokeny + Newsreader + SVG logo + MASTER.md v2;
+   - ✅ PR 1: tokeny + Newsreader + SVG logo + MASTER.md v2 (kap. 13);
    - PR 2: primitíva.
 3. Pred PR 4 (F2b) rozhodnúť obsahové body O1–O9 (kap. 9).
+
+## 13. Fáza 1, PR 1 — čo sa zmenilo (7. 10. 2026)
+
+**Tokeny a pravidlá** (`app/globals.css`, `design-system/MASTER.md` v2):
+
+- nové `ivory`, `ivory-deep`, `line-warm`, `focus`/`focus-dark`, `radius-control/card/panel`, `text-13`/`text-15`, `ease-precise`, `--fs-page`, `--control-h-*`, `--z-*`;
+- `info` z indigo do brand rodiny (`#1E5249` na `#EEF2F0`, 7,88 : 1);
+- `.on-dark` prepína obrys focusu na mint; použité na footeri, tmavom headeri, mobilnom menu, staff sidebari a auth paneli;
+- nová trieda `.t-page` pre nadpis stránky v portáli a auth (migrácia v F3/F4).
+
+**Typografia:**
+
+- Newsreader 500 (`next/font`, latin + latin-ext) nahrádza Bricolage Grotesque;
+- prednačítané fonty ≈ 93 KB (Newsreader ≈ 39 KB + Hanken ≈ 54 KB) oproti ≈ 112 KB predtým;
+- display triedy majú váhu 500 a `font-synthesis-weight: none` (žiadny faux bold), riadkovanie ≥ 1,02 kvôli karonom;
+- serif ostáva vo veľkých nadpisoch; UI nadpisy (topbar portálu a staffu, titulok dialógu, sekcie dashboardu), čísla na dashboarde a ceny v mockupe prešli na Hanken.
+
+**Logo:** `components/ui/logo.tsx` — obrysy pôvodného wordmarku (Bricolage 600, kerning HarfBuzz, tracking −0,03 em), 1,6 KB. Prekrytie s pôvodným textom overené v prehliadači (bez odchýlky).
+
+**Oprava kaskády (K6):** nevrstvené `h1, h2, h3 { margin: 0; font-weight: 400 }` prebíjalo Tailwind utility. Po presune do `@layer base` platia zapísané okraje a váhy nadpisov. Viditeľný dopad: tučné nadpisy sekcií na právnych stránkach, odsadenie nadpisov pod eyebrow, `h1` detailu produktu už nenaráža karonom do eyebrow.
+
+**Overenie** (produkčný build proti staging DB, Playwright, `prefers-reduced-motion`):
+
+- 11 verejných a auth stránok × 375 / 768 / 1440 px, pred (staging nasadenie `4a5e2ab`) aj po;
+- 0 CSP chýb, 0 vodorovných pretečení, počet `h1` bez zmeny, žiadny Bricolage súbor;
+- snímky mimo gitu: `C:\workspace\websites\moonid_redesign_screens\2026-10-07_pr1-{pred,po}\` a porovnania v `cmp\`.
+- **Neoverené vizuálne:** portál a staff (vyžadujú prihlásenie testovacím účtom). Zmeny tam sú len triedy písma, logo a oprava kaskády; doplní sa pri F4/F5 alebo po prihlásení na stagingu.
 
 ## Príloha A — staging env pre lokálny vývoj (od Fázy 1)
 

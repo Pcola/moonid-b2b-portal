@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 import Image from "next/image";
 import { Testimonials } from "@/components/site/testimonials";
 import { MotionToggle } from "@/components/site/motion-toggle";
@@ -140,7 +141,7 @@ export function HeroSection() {
           <div className="marquee-track">
             {[...MARQUEE, ...MARQUEE].map((m, i) => (
               <span key={i} aria-hidden={i >= MARQUEE.length} className="flex items-center gap-[clamp(28px,4vw,56px)]">
-                <span className="text-outline font-display whitespace-nowrap font-semibold uppercase" style={{ fontSize: "clamp(26px,3.4vw,44px)", letterSpacing: "0.01em" }}>{m}</span>
+                <span className="text-outline font-display whitespace-nowrap font-medium uppercase" style={{ fontSize: "clamp(26px,3.4vw,44px)", letterSpacing: "0.01em" }}>{m}</span>
                 <span className="h-2 w-2 flex-none rounded-full bg-mint/40" />
               </span>
             ))}
@@ -228,7 +229,7 @@ export function SortimentSection() {
             <div className="absolute inset-0" aria-hidden="true" style={{ background: "linear-gradient(90deg, rgba(11,24,20,0.92) 0%, rgba(11,24,20,0.62) 32%, rgba(11,24,20,0.1) 62%, rgba(11,24,20,0) 100%)" }} />
             <div className="absolute inset-0 flex flex-col justify-center gap-4 p-[clamp(26px,3.4vw,46px)]">
               <span className="eyebrow eyebrow-dark">Vlastný rozvoz</span>
-              <h3 className="font-display max-w-[300px] font-semibold text-white" style={{ fontSize: "clamp(23px,2.6vw,32px)", lineHeight: 1.08, letterSpacing: "-0.025em", textWrap: "balance" }}>Pravidelný závoz priamo na prevádzku</h3>
+              <h3 className="font-display max-w-[300px] font-medium text-white" style={{ fontSize: "clamp(23px,2.6vw,32px)", lineHeight: 1.1, letterSpacing: "-0.012em", textWrap: "balance" }}>Pravidelný závoz priamo na prevádzku</h3>
             </div>
           </div>
         </div>
@@ -254,7 +255,7 @@ export function DavkovaceSection() {
           <div className="reveal-cascade flex flex-col">
             {RENTAL.map((r, i) => (
               <div key={r.t} className="grid grid-cols-[auto_1fr] items-start gap-x-[clamp(20px,3vw,40px)] border-t border-line py-[clamp(28px,3.4vw,44px)] last:border-b">
-                <span className="font-display font-semibold text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-display font-medium text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-2.5 pt-1.5">
                   <h3 className="t-h3 text-ink">{r.t}</h3>
                   <p className="max-w-[480px] text-[16.5px] leading-relaxed text-muted">{r.d}</p>
@@ -309,7 +310,7 @@ export function PortalSection() {
               <div className="grid grid-cols-[104px_1fr]">
                 {/* mini sidebar */}
                 <div className="flex flex-col gap-2.5 border-r border-white/10 p-3.5">
-                  <span className="font-display mb-1 text-[14px] font-semibold text-white">m<span className="text-mint">.</span></span>
+                  <Logo decorative tone="inverse" className="mb-1 h-[10px]" />
                   {["Prehľad", "Katalóg", "Objednávky", "Faktúry"].map((l, i) => (
                     <span key={l} className={`rounded-md px-2 py-1 text-[10.5px] font-semibold ${i === 1 ? "bg-mint/20 text-mint" : "text-[#7fa199]"}`}>{l}</span>
                   ))}
@@ -323,7 +324,7 @@ export function PortalSection() {
                   <div className="grid grid-cols-3 gap-2">
                     {[["1 600+", "položiek"], ["48 h", "dodanie"], ["−18 %", "vaša zľava"]].map(([v, l]) => (
                       <div key={v} className="rounded-xl bg-white/8 p-2.5">
-                        <div className="font-display text-[15px] font-semibold text-white">{v}</div>
+                        <div className="text-[15px] font-semibold tabular-nums text-white">{v}</div>
                         <div className="mt-0.5 text-[9.5px] font-medium text-[#8fb3ab]">{l}</div>
                       </div>
                     ))}
@@ -335,7 +336,7 @@ export function PortalSection() {
                         <span className="truncate text-[11px] font-semibold text-white/90">{n}</span>
                         <span className="text-[9.5px] text-[#7fa199]">{d}</span>
                       </span>
-                      <span className="font-display text-[12px] font-semibold text-mint">{p}</span>
+                      <span className="text-[12px] font-semibold tabular-nums text-mint">{p}</span>
                       <span className="rounded-md bg-mint/20 px-2 py-1 text-[9px] font-bold text-mint">+ Pridať</span>
                     </div>
                   ))}
@@ -469,7 +470,7 @@ export function AkoZacatSection() {
           <div className="reveal-cascade flex flex-col">
             {STEPS.map((s, i) => (
               <div key={s.t} className="grid grid-cols-[auto_1fr] items-start gap-x-[clamp(20px,3vw,40px)] border-t border-line py-[clamp(28px,3.4vw,44px)] last:border-b">
-                <span className="font-display font-semibold text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-display font-medium text-mint-ink" style={{ fontSize: "clamp(44px,5vw,72px)", lineHeight: 0.9, fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div className="flex flex-col gap-2.5 pt-1.5">
                   <h3 className="t-h3 text-ink">{s.t}</h3>
                   <p className="max-w-[480px] text-[16.5px] leading-relaxed text-muted">{s.d}</p>
@@ -586,8 +587,8 @@ export function KontaktSection() {
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-[12.5px] font-semibold uppercase tracking-[0.16em] text-[#8fb3ab]">{c.label}</span>
-                    <span className={`font-display font-semibold text-white transition-colors group-hover:text-mint ${c.big ? "" : "truncate"}`}
-                      style={{ fontSize: c.big ? "clamp(28px,3.4vw,44px)" : "clamp(19px,2vw,24px)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                    <span className={`font-display font-medium text-white transition-colors group-hover:text-mint ${c.big ? "" : "truncate"}`}
+                      style={{ fontSize: c.big ? "clamp(28px,3.4vw,44px)" : "clamp(19px,2vw,24px)", letterSpacing: "-0.012em", lineHeight: 1.12 }}>
                       {c.value}
                     </span>
                     <span className="text-[14.5px] text-[#8fa8a1]">{c.sub}</span>

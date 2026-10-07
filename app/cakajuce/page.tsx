@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Účet sa pripravuje — Moonid", robots: { index: false } };
@@ -7,7 +8,9 @@ export default function CakajucePage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-cream px-5 py-12">
       <div className="w-full max-w-[460px] text-center">
-        <Link href="/" className="text-[30px] font-bold tracking-[-0.02em] text-brand">moonid</Link>
+        <Link href="/" className="inline-flex py-1">
+          <Logo className="h-[22px]" />
+        </Link>
         <div className="mt-7 rounded-2xl border border-line bg-white p-8 shadow-[0_20px_50px_-30px_rgba(16,42,38,0.3)]">
           <h1 className="text-[20px] font-semibold text-ink">Účet čaká na schválenie</h1>
           <p className="mt-3 text-[14.5px] leading-relaxed text-muted">

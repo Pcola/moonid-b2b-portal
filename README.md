@@ -7,10 +7,10 @@ B2B veľkoobchodný portál pre **Moonid s.r.o.** — dodávateľa hygieny, čis
 
 ## Stack
 
-- **Next.js 15** (App Router, RSC, server actions), React 19, TypeScript
+- **Next.js 16** (App Router, RSC, server actions, `proxy.ts` namiesto `middleware.ts`), React 19, TypeScript
 - **Prisma** + **Supabase Postgres** (EÚ — Frankfurt); pripojenie ako owner rola, **tenant izolácia je app-layer** (dôsledný `companyId` scoping), RLS default-deny ako defense-in-depth
 - **Supabase Auth** (heslo + **TOTP MFA** vynútené pre staff/admin, AAL2)
-- **Tailwind v4** (dizajnový systém „Clean Slate" — tokeny v `app/globals.css`, source of truth `design-system/MASTER.md`)
+- **Tailwind v4** (dizajnový systém v2 „Editorial Precision" — tokeny v `app/globals.css`, source of truth `design-system/MASTER.md`; fonty Hanken Grotesk + Newsreader cez `next/font`, logo SVG v `components/ui/logo.tsx`)
 - **Sentry** (observabilita), **Resend** (transakčné e-maily, best-effort), **Vercel** (hosting, `fra1`)
 - **Pohoda** (Stormware) = system-of-record pre fakturáciu — **vlastná fakturácia sa nestavia**; portál je pred-vrstva (objednávky, katalóg, ceny)
 

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  *    success  #14633f na #ecfdf3 = 6,90:1
  *    warning  #8a5a00 na #fdf6e7 = 5,51:1
  *    danger   #9a3025 na #fdecea = 6,50:1
- *    info     #3730a3 na #eef2ff = 8,88:1
+ *    info     #1e5249 na #eef2f0 = 7,88:1   (v2: brand rodina namiesto indigo)
  *    brand    #163f38 na #eaf3f0 = 10,31:1
  *    neutral  #5c584f na #f5f7f6 = 6,59:1 */
 
