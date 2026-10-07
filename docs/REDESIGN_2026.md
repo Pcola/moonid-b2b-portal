@@ -19,7 +19,7 @@
   4. Verejný detail produktu obchádza `lib/stock.ts`.
   5. Logo „moonid." je živý text v Bricolage, takže pri výmene fontu by sa zmenilo.
   6. Na webe sú neoverené tvrdenia: „1 600+", „48 h", anonymné referencie a neexistujúca funkcia „Moje dávkovače".
-- **Screenshoty súčasného stavu sú zo staging nasadenia na Verceli** (overené: číta staging DB), nie z produkcie. Verejné stránky sú hotové, portál čaká na prihlásenie testovacím účtom. Uložené sú mimo gitu (kap. 1).
+- **Screenshoty súčasného stavu sú zo staging nasadenia na Verceli** (overené: číta staging DB), nie z produkcie. Verejné stránky aj portál (33 záberov) sú uložené mimo gitu (kap. 1).
 
 ---
 
@@ -28,7 +28,7 @@
 | Krok master promptu | Stav |
 |---|---|
 | 1. Prečítať MASTER.md, globals.css, layout, README, UX/a11y audit, komponenty, `lib/focus-trap.ts`, prototypy | ✅ hotové |
-| 2. Preview a screenshoty 375 / 768 / 1440 px | ✅ verejné stránky zo staging nasadenia · ⏳ portál (čaká na prihlásenie, nižšie) |
+| 2. Preview a screenshoty 375 / 768 / 1440 px | ✅ verejné stránky aj portál zo staging nasadenia (33 záberov, nižšie) |
 | 3. `docs/REDESIGN_2026.md` + prototyp | ✅ tento dokument + `prototypes/redesign-2026.html` |
 | 4. STOP | ✅ smer schválený (kap. 12) |
 
@@ -39,10 +39,13 @@
   - Lokálny preview by potreboval DB heslo, ktoré connector nevydá. Staging nasadenie ukazuje ten istý vizuál bez neho.
 - **Rozdiel voči `main`:** staging obsahuje aj práce z vetvy `codex/staging-ops-hardening` (auth/heslá, testy) a a11y úpravy, napr. tlačidlo „Zastaviť pohyb" pri marquee. Zistenia v kap. 4 sa vzťahujú na `main` (`df0dfca`).
 - **Verejné stránky** `/`, `/produkty`, `/produkt/[slug]`, `/kontakt`, `/registracia`, `/login` nafotil Playwright automaticky s `prefers-reduced-motion`, aby scroll animácie neskryli obsah.
-- **Portál** `/dashboard`, `/katalog`, `/katalog/[slug]`, `/kosik`, `/objednavky/[id]`, `/rychla-objednavka`: ⏳ **zatiaľ nenafotený.**
-  - Postup: skript otvorí okno Chromium a Lukáš sa v ňom prihlási sám zákazníckym testovacím účtom. Heslo skript nevidí a session sa neukladá.
-  - Prvý pokus 7. 10. skončil bez prihlásenia (okno zatvorené na obrazovke „Zabudnuté heslo").
-  - Pred-stav kódu ostáva v nemennom nasadení `moonid-b2b-portal-9hqsbpkqe-…vercel.app` (commit `4493b5a`), takže sa dá nafotiť kedykoľvek, najneskôr pred F4.
+- **Portál** `/dashboard`, `/katalog`, `/katalog/[slug]`, `/kosik`, `/rychla-objednavka` je nafotený.
+  - Skript otvoril okno Chromium a Lukáš sa v ňom prihlásil sám zákazníckym testovacím účtom (firma „[TEST] Hotel Aurora", úroveň B2). Heslo skript nevidel a session sa neuložila.
+  - `/objednavky/[id]` chýba, lebo testovacia firma na stagingu nemá žiadnu objednávku. Doplní sa v F4 po testovacej objednávke na stagingu.
+  - V okne s posuvníkom je obsah pri 375 px široký 360 px.
+- **Čo pred-stav potvrdzuje:**
+  - dva `h1` v portáli (topbar „Prehľad" + „Dobrý deň, …");
+  - mobilný katalóg s 18 produktmi má **9 741 px** (≈ 540 px na kartu, väčšina bez obrázka). Riadková karta z 7.2 ho skráti približne na tretinu.
 - **Výstup mimo gitu:** `C:\workspace\websites\moonid_redesign_screens\2026-10-07_pred\{375,768,1440}\`.
 - **Staging projekt** bol 7. 10. obnovený z pozastavenia. Je na free pláne, takže bez nákladov, a po 7 dňoch nečinnosti sa znova uspí.
   - Seed: 35 tabuliek, 18 publikovaných produktov, 1 firma.
