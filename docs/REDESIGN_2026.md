@@ -533,7 +533,7 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 | PR | Fáza | Obsah | Závisí od | Zastavenie |
 |---|---|---|---|---|
 | 0 | F0 | `docs(design)`: tento dokument, prototyp, master prompt | — | **STOP: smer, font, ivory** |
-| 1 | F1a | `feat(design)`: tokeny v `@theme` (nadviazať na UI kit zo `staging`), Newsreader cez `next/font`, SVG logo, odstránenie Bricolage a `container.tsx`, **MASTER.md v2** | PR 0 + **merge `staging` → `main`** (UI kit, tokeny, a11y) | — |
+| 1 | F1a | `feat(design)`: tokeny v `@theme` (nadviazať na UI kit zo `staging`), Newsreader cez `next/font`, SVG logo, odstránenie Bricolage a `container.tsx`, **MASTER.md v2** | PR 0 (#45 ✅) + merge `staging` → `main` (#47 ✅, 7. 10. 2026) | — |
 | 2 | F1b | `feat(design)`: primitíva v `components/ui/` (Button, IconButton, Field/Input, Select, Badge, StockBadge, Price + `formatEur`, QtyStepper, Card, Dialog/Drawer, Tabs, DataTable, EmptyState, Logo). Bez migrácie stránok, staré triedy (`.t-h2`, `.eyebrow`, `.wipe`, `.microgrid`, `.reveal`) ostávajú. | PR 1 | — |
 | 3 | F2a | `feat(design)`: header + hero (mesh, stagger, magnetické CTA) | PR 2 | **STOP: vizuálne schválenie** |
 | 4 | F2b | zvyšok domovskej stránky, footer, cookie lišta, obsahové úpravy O1–O8 po rozhodnutí | PR 3 | — |
@@ -569,7 +569,7 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 | ≈ 400 hex hodnôt a 30+ veľkostí písma | regresie pri migrácii | migrácia po stránkach v F2–F5, vizuálne porovnanie zo stagingu |
 | Nové komponenty a únik cien | porušenie invariantu 2 | len view-model typy (`PricedLine`), kontrola RSC payloadu `/katalog*` v každom PR |
 | E2E proti produkcii (`.env.test`) | zásah do produkčných dát | staging env pred PR 1, `db-guard` nevypínať |
-| Paralelná vetva `codex/staging-ops-hardening` / `staging` už má UI kit, sémantické tokeny a a11y opravy (29 commitov pred `main`) | duplicitná práca a masívne konflikty v F1–F5 | **F1 až po merge `staging` → `main`**; návrh tokenov zosúladiť (kap. 5.1) |
+| Paralelná vetva `codex/staging-ops-hardening` / `staging` už má UI kit, sémantické tokeny a a11y opravy (29 commitov pred `main`) | duplicitná práca a masívne konflikty v F1–F5 | ✅ `staging` je v `main` (PR #47, 7. 10. 2026); v F1 nadviazať na jeho tokeny (kap. 5.1) |
 | Staging na free pláne sa uspí po 7 dňoch nečinnosti | zlyhá fotenie alebo e2e | pred každou fázou skontrolovať stav, prípadne ho zobudiť |
 | Obsahové TODO bez vlastníka | blokuje F2b | rozhodnutia O1–O9 od majiteľa pred PR 4 |
 
@@ -585,8 +585,8 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 
 **Ďalší krok:**
 
-1. Merge PR Fázy 0.
-2. Fáza 1 v novej session:
+1. ✅ Merge PR Fázy 0 (#45) a zlúčenie `staging` → `main` (#47), oboje 7. 10. 2026.
+2. Fáza 1 v novej session (staging env podľa prílohy A):
    - PR 1: tokeny + Newsreader + SVG logo + MASTER.md v2;
    - PR 2: primitíva.
 3. Pred PR 4 (F2b) rozhodnúť obsahové body O1–O9 (kap. 9).
@@ -595,7 +595,16 @@ Každý PR je z vetvy od `main`, má conventional commit, vyplnenú PR šablónu
 
 Lokálny preview (`.claude/launch.json` → `moonid`) potrebuje `.env.local` so staging hodnotami. Nikdy nepoužívať produkčný `.env` z hlavného checkoutu.
 
-**Odporúčaný spôsob (raz, v koreni repa):** stiahnuť presne tie hodnoty, s ktorými beží staging nasadenie na Verceli:
+**Stav 7. 10. 2026:** `C:\workspace\websites\moonid_b2b_portal\.env.staging` je **kompletný a overený** (pripojenie k DB funguje, `service_role` patrí stagingu). Nová session ho len skopíruje do svojho worktree:
+
+```bash
+cp "C:/workspace/websites/moonid_b2b_portal/.env.staging" .env.local
+```
+
+- `DATABASE_URL` aj `DIRECT_URL` mieria na session pooler `aws-0-eu-central-1:5432` s rolou `postgres`, čo je vhodné pre lokálny `next dev`.
+- Transaction pooler (6543) po resete hesla dočasne visel.
+
+**Ak treba súbor vytvoriť znova (raz, v koreni repa):** stiahnuť presne tie hodnoty, s ktorými beží staging nasadenie na Verceli:
 
 ```bash
 npx vercel link
@@ -604,13 +613,18 @@ npx vercel env pull .env.staging --environment=preview --git-branch=staging
 
 Výsledok `C:\workspace\websites\moonid_b2b_portal\.env.staging` je gitignored. Každá session si ho skopíruje do svojho worktree ako `.env.local`.
 
-⚠️ **Heslo staging DB neresetovať.** Používa ho staging nasadenie na Verceli, ktoré by po resete prestalo fungovať, kým sa neaktualizuje premenná vo Verceli.
+⚠️ **Sensitive premenné sa nestiahnu.** Vo Verceli sú `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY` a `RATE_LIMIT_HMAC_SECRET` označené ako *Sensitive*, `vercel env pull` za ne zapíše `[SENSITIVE]` a treba ich doplniť ručne (tabuľka nižšie).
+
+**Heslo `postgres` na stagingu** (overené 7. 10. 2026):
+
+- Staging na Verceli sa pripája samostatnou rolou `moonid_app_staging`, takže reset hesla `postgres` ho **nerozbije**.
+- Heslo `postgres` používa len workflow *Database Migration* cez GitHub secret `MIGRATOR_DATABASE_URL` v prostredí `staging`. Po resete treba aktualizovať tento secret.
 
 Ručne (záloha), ak Vercel CLI nie je k dispozícii:
 
 | Premenná | Kde ju vziať |
 |---|---|
-| `DATABASE_URL`, `DIRECT_URL` | Vercel → projekt `moonid-b2b-portal` → Settings → Environment Variables → prostredie *Preview* (vetva `staging`) → *Reveal*. Alternatívne Supabase → `moonid-b2b-staging` → **Connect** → **ORMs** → **Prisma**, kde `[YOUR-PASSWORD]` nahradiť existujúcim heslom. |
+| `DATABASE_URL`, `DIRECT_URL` | Supabase → `moonid-b2b-staging` → **Connect** → **ORMs** → **Prisma**: pooler `aws-0-eu-central-1`, na lokálny vývoj port **5432** (session), `[YOUR-PASSWORD]` nahradiť heslom `postgres`. Heslo nikde nie je čitateľné, reset: ľavé menu **Database → Settings → Database password → Reset password** (posledný reset 7. 10. 2026) a potom aktualizovať GitHub secret `MIGRATOR_DATABASE_URL` (prostredie `staging`). |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://booeaeyyyitlmuxixjfy.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → **API Keys** → *Legacy API keys* → `anon` (verejný) |
 | `SUPABASE_SERVICE_ROLE_KEY` | tamže → `service_role` → *Reveal* (tajný, nikdy necommitovať) |
